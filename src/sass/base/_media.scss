@@ -1,0 +1,34 @@
+@media (max-width: 1200px){
+  .wrapper {
+    max-width: 960px;
+  }
+}
+
+@media (max-width: 991px){
+  .wrapper {
+    max-width: 720px;
+  }
+}
+
+@media (max-width: 767px){
+  .wrapper {
+    max-width: 540px;
+  }
+ 
+}
+
+@media (max-width: 575px){
+  .wrapper {
+    width: 100%;
+    padding: 0 10px;
+  }
+   
+}
+
+@media (max-width: 320px){
+  .wrapper {
+    width: 100%;
+    padding: 0 10px;
+  }
+   
+}
