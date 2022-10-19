@@ -1,4 +1,92 @@
-.header{
-    color:#fff;
-    
+.header {
+
+    &__menu {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__contact {
+
+        &_time {
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        &_callback {
+        }
+
+        &_btn {
+            margin: .9rem 0;
+            position: relative;
+            padding-left: 2rem;
+            font-size: 1.6rem;
+            & img{
+                width: 2.5rem;
+                height: 2.5rem;
+                position: absolute;
+                top: 1.3rem;
+                left: 2.1rem;
+
+            }
+        }
+
+        &_phone {
+            & a{
+                letter-spacing: .9rem;
+            }
+        }
+
+        &_social {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: .9rem;
+            & img{
+                height: 3rem;
+                width: 3rem;
+            }
+
+        }
+    }
+}
+.wrapper {
+    padding: 4.7rem 0 14.7rem;
+
+}
+.logo {
+    position: relative;
+    & img{
+    position: absolute;
+    top: -6.5rem;
+    left: 0;
+    max-width: 24rem;
+    max-height: 14rem;
+    }
+}
+.menu {
+    margin-left: 25rem;
+                color: #000;
+    &__list {
+        margin-right: 7rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4rem;
+    }
+
+    &__link {
+        transition: all .1s;
+        color: #000;
+        &:hover{
+            font-weight: 700;
+            border-bottom: 4px solid $main-color;
+        }
+        &:active{
+            color: inherit;
+        }
+    }
+}
+.btn {
 }

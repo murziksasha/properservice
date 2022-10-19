@@ -1,14 +1,27 @@
 .btn {
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
-  border-radius: 30px;
+  cursor: pointer;
+  background: #02A653;
+  box-shadow: 0px 8px 8px rgba(30, 165, 97, 0.5);
+  border-radius: 24.5px;
   transition: all 0.5s;
+  height: 5rem;
+  width: 22rem;
+  color: #fff;
+  text-align: center;
+  align-items: center;
+  font-weight: 800;
+  line-height: 130%;
 
   &:hover, &:active {
-    background-color: #323232;
+    background: $main-hover;
+    color: #fff;
+
   }
   &:active {
     position: relative;
     top: 1px;
     background-color: #000;
+    color: #fff;
+
   }
 }

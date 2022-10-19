@@ -1,6 +1,4 @@
 
-    //&display=swap
-    @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;1,100&display=swap');
 
 html {
     font-size: 10px;
@@ -8,19 +6,20 @@ html {
 
 
 body{
-    font-family: 'Roboto', sans-serif;
-    background-color: black;
+    font-family: Circe400, sans-serif;
+    font-size: 1.8rem;
 
 }
 
 .container{
-    width: 1743px;
+    width: 1920px;
     margin: 0 auto;
+    background-color: #fff;
 }
 
 
 .wrapper{
-    width: 100%;
+    max-width: 1140px;
     padding: 0 30px;
     margin: 0 auto;
 

@@ -1,28 +1,58 @@
 <!DOCTYPE html>
 <html lang="en ru">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Title</title>
-    <link rel="shortcut icon" href="./img/icons/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="css/style.min.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ремонт техники</title>
+    <link rel="shortcut icon" href="./img/icons/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/style.min.css" />
+  </head>
+  <body>
     <noscript>
-        <span>Для корректного отображения страницы включите 
-        поддержку JavaScript в настройках браузера</span>
+      <span>Для корректного отображения страницы включите поддержку JavaScript в настройках браузера</span>
     </noscript>
 
     <div class="container">
-        <div class="header">
-            <div class="wrapper">
-                
+      <div class="header">
+        <div class="wrapper">
+          <div class="header__menu">
+            <div class="logo">
+              <a href="#!"><img src="./img/icons/logo.png" alt="logo" /></a>
             </div>
+            <nav class="menu">
+                <ul class="menu__list">
+                    <li><a href="#!" class="menu__link">О компании</a></li>
+                    <li><a href="#!" class="menu__link">Стоимость</a></li>
+                    <li><a href="#!" class="menu__link">Отзывы</a></li>
+                    <li><a href="#!" class="menu__link">Контакты</a></li>
+                </ul>
+            </nav>
+            <div class="header__contact">
+                <p class="header__contact header__contact_time">Работаем с 10:00 до 18:00</p>
+                <div class="header__contact header__contact_callback">
+                    <a href="tel:+30637548912">
+                    <button class="header__contact header__contact_btn btn">
+                        <img src="./img/icons/phone_btn.png" alt="phone" class="header__contact header__contact_phone">
+                        063 754 89 12</button>
+                    </a>
+
+                </div>
+                <div class="header__contact header__contact_social">
+                    <a href="#!"><img src="./img/icons/viber.svg" alt="viber"></a>
+                    <a href="#!"><img src="./img/icons/telegram.svg" alt="telegram"></a>
+                    <a href="#!"><img src="./img/icons/instagram.svg" alt="instagram"></a>
+                    <a href="#!"><img src="./img/icons/youtube.svg" alt="youtube"></a>
+                </div>
+
+            </div>
+          </div>
         </div>
+      </div>
+
+
     </div>
 
-<script src="js/main.min.js"></script>
-
-</body>
+    <script src="js/main.min.js"></script>
+  </body>
 </html>
