@@ -1,0 +1,122 @@
+.services {
+  &-nav {
+    background-color: #EAEAEA;
+    min-height: 6rem;
+    &__list {
+      font-size: 1.5rem;
+      min-height: inherit;
+      position: relative;
+      @include flex-all-center-w;
+      justify-content: space-between;
+      padding: 0 .5rem;
+
+    }
+  
+    &__item {
+      position: relative;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      &_active {
+        min-height: inherit;
+        background-color: $main-color;
+        padding: 0 1.5rem;
+        a {
+          display: inline-block;
+          height: inherit;
+          color: #fff;
+        }
+
+      }
+      &:active{
+        color: #fff;
+      }
+    }
+  }
+
+  &__sub-menu {
+    position: absolute;
+    left: 0;
+    top: 3.7rem;
+    background-color: $main-color;
+    padding-top: 2.5rem;
+    @include flex-column-start;
+    & a:not(:last-child){
+      margin-bottom: .5rem;
+    }
+
+  }
+
+  &__aside {
+    position: relative;
+    padding: 11.6rem 5.1rem 0 6.3rem;
+    max-width: 66.5rem;
+  }
+
+  &__top{
+    max-width: 71rem;
+  }
+
+  &__title {
+    max-width: 63rem;
+    margin-bottom: 3.3rem;
+  }
+
+  &__about {
+    max-width: 63rem;
+    @include flex-all-sb;
+    gap: 4rem;
+    align-items: start;
+    margin-bottom: 2rem;
+  }
+
+  &__about-info {
+    max-width: 22rem;
+  }
+
+  &__main-img{
+    position: absolute;
+    top: 10rem;
+    left: 62rem;
+    & img{
+      z-index: -3;
+      width: 50rem;
+    }
+  }
+}
+
+.callback {
+  padding: 1.4rem 1.8rem;
+  max-width: 63rem;
+  min-height: 15rem;
+  background: linear-gradient(0deg, #ECECEC, #ECECEC), #FFFFFF;
+
+  &__form{
+    @include flex-all-center-w;
+    gap: 3rem
+  }
+
+  &__title {
+    text-align: center;
+    margin-bottom: 1.4rem;
+
+  }
+
+  &__phone {
+    height: 5.8rem;
+    flex: 1 1 auto;
+    border-radius: 4rem;
+    background: linear-gradient(0deg, #FFFFFF, #FFFFFF), #ECECEC;
+    padding: 1.8rem 0 1.8rem 2.9rem;
+    text-transform: uppercase;
+    letter-spacing: .1rem;
+  }
+
+  &__btn {
+    height: 5.8rem;
+    flex: 1 1 auto;
+    font-size: 1.4rem;
+    line-height: 130%;
+  }
+}

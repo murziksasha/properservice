@@ -2,10 +2,12 @@
 
 html {
     font-size: 10px;
+    height: 100%;
 }
 
 
 body{
+    height: 100%;
     font-family: Circe400, sans-serif;
     font-size: 1.8rem;
 
@@ -13,6 +15,9 @@ body{
 
 .container{
     width: 1920px;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
     margin: 0 auto;
     background-color: #fff;
 }
@@ -20,13 +25,22 @@ body{
 
 .wrapper{
     max-width: 1140px;
-    padding: 0 30px;
+    min-height: 100%;
+    overflow: hidden;
+    padding: 0 15px;
     margin: 0 auto;
+}
 
+main.main{
+    flex: 1 1 auto;
+    
 }
 
 
 @import "header";
+@import "services";
+
+@import "footer";
 
 
 

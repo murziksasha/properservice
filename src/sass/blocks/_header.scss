@@ -1,92 +1,90 @@
 .header {
+  &__menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
 
-    &__menu {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+  &__contact {
+    &_time {
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
     }
 
-    &__contact {
-
-        &_time {
-            font-size: 1.4rem;
-            font-weight: 700;
-            text-align: center;
-        }
-
-        &_callback {
-        }
-
-        &_btn {
-            margin: .9rem 0;
-            position: relative;
-            padding-left: 2rem;
-            font-size: 1.6rem;
-            & img{
-                width: 2.5rem;
-                height: 2.5rem;
-                position: absolute;
-                top: 1.3rem;
-                left: 2.1rem;
-
-            }
-        }
-
-        &_phone {
-            & a{
-                letter-spacing: .9rem;
-            }
-        }
-
-        &_social {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: .9rem;
-            & img{
-                height: 3rem;
-                width: 3rem;
-            }
-
-        }
+    &_callback {
     }
-}
-.wrapper {
-    padding: 4.7rem 0 14.7rem;
 
+    &_btn {
+      margin: 0.9rem 0;
+      position: relative;
+      padding-left: 2rem;
+      font-size: 1.6rem;
+      & img {
+        width: 2.5rem;
+        height: 2.5rem;
+        position: absolute;
+        top: 1.3rem;
+        left: 2.1rem;
+      }
+    }
+
+    &_phone {
+      & a {
+        letter-spacing: 0.9rem;
+      }
+    }
+
+    &_social {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.9rem;
+      & img {
+        height: 3rem;
+        width: 3rem;
+      }
+    }
+  }
+  &__wrapper {
+    padding: 1.7rem 0 .7rem;
+  }
 }
+
 .logo {
-    position: relative;
-    & img{
+  position: relative;
+  & img {
     position: absolute;
     top: -6.5rem;
     left: 0;
     max-width: 24rem;
     max-height: 14rem;
-    }
+  }
 }
 .menu {
-    margin-left: 25rem;
-                color: #000;
-    &__list {
-        margin-right: 7rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 4rem;
-    }
+  margin-left: 25rem;
+  &__list {
+    @include flex-all-center-w;
+    flex-wrap: wrap;
+    gap: 4rem;
+  }
 
-    &__link {
-        transition: all .1s;
-        color: #000;
-        &:hover{
-            font-weight: 700;
-            border-bottom: 4px solid $main-color;
-        }
-        &:active{
-            color: inherit;
-        }
+  &__link {
+    transition: all 0.1s;
+    color: #000;
+    &:hover {
+      font-weight: 700;
+      border-bottom: 4px solid $main-color;
     }
-}
-.btn {
+    &:active {
+      color: inherit;
+    }
+  }
+
+  &__lang{
+    transition: all .3s ease 0s;
+    &:hover{
+      transform: scale(1.2);
+    }
+  }
 }
