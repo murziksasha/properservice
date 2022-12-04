@@ -1,0 +1,35 @@
+._callback {
+  padding: 1.4rem 1.8rem;
+  max-width: 63rem;
+  min-height: 15rem;
+  background: linear-gradient(0deg, #ECECEC, #ECECEC), #FFFFFF;
+  border-radius: 1.5rem;
+
+  &__form{
+    @include flex-all-center-w;
+    gap: 3rem
+  }
+
+  &__title {
+    text-align: center;
+    margin-bottom: 1.4rem;
+
+  }
+
+  &__phone {
+    height: 5.8rem;
+    flex: 1 1 auto;
+    border-radius: 4rem;
+    background: linear-gradient(0deg, #FFFFFF, #FFFFFF), #ECECEC;
+    padding: 1.8rem 0 1.8rem 2.9rem;
+    text-transform: uppercase;
+    letter-spacing: .1rem;
+  }
+
+  &__btn {
+    height: 5.8rem;
+    flex: 1 1 auto;
+    font-size: 1.4rem;
+    line-height: 130%;
+  }
+}
