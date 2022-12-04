@@ -1,15 +1,40 @@
 .about-link {
 
   &__wrapper {
+    position: relative;
+    padding: 0 0 4.4rem ;
+  }
+
+  &__line{
+    position: relative;
+    top: 4rem;
+    left: 5rem;
+    max-width: 20rem;
   }
 
   &__title {
+    text-align: center;
+  }
+  
+  &__paragr{
+    text-align: center;
+    font-family: 'Akronim';
+    line-height: 120%;
+    font-size: 2rem;
+    margin-bottom: 2rem;
   }
 
   &__items-wrapper {
+    display: grid;
+    margin: auto;
+    gap: 3.7rem 3.3rem;
+    grid-template-columns: repeat(auto-fill, 22.2rem) ;
+    grid-template-rows: repeat(22.2rem);
+    justify-content: center;
   }
 
   &__item {
+    position: relative;
   }
 
   &__link {
@@ -19,13 +44,13 @@
   }
 
   &__descr {
+
   }
 
   &__callback {
   }
 }
-.wrapper {
-}
+
 
 ._callback {
 
