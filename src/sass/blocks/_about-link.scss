@@ -1,8 +1,10 @@
 .about-link {
 
+
   &__wrapper {
     position: relative;
-    padding: 0 0 4.4rem ;
+    padding: 5px 0 4.4rem ;
+    background: #ECECEC;
   }
 
   &__line{
@@ -31,6 +33,7 @@
     grid-template-columns: repeat(auto-fill, 22.2rem) ;
     grid-template-rows: repeat(22.2rem);
     justify-content: center;
+    margin-bottom: 4.5rem;
   }
 
   &__item {
@@ -38,31 +41,40 @@
   }
 
   &__link {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.71) 59.37%, #000000 100%);
   }
 
   &__img {
+    position: relative;
+    z-index: -1;
   }
 
   &__descr {
-
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    position: absolute;
+    top: 4px;
+    left: 76px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
   }
 
   &__callback {
+    margin: 0 auto;
+    background: linear-gradient(0deg, #FFFFFF, #FFFFFF), linear-gradient(0deg, #ECECEC, #ECECEC), #FFFFFF;
+    border-radius: 1.5rem;
+    ._callback {
+      &__btn {
+        text-transform: uppercase;
+        line-height: 130%;
+        font-size: 1.7rem;
+      }
+    }
   }
 }
 
 
-._callback {
 
-  &__title {
-  }
-
-  &__form {
-  }
-
-  &__phone {
-  }
-
-  &__btn {
-  }
-}
