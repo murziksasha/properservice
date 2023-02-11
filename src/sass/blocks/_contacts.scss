@@ -20,42 +20,101 @@
   &__title {
     font-weight: 700;
     font-size: 4.8rem;
+    justify-content: space-between;
+    margin-bottom: 4.5rem;
+  }
+
+  &__left-side {
+    max-width: 37.5rem;
+    position: relative;
+  }
+
+  &__title {
+    font-family: 'Roboto';
+    font-weight: 700;
+    font-size: 4.7rem;
+    line-height: 128%;
+    margin-bottom: 3.2rem;
   }
 
   &__par-bold {
+    font-family: 'Roboto';
+    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 125%;
+    margin-bottom: 3rem;
   }
 
   &__par {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 135%;
+    margin-bottom: 3rem;
   }
 
   &__phone {
+    font-family: 'Roboto';
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 125%;
+    margin-bottom: 3rem;
+    & a {
+      color: inherit;
+    }
   }
 
   &__mail {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 125%;
+    margin-bottom: 3rem;
   }
 
   &__social {
+    position: absolute;
+    left: 86%;
+    bottom: 6%;
   }
 
   &__right-side {
+    max-width: 48rem;
   }
 
   &__line {
+    margin-right: -7.2rem;
+    margin-bottom: 5.6rem;
   }
 
   &__map {
+    filter: drop-shadow(0px 15px 20px rgba(0, 0, 0, 0.25));
   }
 
   &__callback {
-  }
-}
-.wrapper {
-}
-.header {
-
-  &__contact {
-
-    &_social {
+    font-family: 'Roboto';
+    font-weight: 700;
+    font-size: 2rem;
+    line-height: 130%;
+    color: #fff;
+    margin: 0 auto;
+    min-width: 75rem;
+    background: $main-color;
+    box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.35);
+    & input._callback__phone{
+      background: rgba(255, 255, 255, 0.2);
+    }
+    & button._callback__btn{
+      background: #FFFFFF;
+      box-shadow: 0px 8px 8px rgba(17, 107, 62, 0.5);
+      color: $main-color;
+      font-weight: 600;
+      font-size: 1.8rem;
+      line-height: 130%;
+      text-transform: uppercase;
+      &:hover{
+        background: gray;
+        color: #fff;
+        scale: 1.05;
+      }
     }
   }
 }
