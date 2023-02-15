@@ -24,6 +24,9 @@
     line-height: 120%;
     font-size: 2rem;
     margin-bottom: 2rem;
+    &.repair-item{
+      color: red;
+    }
   }
 
   &__items-wrapper {
@@ -86,5 +89,21 @@
   }
 }
 
+.malfunctions{
+  position: relative;
+  padding-top: 10rem;
+  display: flex;
+  justify-content: space-between;
+  & .about-link__line {
+    position: relative;
+    top: 1rem;
+    left: -31rem;
+    max-width: 16rem;
+  }
+  .line-circle {
+    height: 3px;
+    border: 1px solid #A2A2A2;
+  }
+}
 
 
