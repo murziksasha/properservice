@@ -1,0 +1,56 @@
+.malfunctions {
+
+  &__left-side {
+  }
+
+  &__items {
+    padding-left: 5rem;
+  }
+
+  &__item {
+    margin-bottom: 2rem;
+    &::before{
+      content: url('../../img/icons/crest_mulfunction.png');
+      position: absolute;
+      left: 2rem;
+
+    }
+  }
+
+  &__right-side {
+  }
+
+  &__img {
+    width: 50%;
+    height: 50%;
+  }
+}
+.wrapper-malfunctions-under {
+}
+.about-link {
+
+  &__title {
+  }
+
+  &__paragr {
+  }
+}
+
+.malfunctions {
+
+  &__line {
+  }
+}
+.line {
+
+  &__circle {
+
+    &_right {
+    }
+
+    &_right-black {
+    }
+  }
+}
+.repair-item {
+}

@@ -1,60 +1,40 @@
-
-
 html {
-    font-size: 10px;
-    height: 100%;
+  font-size: 10px;
+  height: 100%;
 }
 
-
-body{
-    height: 100%;
-    font-family: Circe400, sans-serif;
-    font-size: 1.8rem;
-
+body {
+  height: 100%;
+  font-family: Circe400, sans-serif;
+  font-size: 1.8rem;
 }
 
-.container{
-    width: 1920px;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    margin: 0 auto;
-    background-color: #fff;
+.container {
+  width: 1920px;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+  background-color: #fff;
 }
 
-
-.wrapper{
-    max-width: 1140px;
-    min-height: 100%;
-    overflow: hidden;
-    padding: 0 15px;
-    margin: 0 auto;
+.wrapper {
+  max-width: 1140px;
+  min-height: 100%;
+  overflow: hidden;
+  padding: 0 15px;
+  margin: 0 auto;
 }
 
-main.main{
-    flex: 1 1 auto;
-    
+main.main {
+  flex: 1 1 auto;
 }
 
+@import 'header';
+@import 'services';
+@import 'advantages';
+@import 'about-link';
+@import 'contacts';
+@import 'malfunctions';
 
-@import "header";
-@import "services";
-@import "advantages";
-@import "about-link";
-@import "contacts";
-
-@import "footer";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@import 'footer';
