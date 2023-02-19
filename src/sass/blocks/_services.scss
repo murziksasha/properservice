@@ -84,6 +84,17 @@
       z-index: -3;
       width: 50rem;
     }
+    &.tv__set{
+      left: 63rem;
+    }
+    .tv__set{
+      &_main-img{
+        z-index: -30;
+        width: 69rem;
+        height: 56rem;
+        border-radius: 5%;
+      }
+    }
   }
 }
 
