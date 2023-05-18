@@ -89,11 +89,22 @@
     }
     .tv__set{
       &_main-img{
-        z-index: -30;
-        width: 69rem;
-        height: 56rem;
+        width: 46rem;
+        height: 29rem;
         border-radius: 5%;
+        margin-top: 4rem;
       }
+    }
+    .bake {
+      width: 48rem;
+      border-radius: 5%;
+      height: 53rem;
+    }
+    .laptop{
+      width: 48rem;
+      border-radius: 5%;
+      height: 43rem;
+      margin-top: 4rem;
     }
   }
 }
