@@ -11,6 +11,10 @@
       content="Качественно ремонтируем, восстанавливаем устройства, гарантия качества, лояльные цены!"
     />
     <link rel="shortcut icon" href="./img/icons/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/animate.css">
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="css/style.min.css" />
   </head>
   <body>
@@ -86,7 +90,7 @@
               <div class="services__callback _callback">
                 <p class="_callback__title _paragr">Вирішуємо питання навіть <span>віддалено!</span></p>
                 <form class="_callback__form" action="post">
-                  <input type="text" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
+                  <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
                   <button class="_callback__btn _btn" type="button"><span>записатися на</span> <br>безкоштовну діагностику</button>
                 </form>
               </div>
@@ -162,10 +166,24 @@
             <div class="about-link__callback _callback">
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію та діагностику!</p>
               <form class="_callback__form" action="post">
-                <input type="text" class="_callback__phone" placeholder="+38( ___ ) __ __ ___" />
+                <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___" />
                 <button class="_callback__btn _btn" type="button">залишити заявку</button>
               </form>
             </div>
+          </div>
+        </section>
+
+        <section class="feedback" id="feedback">
+          <div class="feedback__wrapper wrapper" id="feedback">
+            <button><img src="./img/icons/left-arr.png" class="feedback left-arrow"alt="arrow"></img></button>
+            <button><img src="./img/icons/right-arr.png" class="feedback right-arrow" alt="arrow"></img></button>
+            <div class="feedback__slider-item _flex"><img src="./img/feedback/feed-1.jpg" alt="feedback"></div>
+            <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-2.jpg" alt="feedback"></div>
+            <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-3.jpg" alt="feedback"></div>
+            <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-4.jpg" alt="feedback"></div>
+            <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-5.jpg" alt="feedback"></div>
+            <button class="_callback__btn _btn feedback-btn" type="button
+            "><a  href="https://goo.gl/maps/pt5nFeHPYtjRTu3f6" target="_blank">Більше відгуків<a/></button>
           </div>
         </section>
 
@@ -182,10 +200,10 @@
                   <a href="tel:+380635567090">+38 063 556 70 90</a></p>
                 <p class="contacts__mail"><a href="mailto:remontmailshop@gmail.com">remontmailshop@gmail.com</a></p>
                 <div class="contacts__social header__contact_social">
-                  <a href="#!"><img src="./img/icons/viber.svg" alt="viber" /></a>
-                  <a href="#!"><img src="./img/icons/telegram.svg" alt="telegram" /></a>
-                  <a href="#!"><img src="./img/icons/instagram.svg" alt="instagram" /></a>
-                  <a href="#!"><img src="./img/icons/youtube.svg" alt="youtube" /></a>
+                  <a href="viber://chat?number=+380995385655" target="_blank"><img src="./img/icons/viber.svg" alt="viber" /></a>
+                  <a href="https://t.me/+380995385655" target="_blank"><img src="./img/icons/telegram.svg" alt="telegram" /></a>
+                  <a href="http://instagram.com/_u/remont_servis_chernomorsk" target="_blank"><img src="./img/icons/instagram.svg" alt="instagram" /></a>
+                  <a href="https://www.youtube.com/channel/UCMst-3U2Yp4zqRPzGDkh0fg" target="_blank"><img src="./img/icons/youtube.svg" alt="youtube" /></a>
                 </div>
               </div>
               <div class="contacts__right-side">
@@ -200,7 +218,7 @@
             <div class="contacts__callback _callback">
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію:</p>
               <form class="_callback__form" action="post">
-                <input type="text" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
+                <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
                 <button class="_callback__btn _btn" type="button">залишити заявку</button>
               </form>
             </div>
@@ -211,15 +229,31 @@
       <footer class="footer">
         <div class="footer__wrapper wrapper">
           <div class="logo">
-            <a href="#!"><img src="./img/icons/logo.png" alt="logo" /></a>
+            <a href="./index.html"><img src="./img/icons/logo.png" alt="logo" /></a>
           </div>
-          <div class="policy">Використовуючи веб-сайт, Ви погоджуєтесь з умовами<a href="./confident.html" target="_blank">політики конфіденційності персональних даних</a></div>
+          <div class="policy">Використовуючи веб-сайт, Ви погоджуєтесь з умовами <a href="./confident.html" target="_blank">політики конфіденційності персональних даних</a></div>
           
           <div class="copy">&copy; 2017</div>
         </div>
       </footer>
     </div>
 
-    <script src="js/main.min.js"></script>
+    <script type="module" src="js/main.min.js"></script>
+    <script>
+      (function () {
+          var s = document.createElement('script');
+              s.type = 'text/javascript';
+              s.async = true;
+              s.src = '//remontservice.gincore.net/widget.php?ajax=&w=state&jquery='+('jQuery' in window?1:0);
+          document.getElementsByTagName('head')[0].appendChild(s);
+      })();
+      (function () {
+        var s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = '//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery='+('jQuery' in window?1:0);
+        document.getElementsByTagName('head')[0].appendChild(s);
+    })();
+    </script>
   </body>
 </html>
