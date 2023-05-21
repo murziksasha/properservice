@@ -31,9 +31,9 @@
             </div>
             <nav class="menu">
               <ul class="menu__list">
-                <li><a href="#about_company" class="_list-reset">Про компанію</a></li>
-                <li><a href="#feedback" class="menu__link">Відгуки</a></li>
-                <li><a href="#contacts" class="menu__link">Контакти</a></li>
+                <li class="_list-reset"><a class="menu__link" href="#about_company">Про компанію</a></li>
+                <li class="_list-reset"><a href="#feedback" class="menu__link">Відгуки</a></li>
+                <li class="_list-reset"><a href="#contacts" class="menu__link">Контакти</a></li>
               </ul>
             </nav>
             <div class="header__contact">
@@ -96,7 +96,7 @@
             </aside>
           </div>
         </section>
-        
+
         <section class="about-link">
           <div class="about-link__wrapper wrapper" id="about_company">
 
@@ -214,7 +214,7 @@
             </div>
           </div>
         </section>
-
+        <!-- 
         <section class="feedback" id="feedback">
           <div class="feedback__wrapper wrapper" id="feedback">
             <button><img src="./img/icons/left-arr.png" class="feedback left-arrow"alt="arrow"></img></button>
@@ -224,8 +224,8 @@
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-3.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-4.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-5.jpg" alt="feedback"></div>
-            <button class="_callback__btn _btn feedback-btn" type="button
-            "><a  href="https://goo.gl/maps/pt5nFeHPYtjRTu3f6" target="_blank">Більше відгуків<a/></button>
+            <button class="_callback__btn _btn feedback-btn" id="feed-google" type="button
+              ">Більше відгуків</input>
           </div>
         </section>
 
@@ -268,7 +268,7 @@
         </section>
       </main>
       
-      <a href="#up" class="pageup">
+      <a href="#up" class="pageup _hide">
         <svg class="up" viewBox="0 0 26 26" fill="#fff" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M26 0H0V26H26V0ZM4.6593 17.7519L13.1233 10.33L21.5873 17.7519L22.9059 16.2481L13.7826 8.24813L13.1233 7.67L12.464 8.24813L3.3407 16.2481L4.6593 17.7519Z" fill="black"/>
         </svg>
@@ -283,11 +283,11 @@
           
           <div class="copy">&copy; 2017</div>
         </div>
-      </footer>
-    </div>
+      </footer>-->
+    </div> 
 
     <script type="module" src="js/main.min.js"></script>
-    <script>
+    <!-- <script>
       (function () {
           var s = document.createElement('script');
               s.type = 'text/javascript';
@@ -302,6 +302,6 @@
             s.src = '//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery='+('jQuery' in window?1:0);
         document.getElementsByTagName('head')[0].appendChild(s);
     })();
-    </script>
+    </script> -->
   </body>
 </html>

@@ -1,9 +1,9 @@
 ._list-reset {
   text-decoration: none;
-	transition: all .1s;
+	transition: all .4s;
 	color: #000;
 	&:hover{
-			font-weight: 700;
+			font-weight: 500;
 			border-bottom: 4px solid $main-color;
 	}
 	&:active{

@@ -2,6 +2,7 @@
 import { slider } from "./modules/slider/slider.js";
 import { mask } from "./modules/mask/mask.js";
 import { scrolling } from "./modules/scrolling/scrolling.js";
+import { moreFeedbacks } from "./modules/more-feedbacks/moreFeedback.js";
 
 
 document.addEventListener('DOMContentLoaded',()=>{
@@ -11,5 +12,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   mask('[name="phone"]');
   scrolling('.pageup');
+  moreFeedbacks();
 
 });

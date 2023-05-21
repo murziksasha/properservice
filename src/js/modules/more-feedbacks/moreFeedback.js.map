@@ -1,0 +1,1 @@
+{"version":3,"file":"moreFeedback.js","sourceRoot":"","sources":["moreFeedback.ts"],"names":[],"mappings":"AAEA,MAAM,UAAU,aAAa;IAC3B,MAAM,GAAG,GAAG,QAAQ,CAAC,aAAa,CAAC,cAAc,CAAsB,CAAC;IACxE,GAAG,CAAC,gBAAgB,CAAC,OAAO,EAAE,GAAG,EAAE;QACjC,MAAM,CAAC,IAAI,CAAC,yBAAyB,EAAE,QAAQ,CAAC,CAAC;IACnD,CAAC,CAAC,CAAA;AACJ,CAAC"}

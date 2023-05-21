@@ -17,14 +17,14 @@
       margin-bottom: 2rem;
     }
     &::before{
-      content: url('../../img/icons/crest_mulfunction.png');
+      content: url('../img/icons/crest_mulfunction.png');
       position: absolute;
       left: 8rem;
       transform: translate(3%, 8%);
     }
     &-other{
       &::before{
-        content: url('../../img/icons/check_ico.png');
+        content: url('../img/icons/check_ico.png');
         position: absolute;
         left: 5rem;
         transform: translate(-8%,-14%);

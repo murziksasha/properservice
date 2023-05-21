@@ -72,7 +72,7 @@ function styles (){
 
 function build(){
     return src([
-        'src/css/style.min.css',
+        'src/css/*.css',
         'src/fonts/**/*',
         'src/js/**/*.js',
         'src/img/**/*',
