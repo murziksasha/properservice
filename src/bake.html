@@ -39,12 +39,10 @@
             <div class="header__contact">
               <p class="header__contact header__contact_time">Працюємо з 10:00 до 18:00</p>
               <div class="header__contact header__contact_callback">
-                <a href="tel:+30637548912">
-                  <button class="header__contact header__contact_btn _btn">
-                    <img src="./img/icons/phone_btn.png" alt="phone" class="header__contact header__contact_phone" />
-                    063 754 89 12
-                  </button>
-                </a>
+                <a class="header__contact header__contact_btn _btn"  href="tel:+30637548912">
+                  <div><img src="./img/icons/phone_btn.png" alt="phone" class="header__contact header__contact_phone" /></div>
+                  <div>063 754 89 12</div>
+              </a>
               </div>
               <div class="header__contact header__contact_social">
                 <a href="viber://chat?number=+380995385655" target="_blank"><img src="./img/icons/viber.svg" alt="viber" /></a>
@@ -57,8 +55,8 @@
         </div>
       </header>
 
-      <main class="main" id="up">
-        <section class="services">
+      <main class="main">
+        <div class="services">
           <div class="wrapper services__wrapper">
             <nav class="services-nav">
               <ul class="services-nav__list">
@@ -92,7 +90,7 @@
                 <p class="_callback__title _paragr">Вирішуємо питання навіть <span>віддалено!</span></p>
                 <form class="_callback__form" action="post">
                   <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
-                  <button class="_callback__btn _btn" type="button"><span>записатися на</span> <br>безкоштовну діагностику</button>
+                  <button class="_callback__btn _btn" type="submit"><span>записатися на</span> <br>безкоштовну діагностику</button>
                 </form>
               </div>
               <div class="services__main-img tv__set">
@@ -100,9 +98,9 @@
               </div>
             </aside>
           </div>
-        </section>
+        </div>
 
-        <section class="about-link">
+        <div class="about-link">
           <div class="about-link__wrapper wrapper">
             <div class="advantages">
               <div class="advantages__wrapper wrapper">
@@ -170,14 +168,14 @@
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію та діагностику!</p>
               <form class="_callback__form" action="post">
                 <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___" />
-                <button class="_callback__btn _btn" type="button">залишити заявку</button>
+                <button class="_callback__btn _btn" type="submit">залишити заявку</button>
               </form>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section class="feedback" id="feedback">
-          <div class="feedback__wrapper wrapper" id="feedback">
+        <div class="feedback" id="feedback">
+          <div class="feedback__wrapper wrapper">
             <button><img src="./img/icons/left-arr.png" class="feedback left-arrow"alt="arrow"></img></button>
             <button><img src="./img/icons/right-arr.png" class="feedback right-arrow" alt="arrow"></img></button>
             <div class="feedback__slider-item _flex"><img src="./img/feedback/feed-1.jpg" alt="feedback"></div>
@@ -185,12 +183,11 @@
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-3.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-4.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-5.jpg" alt="feedback"></div>
-            <button class="_callback__btn _btn feedback-btn" type="button
-            "><a  href="https://goo.gl/maps/pt5nFeHPYtjRTu3f6" target="_blank">Більше відгуків<a/></button>
+            <button class="_callback__btn _btn feedback-btn" id="feed-google" type="button">Більше відгуків</button>
           </div>
-        </section>
+        </div>
 
-        <section class="contacts" id="contacts">
+        <div class="contacts" id="contacts">
           <div class="contacts__wrapper wrapper">
             <div class="contacts__inner-wrapper">
               <div class="contacts__left-side">
@@ -222,11 +219,11 @@
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію:</p>
               <form class="_callback__form" action="post">
                 <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
-                <button class="_callback__btn _btn" type="button">залишити заявку</button>
+                <button class="_callback__btn _btn" type="submit">залишити заявку</button>
               </form>
             </div>
           </div>
-        </section>
+        </div>
       </main>
 
       <a href="#up" class="pageup _hide">

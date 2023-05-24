@@ -16,6 +16,9 @@
     }
 
     &_btn {
+      display: flex;
+      justify-content: center;
+      column-gap: 1rem;
       margin: 0.9rem 0;
       position: relative;
       padding-left: 2rem;

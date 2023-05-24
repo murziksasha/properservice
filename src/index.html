@@ -39,11 +39,9 @@
             <div class="header__contact">
               <p class="header__contact header__contact_time">Працюємо з 10:00 до 18:00</p>
               <div class="header__contact header__contact_callback">
-                <a href="tel:+30637548912">
-                  <button class="header__contact header__contact_btn _btn">
-                    <img src="./img/icons/phone_btn.png" alt="phone" class="header__contact header__contact_phone" />
-                    063 754 89 12
-                  </button>
+                <a class="header__contact header__contact_btn _btn"  href="tel:+30637548912">
+                    <div><img src="./img/icons/phone_btn.png" alt="phone" class="header__contact header__contact_phone" /></div>
+                    <div>063 754 89 12</div>
                 </a>
               </div>
               <div class="header__contact header__contact_social">
@@ -58,7 +56,7 @@
       </header>
 
       <main class="main">
-        <section class="services">
+        <div class="services">
           <div class="wrapper services__wrapper">
             <nav class="services-nav">
               <ul class="services-nav__list">
@@ -87,7 +85,7 @@
                 <p class="_callback__title _paragr">Вирішуємо питання навіть <span>віддалено!</span></p>
                 <form class="_callback__form" action="post">
                   <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
-                  <button class="_callback__btn _btn" type="button"><span>записатися на</span> <br>безкоштовну діагностику</button>
+                  <button class="_callback__btn _btn" type="submit"><span>записатися на</span> <br>безкоштовну діагностику</button>
                 </form>
               </div>
               <div class="services__main-img">
@@ -95,9 +93,9 @@
               </div>
             </aside>
           </div>
-        </section>
+        </div>
 
-        <section class="about-link">
+        <div class="about-link">
           <div class="about-link__wrapper wrapper" id="about_company">
 
             <div class="advantages">
@@ -141,64 +139,56 @@
             <div class="about-link__items-wrapper">
 
               <div class="about-link__item">
-                <a href="./coffee-machines.html" class="about-link__link" target="_blank
-                ">
+                <a href="./coffee-machines.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/coff_machine_log.png" alt="coffee machine" class="about-link__img">
                   <p class="about-link__descr">Кофемашина</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./televizoru.html" class="about-link__link" target="_blank
-                ">
+                <a href="./televizoru.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/televizor_logo.png" alt="tv set" class="about-link__img">
                   <p class="about-link__descr">телевизор</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./laptop-pc.html" class="about-link__link" target="_blank
-                ">
+                <a href="./laptop-pc.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/laptop-ico.png" alt="laptop" class="about-link__img">
                   <p class="about-link__descr">ноутбук</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./bake.html" target="_blank
-                " class="about-link__link">
+                <a href="./bake.html" target="_blank" class="about-link__link">
                   <img src="./img/about-link/bake0.png" alt="bake" class="about-link__img">
                   <p class="about-link__descr">піч</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./vacuum-cleaner.html" class="about-link__link" target="_blank
-                ">
+                <a href="./vacuum-cleaner.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/vacuum.png" alt="vacuum-cleaner" class="about-link__img">
                   <p class="about-link__descr">пилосмок</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./televizoru.html" class="about-link__link" target="_blank
-                ">
+                <a href="./televizoru.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/monitor.jpg" alt="monitor" class="about-link__img">
                   <p class="about-link__descr">монітор</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./phones.html" class="about-link__link" target="_blank
-                ">
+                <a href="./phones.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/phone.png" alt="" class="about-link__img">
                   <p class="about-link__descr">смартфон</p>
                 </a>
               </div>
               
               <div class="about-link__item">
-                <a href="./others.html" class="about-link__link" target="_blank
-                ">
+                <a href="./others.html" class="about-link__link" target="_blank">
                   <img src="./img/about-link/other.png" alt="" class="about-link__img">
                   <p class="about-link__descr">інші прилади</p>
                 </a>
@@ -208,28 +198,27 @@
             <div class="about-link__callback _callback">
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію та діагностику!</p>
               <form class="_callback__form" action="post">
-                <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
-                <button class="_callback__btn _btn" type="button">залишити заявку</button>
+                <input type="text" name="phone" required class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
+                <button class="_callback__btn _btn" type="submit">залишити заявку</button>
               </form>
             </div>
           </div>
-        </section>
-        <!-- 
-        <section class="feedback" id="feedback">
-          <div class="feedback__wrapper wrapper" id="feedback">
-            <button><img src="./img/icons/left-arr.png" class="feedback left-arrow"alt="arrow"></img></button>
-            <button><img src="./img/icons/right-arr.png" class="feedback right-arrow" alt="arrow"></img></button>
+        </div>
+
+        <div class="feedback" id="feedback">
+          <div class="feedback__wrapper wrapper">
+            <button class="feedback left-arrow" type="button"><img src="./img/icons/left-arr.png" alt="arrow"></img></button>
+            <button class="feedback right-arrow" type="button"><img src="./img/icons/right-arr.png"  alt="arrow"></img></button>
             <div class="feedback__slider-item _flex"><img src="./img/feedback/feed-1.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-2.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-3.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-4.jpg" alt="feedback"></div>
             <div class="feedback__slider-item _hide"><img src="./img/feedback/feed-5.jpg" alt="feedback"></div>
-            <button class="_callback__btn _btn feedback-btn" id="feed-google" type="button
-              ">Більше відгуків</input>
+            <button class="_callback__btn _btn feedback-btn" id="feed-google" type="submit">Більше відгуків</button>
           </div>
-        </section>
+        </div>
 
-        <section class="contacts" id="contacts">
+        <div class="contacts" id="contacts">
           <div class="contacts__wrapper wrapper">
             <div class="contacts__inner-wrapper">
               <div class="contacts__left-side">
@@ -261,19 +250,19 @@
               <p class="_callback__title _paragr">Залишіть заявку та отримайте первинну консультацію:</p>
               <form class="_callback__form" action="post">
                 <input type="text" name="phone" class="_callback__phone" placeholder="+38( ___ ) __ __ ___">
-                <button class="_callback__btn _btn" type="button">залишити заявку</button>
+                <button class="_callback__btn _btn" type="submit">залишити заявку</button>
               </form>
             </div>
           </div>
-        </section>
+        </div>
       </main>
-      
+
       <a href="#up" class="pageup _hide">
         <svg class="up" viewBox="0 0 26 26" fill="#fff" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M26 0H0V26H26V0ZM4.6593 17.7519L13.1233 10.33L21.5873 17.7519L22.9059 16.2481L13.7826 8.24813L13.1233 7.67L12.464 8.24813L3.3407 16.2481L4.6593 17.7519Z" fill="black"/>
         </svg>
       </a>
-      
+
       <footer class="footer">
         <div class="footer__wrapper wrapper">
           <div class="logo">
@@ -283,11 +272,11 @@
           
           <div class="copy">&copy; 2017</div>
         </div>
-      </footer>-->
+      </footer>
     </div> 
 
     <script type="module" src="js/main.min.js"></script>
-    <!-- <script>
+    <script>
       (function () {
           var s = document.createElement('script');
               s.type = 'text/javascript';
@@ -302,6 +291,6 @@
             s.src = '//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery='+('jQuery' in window?1:0);
         document.getElementsByTagName('head')[0].appendChild(s);
     })();
-    </script> -->
+    </script>
   </body>
 </html>

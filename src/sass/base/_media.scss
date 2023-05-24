@@ -5,6 +5,19 @@
   .wrapper {
     max-width: 960px;
   }
+  .advantages{
+    min-height: 43rem;
+    &__wrapper{
+      display: flex;
+      flex: 1 1 0;
+    }
+  }
+  .about-link__line{
+    top: 0;
+  }
+  .about-link__title._title{
+    font-size: 3.6rem;
+  }
 }
 
 @media (max-width: 991px){
@@ -37,6 +50,33 @@
         max-height: 1.5rem;
     }
   }
+  .about-link__title{
+    margin-top: 4rem;
+  }
+  .about-link__line{
+    top: 23px;
+  }
+  .contacts{
+    &__inner-wrapper{
+      flex-direction: column;
+    }
+    &__line{
+      top: -442px;
+      left: 481px;
+    }
+    &__map{
+      position: relative;
+      top: -6rem;
+    }
+    &__callback{
+      min-width: 20rem;
+    }
+    ._callback__form{
+      gap: 1rem;
+    }
+
+  }
+
 
 
 }
@@ -69,6 +109,48 @@
     font-size: 3.6rem;
   }
  }
+ .about-link__title._title{
+  font-size: 3rem;
+ }
+ .about-link__paragr{
+  margin-top: 1.5rem;
+ }
+ .contacts{
+  &__line{
+    left: 363px;
+  }
+  &__map{
+    position: relative;
+    top: -6rem;
+    left: -3.6rem;
+  }
+ }
+ .malfunctions{
+  padding-bottom: 3rem;
+  &__items{
+    padding-left: 1rem;
+  }
+  &__item{
+    width: 153%;;
+    &::before{
+      left: 12rem;
+    }
+  }
+
+  .wrapper-malfunctions-under{
+    flex-direction: column;
+    align-items: center;
+    .malfunctions__left-side{
+      order: 1;
+    }
+  }
+ }
+ .footer {
+  padding-bottom: 6rem;
+  .logo {
+    margin: 0 auto;
+    }
+  }
 }
 
 @media (max-width: 575px){
@@ -89,6 +171,7 @@
     }
   }
   .services{
+    margin-bottom: 2rem;
     &__title{
       font-size: 2.6rem;
     }
@@ -96,7 +179,169 @@
       font-size: 1.6rem;
     }
    }
+  .advantages{
+    min-height: 44rem;
+    &__wrapper{
+      gap: 1rem;
+    }
+    &__block{
+      flex: 0 1 17rem;
+
+      padding: 1rem 2rem;
+    }
+    &__ico{
+      width: 50%;
+    }
+  }
+  .about-link__img{
+    max-width: 22rem;
+  }
+  .about-link__descr{
+    left: 7rem;
+  }
+  .feedback{
+    &__wrapper{
+      margin-top: 2rem;
+    }
+    &__slider-item{
+      min-height: 20rem;
+      img{
+        width: 25rem;
+        height: 15rem;
+      }
+    }
+    button.right-arrow{
+      top: 65%;
+    }
+    button.left-arrow{
+      top: 65%;
+    }
+    &-btn{
+      margin-top: 5rem;
+    }
+  }
+  .contacts{
+    &__line{
+      left: 374px;
+    }
+    &__map{
+      position: relative;
+      top: -6rem;
+      left: -3.6rem;
+    }
+    &__inner-wrapper{
+      align-items: center;
+    }
+    &__social{
+      left: 21%;
+      bottom: -1%;
+    }
+    &__map{
+      top: -4rem;
+      left: -2.6rem;
+    }
+  }
+  .footer{
+    div.policy{
+      font-size: 1.4rem;
+    }
+  }
    
+}
+
+@media (max-width: 420px){
+  .contacts{
+    &__left-side{
+      padding-top: 2rem;
+      & p {
+        font-size: 2.1rem;
+      }
+    }
+    &__title{
+      font-size: 3.3rem;
+    }
+    &__map{
+      left: .4rem;
+      & iframe{
+        width: 300px;
+      }
+    }
+    &__social{
+      left: 21%;
+      bottom: -1%;
+    }
+  }
+  .malfunctions{
+    &__item{
+      &::before{
+        left: 9rem;
+      }
+    }
+  }
+  .footer{
+    div.logo{
+      margin-top: 2rem;
+    }
+    div.policy{
+      text-align: center;
+    }
+    div.copy{
+      margin: 0 auto;
+      margin-top: 2rem;
+    }
+  }
+}
+
+@media (max-width: 365px){
+  .advantages{
+    min-height: 66rem;
+  }
+  .feedback{
+    button.right-arrow{
+      right: 12rem;
+      top: 65%;
+    }
+    button.left-arrow{
+      left: 12rem;
+      top: 65%;
+    }
+  }
+  .contacts{
+    &__left-side{
+      & p {
+        font-size: 1.6rem;
+      }
+    }
+    &__title{
+      font-size: 2.6rem;
+      text-align: center;
+    }
+    &__social{
+      left: 18%;
+      bottom: -3%;
+    }
+    &__callback{
+      width: 80%;
+    }
+    ._callback__title{
+      display: none;
+    }
+    ._callback__form{
+      flex-direction: column;
+    }
+  }
+}
+@media (max-width: 358px){
+  .advantages{
+    display: none;
+  }
+  .malfunctions{
+    &__item{
+      &::before{
+        left: 8rem;
+      }
+    }
+  }
 }
 
 @media (max-width: 349px){
@@ -128,5 +373,13 @@
   ._callback__phone{
     min-width: 187px;
   }
-   
+  .contacts{
+    &__left-side{
+      text-align: center;
+    }
+    &__social{
+      left: 32%;
+      bottom: -3%;
+    }
+  }
 }
