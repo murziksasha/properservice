@@ -1,28 +1,30 @@
 {
-  "name": "gulp-start",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "properservice",
+  "version": "2.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "browser-sync": "^2.27.5",
-    "del": "^6.0.0",
-    "gulp": "^4.0.2",
-    "gulp-autoprefixer": "^8.0.0",
-    "gulp-clean-css": "^4.3.0",
-    "gulp-concat": "^2.6.1",
-    "gulp-htmlmin": "^5.0.1",
-    "gulp-sass": "^5.0.0",
-    "gulp-uglify-es": "^3.0.0",
-    "jquery": "^3.6.0",
-    "sass": "^1.38.0"
+    "dev": "next dev",
+    "dev:docker": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
+    "build": "next build",
+    "start": "next start",
+    "seed": "tsx scripts/seed.ts",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
-    "animate.css": "^4.1.1",
-    "prettier": "^2.7.1"
+    "next": "^15.0.0",
+    "nodemailer": "^9.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sass": "^1.77.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/nodemailer": "^8.0.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
   }
 }

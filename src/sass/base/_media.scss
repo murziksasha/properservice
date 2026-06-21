@@ -18,6 +18,9 @@
   .about-link__title._title{
     font-size: 3.6rem;
   }
+  .menu {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 991px){
@@ -161,13 +164,17 @@
   .header{
     &__menu{
       flex-direction: column;
-      row-gap: 4rem;
+      align-items: flex-start;
+      row-gap: 1rem;
+    }
+    &__contact {
+      flex-wrap: wrap;
     }
   }
   .logo{
-    img{
-      top: 2.5rem;
-      left: -163px;
+    img {
+      position: static;
+      max-width: 140px;
     }
   }
   .services{
@@ -332,8 +339,9 @@
   }
 }
 @media (max-width: 358px){
+  /* Avoid completely hiding advantages - just shrink */
   .advantages{
-    display: none;
+    min-height: auto;
   }
   .malfunctions{
     &__item{
@@ -347,12 +355,11 @@
 @media (max-width: 349px){
   .menu{
     margin-left: 0;
-    margin-top: 11rem;
   }
   .logo{
-    img{
-      top: -0.5rem;
-      left: -90px;
+    img {
+      position: static;
+      max-width: 120px;
     }
   }
   .services{

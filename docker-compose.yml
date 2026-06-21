@@ -1,0 +1,52 @@
+services:
+  next-app:
+    build: .
+    restart: unless-stopped
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - DATA_DIR=/app/data
+      - HOSTNAME=0.0.0.0
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - MAIL_TO=${MAIL_TO:-remontmailshop@gmail.com}
+      - MAIL_FROM=${MAIL_FROM:-}
+    volumes:
+      - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  php-mailer:
+    image: php:8.3-fpm-alpine
+    restart: unless-stopped
+    volumes:
+      - ./mailer:/var/www/mailer
+    environment:
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - MAIL_TO=${MAIL_TO:-remontmailshop@gmail.com}
+      - MAIL_FROM=${MAIL_FROM:-}
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-80}:80"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./public/uploads:/var/www/uploads:ro
+    depends_on:
+      next-app:
+        condition: service_healthy
+      php-mailer:
+        condition: service_started
