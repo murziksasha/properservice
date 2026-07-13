@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { AboutLinksSection as AboutLinksSectionType } from '@/lib/types';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { AdvantagesSection } from './AdvantagesSection';
 import type { AdvantagesSection as AdvantagesSectionType } from '@/lib/types';
 
@@ -18,7 +19,7 @@ export function AboutLinksSection({
         <div className="about-link__line line">
           <div className="line__circle line__circle_left" />
         </div>
-        <h2 className="about-link__title _title" dangerouslySetInnerHTML={{ __html: section.titleHtml }} />
+        <h2 className="about-link__title _title" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }} />
         <p className="about-link__paragr">{section.subtitle}</p>
         <div className="about-link__items-wrapper">
           {section.items.map((item) => (

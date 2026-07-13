@@ -27,6 +27,7 @@ export default async function HomePage() {
         sections={page.sections}
         servicesNav={data.servicesNav}
         products={data.goods.filter((g) => g.visible)}
+        reviewsUrl={data.settings.reviewsUrl}
       />
     </SiteShell>
   );

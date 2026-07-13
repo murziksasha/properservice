@@ -1,0 +1,111 @@
+import { z } from 'zod';
+import type { SiteData } from './types';
+
+const phoneEntrySchema = z.object({
+  display: z.string(),
+  tel: z.string(),
+});
+
+const socialLinkSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  url: z.string(),
+  icon: z.string(),
+});
+
+const menuItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  href: z.string(),
+  visible: z.boolean(),
+});
+
+const serviceNavItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  href: z.string(),
+  slug: z.string(),
+  visible: z.boolean(),
+});
+
+const productSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  price: z.number(),
+  image: z.string(),
+  visible: z.boolean(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+
+const sectionBase = {
+  id: z.string(),
+  visible: z.boolean(),
+};
+
+const sectionSchema = z
+  .object({
+    ...sectionBase,
+    type: z.string(),
+  })
+  .passthrough();
+
+const pageSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  description: z.string(),
+  visible: z.boolean(),
+  sections: z.array(sectionSchema),
+  contentHtml: z.string().optional(),
+  titleSize: z.number().optional(),
+  textScale: z.number().optional(),
+});
+
+const settingsSchema = z
+  .object({
+    title: z.string(),
+    description: z.string(),
+    logo: z.string(),
+    favicon: z.string(),
+    phones: z.array(phoneEntrySchema),
+    headerPhone: phoneEntrySchema,
+    social: z.array(socialLinkSchema),
+    hours: z.string(),
+    address: z.string(),
+    addressNote: z.string(),
+    officeHours: z.string(),
+    email: z.string(),
+    mapEmbedUrl: z.string(),
+    copyright: z.string(),
+    privacyPolicyUrl: z.string(),
+    privacyPolicyText: z.string(),
+    reviewsUrl: z.string().optional(),
+  })
+  .passthrough();
+
+export const siteDataSchema = z.object({
+  settings: settingsSchema,
+  headerMenu: z.array(menuItemSchema),
+  servicesNav: z.array(serviceNavItemSchema),
+  shopLink: menuItemSchema,
+  pages: z.array(pageSchema),
+  goods: z.array(productSchema),
+});
+
+export type SiteDataValidated = z.infer<typeof siteDataSchema>;
+
+export function parseSiteData(input: unknown):
+  | { success: true; data: SiteData }
+  | { success: false; error: string } {
+  const result = siteDataSchema.safeParse(input);
+  if (!result.success) {
+    const msg = result.error.issues
+      .slice(0, 5)
+      .map((i) => `${i.path.join('.') || 'root'}: ${i.message}`)
+      .join('; ');
+    return { success: false, error: msg || 'Invalid site data' };
+  }
+  return { success: true, data: result.data as SiteData };
+}

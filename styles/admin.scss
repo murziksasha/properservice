@@ -11,6 +11,24 @@
   min-height: 100vh;
 }
 
+.admin-nav-toggle {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 40;
+  background: #0f3d2e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.admin-nav-overlay {
+  display: none;
+}
+
 .admin-nav {
   background: #0f3d2e;
   color: #fff;
@@ -37,8 +55,14 @@
   }
 }
 
+.admin-nav-logout {
+  margin-top: 24px;
+  width: 100%;
+}
+
 .admin-main {
   padding: 24px 32px;
+  min-width: 0;
 }
 
 .admin-card {
@@ -58,12 +82,14 @@
 
 .admin-form input,
 .admin-form textarea,
-.admin-form select {
+.admin-form select,
+.admin-select {
   width: 100%;
   padding: 8px 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   margin-bottom: 12px;
+  box-sizing: border-box;
 }
 
 .admin-btn {
@@ -73,9 +99,18 @@
   border-radius: 6px;
   padding: 8px 16px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 0.9rem;
+  line-height: 1.3;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   &--danger {
@@ -85,6 +120,10 @@
   &--secondary {
     background: #6c757d;
   }
+
+  &--block {
+    width: 100%;
+  }
 }
 
 .admin-row {
@@ -92,6 +131,75 @@
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+
+  &--between {
+    justify-content: space-between;
+  }
+
+  &--wrap {
+    flex-wrap: wrap;
+  }
+}
+
+.admin-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.admin-dirty {
+  font-size: 0.85rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.admin-hint {
+  color: #666;
+  display: block;
+  margin-top: 8px;
+}
+
+.admin-check {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+
+  input {
+    width: auto !important;
+    margin: 0 !important;
+  }
+}
+
+.admin-field-sm {
+  min-width: 160px;
+  max-width: 200px;
+}
+
+.admin-grow {
+  flex: 1;
+  min-width: 120px;
+}
+
+.admin-grow-2 {
+  flex: 2;
+  min-width: 160px;
+}
+
+.admin-mb {
+  margin-bottom: 8px;
+}
+
+.admin-mb-lg {
+  margin-bottom: 16px;
+}
+
+.admin-sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .admin-section-item {
@@ -107,12 +215,114 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+}
 
-  form {
-    background: #fff;
-    padding: 32px;
-    border-radius: 12px;
-    width: 320px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.admin-login-card {
+  background: #fff;
+  padding: 32px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+  h1 {
+    margin: 0 0 16px;
+    font-size: 1.35rem;
+  }
+}
+
+.admin-login-brand {
+  color: #02a653;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.02em;
+}
+
+.admin-login-error {
+  color: #c0392b;
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+.admin-toast-host {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+}
+
+.admin-toast {
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  animation: admin-toast-in 0.2s ease;
+
+  &--success {
+    background: #0f766e;
+  }
+
+  &--error {
+    background: #b91c1c;
+  }
+
+  &--info {
+    background: #334155;
+  }
+}
+
+@keyframes admin-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-nav-toggle {
+    display: block;
+  }
+
+  .admin-nav-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 30;
+    border: none;
+  }
+
+  .admin-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 240px;
+    z-index: 35;
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+
+    &.is-open {
+      transform: translateX(0);
+    }
+  }
+
+  .admin-main {
+    padding: 64px 16px 24px;
   }
 }

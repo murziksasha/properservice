@@ -44,7 +44,7 @@
         "icon": "/img/icons/youtube.svg"
       }
     ],
-    "hours": "Працюємо з 10:00 до 18:00",
+    "hours": "Працюємо з 10:00 до 19:00",
     "address": "м. Чорноморськ, вул. Віталія Шума 2-Б",
     "addressNote": "(цоколь зліва від входу в \"Снігова Королева\")",
     "officeHours": "ПН - ПТ с 08:00 до 17:00",
@@ -52,7 +52,8 @@
     "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d669.5547639817211!2d30.639834534575012!3d46.295996529895035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c7c9103c986d39%3A0x60ee4de500df2374!2z0KDQtdC80L7QvdGCINCh0LXRgNCy0LjRgQ!5e0!3m2!1sen!2sua!4v1671553101368!5m2!1sen!2sua",
     "copyright": "© 2017",
     "privacyPolicyUrl": "/confident",
-    "privacyPolicyText": "політики конфіденційності персональних даних"
+    "privacyPolicyText": "політики конфіденційності персональних даних",
+    "reviewsUrl": "https://www.google.com/maps/place/Ремонт+Сервис/@46.296654,30.6404385,17z/data=!4m8!3m7!1s0x40c7c9103c986d39:0x60ee4de500df2374!8m2!3d46.296654!4d30.6404385!9m1!1b1!16s%2Fg%2F11g9jwj2n7"
   },
   "headerMenu": [
     {
@@ -137,33 +138,23 @@
     "href": "/shop",
     "visible": true
   },
-  "goods": [
-    {
-      "id": "nsfi1onk",
-      "title": "test",
-      "description": "super goods with love from remont service",
-      "price": 500,
-      "image": "/uploads/1782059169408-621vs3.png",
-      "visible": true
-    }
-  ],
   "pages": [
     {
       "id": "home",
       "slug": "",
       "title": "Ремонт комп'ютерної та побутової техніки, телефонів та планшетів",
-      "description": "Качественно ремонтируем, восстанавливаем устройства, гарантия качества, лояльные цены!",
+      "description": "Якісний ремонт, відновлюємо пристрої, гарантія якості, низькі ціни!",
       "visible": true,
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
-          "visible": true
+          "visible": true,
+          "type": "services-nav"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо побутову техніку. та цифрову техніку <span>у Чорноморську </span> з гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -179,8 +170,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -206,8 +197,8 @@
         },
         {
           "id": "about-links",
-          "type": "about-links",
           "visible": true,
+          "type": "about-links",
           "titleHtml": "Ми на ринку <span>понад 5 років!</span> <br/>Бездоганна репутація та індивідуальний підхід",
           "subtitle": "Виберіть, що потрібно відремонтувати:",
           "items": [
@@ -263,23 +254,23 @@
         },
         {
           "id": "shop-grid",
-          "type": "shop-grid",
           "visible": true,
+          "type": "shop-grid",
           "title": "Магазин запчастин",
           "subtitle": "Актуальні товари та комплектуючі"
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -291,8 +282,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -337,8 +328,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": false,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -354,14 +345,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "coffee-machines"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />кавомашини та кавоварки <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -378,8 +369,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -405,8 +396,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваша кофемашина:",
           "items": [
@@ -423,16 +414,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -444,8 +435,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 10:00 до 19:00",
@@ -490,8 +481,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": false,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -507,14 +498,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "televizoru"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />телевізори <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -532,8 +523,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -559,8 +550,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваш телевізор:",
           "items": [
@@ -577,16 +568,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -598,8 +589,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -644,8 +635,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -661,14 +652,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "laptop-pc"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />ноутбуки та ПК <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -685,8 +676,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -712,8 +703,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваш ноутбук або ПК:",
           "items": [
@@ -729,16 +720,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -750,8 +741,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -796,8 +787,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -813,14 +804,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "vacuum-cleaner"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />пилосмоки <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -837,8 +828,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -864,8 +855,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваш пилосмок:",
           "items": [
@@ -880,16 +871,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -901,8 +892,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -947,8 +938,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -964,14 +955,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "bake"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />мікрохвильові печі <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -988,8 +979,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -1015,8 +1006,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваша піч:",
           "items": [
@@ -1031,16 +1022,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -1052,8 +1043,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -1098,8 +1089,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -1115,14 +1106,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "phones"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />телефони та планшети <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -1140,8 +1131,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -1167,8 +1158,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо, якщо Ваш телефон:",
           "items": [
@@ -1187,16 +1178,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -1208,8 +1199,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -1254,8 +1245,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -1271,14 +1262,14 @@
       "sections": [
         {
           "id": "nav",
-          "type": "services-nav",
           "visible": true,
+          "type": "services-nav",
           "activeSlug": "others"
         },
         {
           "id": "hero",
-          "type": "hero",
           "visible": true,
+          "type": "hero",
           "titleHtml": "Відремонтуємо <br />інші пристрої <span>у Чорноморську</span> <br/>із гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
@@ -1295,8 +1286,8 @@
         },
         {
           "id": "advantages",
-          "type": "advantages",
           "visible": true,
+          "type": "advantages",
           "items": [
             {
               "icon": "/img/icons/descr_key.png",
@@ -1322,8 +1313,8 @@
         },
         {
           "id": "malfunctions",
-          "type": "malfunctions",
           "visible": true,
+          "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
           "intro": "Якісно допоможемо з ремонтом:",
           "items": [
@@ -1338,16 +1329,16 @@
         },
         {
           "id": "callback-1",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
         },
         {
           "id": "feedback",
-          "type": "feedback",
           "visible": true,
+          "type": "feedback",
           "images": [
             "/img/feedback/feed-1.jpg",
             "/img/feedback/feed-2.jpg",
@@ -1359,8 +1350,8 @@
         },
         {
           "id": "contacts",
-          "type": "contacts",
           "visible": true,
+          "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
           "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
@@ -1405,8 +1396,8 @@
         },
         {
           "id": "callback-2",
-          "type": "callback",
           "visible": true,
+          "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
           "placeholder": "+38( ___ ) __ __ ___"
@@ -1421,6 +1412,24 @@
       "visible": true,
       "sections": [],
       "contentHtml": "<div class=\"wrapper\" style=\"padding:40px 20px\"><h1 class=\"_title\">Політика конфіденційності персональних даних</h1><p class=\"_paragr\">Використовуючи веб-сайт, Ви погоджуєтесь з умовами політики конфіденційності персональних даних.</p></div>"
+    }
+  ],
+  "goods": [
+    {
+      "id": "nsfi1onk",
+      "title": "test",
+      "description": "super goods with love from remont service",
+      "price": 500,
+      "image": "/uploads/1782059169408-621vs3.png",
+      "visible": true
+    },
+    {
+      "id": "2da1a0bd362e",
+      "title": "New Test Good",
+      "description": "the best Goods in the world",
+      "price": 1050,
+      "image": "/img/services/technika_img.png",
+      "visible": true
     }
   ]
 }

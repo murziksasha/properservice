@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { SectionRenderer } from '@/components/sections/SectionRenderer';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -44,7 +45,7 @@ export default async function SlugPage({ params }: PageProps) {
         titleSize={page.titleSize}
         textScale={page.textScale}
       >
-        <div dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
+        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }} />
       </SiteShell>
     );
   }
@@ -61,6 +62,7 @@ export default async function SlugPage({ params }: PageProps) {
         sections={page.sections}
         servicesNav={data.servicesNav}
         products={data.goods.filter((g) => g.visible)}
+        reviewsUrl={data.settings.reviewsUrl}
       />
     </SiteShell>
   );

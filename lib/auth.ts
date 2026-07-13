@@ -1,6 +1,11 @@
 import { timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
-import { isValidSession, SESSION_COOKIE, SESSION_TOKEN } from './session';
+import {
+  createSessionToken,
+  isValidSession,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+} from './session';
 
 function safeCompare(a: string, b: string): boolean {
   const bufferA = Buffer.from(a);
@@ -23,15 +28,24 @@ export function verifyPassword(password: string): boolean {
   return safeCompare(password, adminPassword);
 }
 
+/** Secure cookies only over HTTPS. Over plain HTTP (local Docker) set COOKIE_SECURE=false. */
+function cookieSecureEnabled(): boolean {
+  if (process.env.COOKIE_SECURE === 'true') return true;
+  if (process.env.COOKIE_SECURE === 'false') return false;
+  // Default: secure in production (HTTPS). Local HTTP Docker must set COOKIE_SECURE=false.
+  return process.env.NODE_ENV === 'production';
+}
+
 export async function createSession(): Promise<void> {
   const cookieStore = await cookies();
+  const token = await createSessionToken();
 
-  cookieStore.set(SESSION_COOKIE, SESSION_TOKEN, {
+  cookieStore.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: cookieSecureEnabled(),
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
 }
 

@@ -28,10 +28,13 @@ export function PhoneInput({ name, className, placeholder }: PhoneInputProps) {
 
   return (
     <input
-      type="text"
+      type='tel'
       name={name}
       className={className}
       placeholder={placeholder}
+      inputMode='tel'
+      autoComplete='tel'
+      aria-label='Номер телефону'
       onInput={(e) => {
         e.currentTarget.value = formatValue(e.currentTarget.value);
       }}

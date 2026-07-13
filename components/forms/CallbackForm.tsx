@@ -1,12 +1,15 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { isValidUaPhone } from '@/lib/phone';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { PhoneInput } from './PhoneInput';
 
 const MESSAGES = {
   loading: 'Завантаження...',
-  success: 'Дякуємо! Скоро ми з вами зв\'яжемося',
+  success: "Дякуємо! Скоро ми з вами зв'яжемося",
   failure: 'Щось пішло не так...',
+  invalid: 'Введіть коректний номер телефону',
 };
 
 interface CallbackFormProps {
@@ -23,34 +26,56 @@ export function CallbackForm({
   className = '_callback__form',
 }: CallbackFormProps) {
   const [status, setStatus] = useState('');
+  const [isError, setIsError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const phone = String(formData.get('phone') || '');
 
+    if (!isValidUaPhone(phone)) {
+      setIsError(true);
+      setStatus(MESSAGES.invalid);
+      return;
+    }
+
+    setLoading(true);
+    setIsError(false);
     setStatus(MESSAGES.loading);
 
     try {
-      // Use Next.js API (works in dev + docker). Supports FormData.
       const response = await fetch('/api/contact', { method: 'POST', body: formData });
       if (!response.ok) throw new Error('Request failed');
+      setIsError(false);
       setStatus(MESSAGES.success);
       form.reset();
+      window.setTimeout(() => setStatus(''), 3000);
     } catch {
+      setIsError(true);
       setStatus(MESSAGES.failure);
+      window.setTimeout(() => setStatus(''), 5000);
     } finally {
-      setTimeout(() => setStatus(''), 3000);
+      setLoading(false);
     }
   }
 
   return (
-    <form className={className} onSubmit={handleSubmit}>
-      <PhoneInput name="phone" className="_callback__phone" placeholder={placeholder} />
-      <button className="_callback__btn _btn" type="submit">
-        {buttonHtml ? <span dangerouslySetInnerHTML={{ __html: buttonHtml }} /> : buttonText}
+    <form className={className} onSubmit={handleSubmit} noValidate>
+      <PhoneInput name='phone' className='_callback__phone' placeholder={placeholder} />
+      <button className='_callback__btn _btn' type='submit' disabled={loading} aria-busy={loading}>
+        {buttonHtml ? (
+          <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(buttonHtml) }} />
+        ) : (
+          buttonText
+        )}
       </button>
-      {status ? <div className="status">{status}</div> : null}
+      {status ? (
+        <div className={`status${isError ? ' status--error' : ''}`} role='status' aria-live='polite'>
+          {status}
+        </div>
+      ) : null}
     </form>
   );
 }

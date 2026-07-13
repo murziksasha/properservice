@@ -4,6 +4,9 @@ services:
     restart: unless-stopped
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - SESSION_SECRET=${SESSION_SECRET:-}
+      # false for local HTTP (localhost). Set true behind HTTPS in real production.
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
       - DATA_DIR=/app/data
       - HOSTNAME=0.0.0.0
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}

@@ -1,11 +1,10 @@
 'use client';
 
 import '@/styles/admin.scss';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,40 +17,59 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get('password') ?? '');
 
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+        credentials: 'same-origin',
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(
-        res.status === 503
-          ? 'ADMIN_PASSWORD не налаштовано в .env — скопіюйте з .env.example і перезапустіть сервер'
-          : 'Невірний пароль',
-      );
-      if (data.error && res.status === 503) console.error(data.error);
+      if (!res.ok) {
+        setError(
+          res.status === 503
+            ? 'ADMIN_PASSWORD не налаштовано в .env — скопіюйте з .env.example і перезапустіть сервер'
+            : res.status === 429
+              ? 'Забагато спроб. Зачекайте хвилину.'
+              : 'Невірний пароль',
+        );
+        setLoading(false);
+        return;
+      }
+
+      // Full navigation so the browser always sends the new session cookie
+      const from = searchParams.get('from') || '/admin';
+      const target = from.startsWith('/admin') ? from : '/admin';
+      window.location.assign(target);
+    } catch {
+      setError('Помилка мережі. Спробуйте ще раз.');
       setLoading(false);
-      return;
     }
-
-    const from = searchParams.get('from') ?? '/admin';
-    router.push(from);
-    router.refresh();
   }
 
   return (
-    <div className="admin-body admin-login">
-      <form onSubmit={handleSubmit}>
-        <h1>Admin</h1>
-        <label>
+    <div className='admin-body admin-login'>
+      <form onSubmit={handleSubmit} className='admin-login-card'>
+        <div className='admin-login-brand'>Proper Service</div>
+        <h1>Вхід до адмінки</h1>
+        <label htmlFor='admin-password'>
           Пароль
-          <input type="password" name="password" required autoFocus />
+          <input
+            id='admin-password'
+            type='password'
+            name='password'
+            required
+            autoFocus
+            autoComplete='current-password'
+          />
         </label>
-        {error ? <p style={{ color: '#c0392b' }}>{error}</p> : null}
-        <button type="submit" className="admin-btn" disabled={loading} style={{ width: '100%' }}>
-          {loading ? '...' : 'Увійти'}
+        {error ? (
+          <p className='admin-login-error' role='alert' aria-live='assertive'>
+            {error}
+          </p>
+        ) : null}
+        <button type='submit' className='admin-btn admin-btn--block' disabled={loading}>
+          {loading ? 'Вхід…' : 'Увійти'}
         </button>
       </form>
     </div>

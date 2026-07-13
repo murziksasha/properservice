@@ -6,6 +6,8 @@ services:
     command: sh -c "apk add --no-cache wget && npm run dev -- -H 0.0.0.0"
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme}
+      - SESSION_SECRET=${SESSION_SECRET:-}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
       - DATA_DIR=/app/data
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
       - SMTP_USER=${SMTP_USER:-}

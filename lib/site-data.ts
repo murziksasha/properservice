@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { createId } from './id';
 import type { Page, Product, SiteData } from './types';
 
 const DEFAULT_DATA_PATH = path.join(process.cwd(), 'data', 'site.json');
@@ -84,7 +85,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 export async function createPage(page: Omit<Page, 'id'> & { id?: string }): Promise<Page> {
   const data = await getSiteData();
   const newPage: Page = {
-    id: page.id || Math.random().toString(36).slice(2, 10),
+    id: page.id || createId(),
     ...page,
   } as Page;
 

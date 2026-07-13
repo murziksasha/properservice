@@ -34,6 +34,8 @@ export interface SiteSettings {
   copyright: string;
   privacyPolicyUrl: string;
   privacyPolicyText: string;
+  /** Optional Google / external reviews URL for feedback CTA */
+  reviewsUrl?: string;
 }
 
 export interface ServiceNavItem {

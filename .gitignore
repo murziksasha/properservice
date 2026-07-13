@@ -8,6 +8,8 @@
 # production
 /build
 /dist
+/dist.zip
+*.zip
 
 # env
 .env

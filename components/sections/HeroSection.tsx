@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { HeroSection as HeroSectionType } from '@/lib/types';
 import { CallbackForm } from '@/components/forms/CallbackForm';
+import { sanitizeHtml } from '@/lib/sanitize';
 import { ServicesNav } from './ServicesNav';
 import type { ServiceNavItem } from '@/lib/types';
 
@@ -17,17 +18,17 @@ export function HeroSection({
         <ServicesNav items={servicesNav} activeSlug={section.activeServiceSlug} />
         <aside className="services__aside">
           <div className="services__top">
-            <h1 className="services__title _title" dangerouslySetInnerHTML={{ __html: section.titleHtml }} />
+            <h1 className="services__title _title" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }} />
             <div className="services__about">
               {section.aboutLines.map((line) => (
-                <p key={line} className="services__about-info _paragr" dangerouslySetInnerHTML={{ __html: line }} />
+                <p key={line} className="services__about-info _paragr" dangerouslySetInnerHTML={{ __html: sanitizeHtml(line) }} />
               ))}
             </div>
           </div>
           <div className="services__callback _callback">
             <p
               className="_callback__title _paragr"
-              dangerouslySetInnerHTML={{ __html: section.callbackTitleHtml ?? section.callbackTitle }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.callbackTitleHtml ?? section.callbackTitle) }}
             />
             <CallbackForm
               buttonText={section.callbackButtonText}

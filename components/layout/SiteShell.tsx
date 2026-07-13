@@ -19,13 +19,18 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
   if (textScale) style['--text-scale'] = String(textScale);
 
   return (
-    <div className="container" id="up" style={style}>
+    <div className='container' id='up' style={style}>
+      <a className='skip-link' href='#main-content'>
+        Перейти до вмісту
+      </a>
       <Header settings={settings} menu={menu} variant={variant} />
-      <main className="main">{children}</main>
+      <main className='main' id='main-content'>
+        {children}
+      </main>
       <PageUp />
       <Footer settings={settings} />
-      <Script src="//remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0" strategy="lazyOnload" />
-      <Script src="//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0" strategy="lazyOnload" />
+      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0' strategy='lazyOnload' />
+      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0' strategy='lazyOnload' />
     </div>
   );
 }

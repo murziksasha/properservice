@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { ContactsSection as ContactsSectionType } from '@/lib/types';
 import { CallbackForm } from '@/components/forms/CallbackForm';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export function ContactsSection({ section }: { section: ContactsSectionType }) {
   return (
@@ -10,7 +11,7 @@ export function ContactsSection({ section }: { section: ContactsSectionType }) {
           <div className="contacts__left-side">
             <h2 className="contacts__title">{section.title}</h2>
             <p className="contacts__par-bold">{section.inviteText}</p>
-            <p className="contacts__par" dangerouslySetInnerHTML={{ __html: section.addressHtml }} />
+            <p className="contacts__par" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.addressHtml) }} />
             <p className="contacts__phone">
               {section.phones.map((phone) => (
                 <span key={phone.tel}>

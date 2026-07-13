@@ -12,9 +12,10 @@ interface SectionRendererProps {
   sections: Section[];
   servicesNav: ServiceNavItem[];
   products: Product[];
+  reviewsUrl?: string;
 }
 
-export function SectionRenderer({ sections, servicesNav, products }: SectionRendererProps) {
+export function SectionRenderer({ sections, servicesNav, products, reviewsUrl }: SectionRendererProps) {
   const visible = sections.filter((s) => s.visible);
   const advantages = visible.find((s) => s.type === 'advantages');
 
@@ -63,7 +64,7 @@ export function SectionRenderer({ sections, servicesNav, products }: SectionRend
               </div>
             );
           case 'feedback':
-            return <FeedbackSection key={section.id} section={section} />;
+            return <FeedbackSection key={section.id} section={section} reviewsUrl={reviewsUrl} />;
           case 'contacts':
             return <ContactsSection key={section.id} section={section} />;
           case 'shop-grid':

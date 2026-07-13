@@ -1,7 +1,9 @@
 'use client';
 
 import type { SiteData } from '@/lib/types';
+import { saveSiteData } from '@/lib/admin/saveSite';
 import { useState } from 'react';
+import { showToast } from './AdminToast';
 
 interface SiteEditorProps {
   initialData: SiteData;
@@ -10,20 +12,22 @@ interface SiteEditorProps {
 
 export function SiteEditor({ initialData, children }: SiteEditorProps) {
   const [data, setData] = useState(initialData);
+  const [saving, setSaving] = useState(false);
 
   async function save() {
-    await fetch('/api/site', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    alert('Збережено');
+    setSaving(true);
+    const result = await saveSiteData(data);
+    setSaving(false);
+    if (result.ok) showToast('Збережено', 'success');
+    else showToast(result.error, 'error');
   }
 
   return (
     <div>
-      <div className="admin-row" style={{ marginBottom: 16 }}>
-        <button type="button" className="admin-btn" onClick={save}>Зберегти зміни</button>
+      <div className='admin-toolbar'>
+        <button type='button' className='admin-btn' onClick={save} disabled={saving}>
+          {saving ? 'Збереження…' : 'Зберегти зміни'}
+        </button>
       </div>
       {children(data, setData)}
     </div>
