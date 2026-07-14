@@ -1,4 +1,4 @@
-import type { Product, Section, ServiceNavItem } from '@/lib/types';
+import type { Product, Section, ServiceNavItem, SiteSettings } from '@/lib/types';
 import { AboutLinksSection } from './AboutLinksSection';
 import { AdvantagesSection } from './AdvantagesSection';
 import { CallbackBlock } from './CallbackBlock';
@@ -13,9 +13,16 @@ interface SectionRendererProps {
   servicesNav: ServiceNavItem[];
   products: Product[];
   reviewsUrl?: string;
+  settings?: SiteSettings;
 }
 
-export function SectionRenderer({ sections, servicesNav, products, reviewsUrl }: SectionRendererProps) {
+export function SectionRenderer({
+  sections,
+  servicesNav,
+  products,
+  reviewsUrl,
+  settings,
+}: SectionRendererProps) {
   const visible = sections.filter((s) => s.visible);
   const advantages = visible.find((s) => s.type === 'advantages');
 
@@ -66,7 +73,7 @@ export function SectionRenderer({ sections, servicesNav, products, reviewsUrl }:
           case 'feedback':
             return <FeedbackSection key={section.id} section={section} reviewsUrl={reviewsUrl} />;
           case 'contacts':
-            return <ContactsSection key={section.id} section={section} />;
+            return <ContactsSection key={section.id} section={section} settings={settings} />;
           case 'shop-grid':
             return <ShopGridSection key={section.id} section={section} products={products} />;
           default:

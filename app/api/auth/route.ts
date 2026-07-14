@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSession, destroySession, verifyPassword } from '@/lib/auth';
+import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const ipGate = await assertAdminIp();
+  if (!ipGate.ok) {
+    return NextResponse.json({ error: ipGate.error }, { status: ipGate.status });
+  }
+
   const rl = rateLimit(clientKey(request, 'auth'), { limit: 10, windowMs: 60_000 });
   if (!rl.allowed) {
+    const retryAfter = Math.ceil(rl.retryAfterMs / 1000) || 60;
     return NextResponse.json(
-      { error: 'Too many attempts' },
-      { status: 429, headers: { 'Retry-After': String(Math.ceil(rl.retryAfterMs / 1000) || 60) } },
+      { error: 'Too many attempts', retryAfter },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } },
     );
   }
 

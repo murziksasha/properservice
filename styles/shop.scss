@@ -98,7 +98,49 @@
 
 .shop-empty {
   text-align: center;
-  padding: 40px;
+  padding: 40px 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 24px;
+
+  &__hint {
+    color: #666;
+    margin: 8px 0 0;
+    font-size: 0.95rem;
+  }
+}
+
+.shop-page__contact {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.shop-page__messengers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.shop-page__social {
+  text-transform: capitalize;
+  color: #02a653;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.shop-page__home {
+  text-align: center;
+  margin-top: 20px;
+
+  a {
+    color: #333;
+  }
 }
 
 .shop-detail {

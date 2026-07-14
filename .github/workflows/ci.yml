@@ -31,6 +31,17 @@ jobs:
           SESSION_SECRET: ci-test-session-secret
           ADMIN_PASSWORD: ci-test-password
 
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke
+        run: npm run test:smoke
+        env:
+          SESSION_SECRET: ci-test-session-secret-at-least-32-chars
+          ADMIN_PASSWORD: ci-test-password
+          COOKIE_SECURE: 'false'
+          CI: true
+
       - name: Build
         run: npm run build
         env:

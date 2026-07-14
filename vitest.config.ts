@@ -5,7 +5,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'dist', 'mailer'],
+    exclude: ['node_modules', '.next', 'dist', 'mailer', 'e2e'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],

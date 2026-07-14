@@ -21,8 +21,15 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const data = await getSiteData();
   const page = data.pages.find((p) => p.slug === slug && p.visible);
-  if (!page) return {};
-  return { title: page.title, description: page.description };
+  if (!page) return { title: 'Не знайдено' };
+  return {
+    title: page.title,
+    description: page.description || data.settings.description,
+    openGraph: {
+      title: page.title,
+      description: page.description || data.settings.description,
+    },
+  };
 }
 
 export default async function SlugPage({ params }: PageProps) {
@@ -63,6 +70,7 @@ export default async function SlugPage({ params }: PageProps) {
         servicesNav={data.servicesNav}
         products={data.goods.filter((g) => g.visible)}
         reviewsUrl={data.settings.reviewsUrl}
+        settings={data.settings}
       />
     </SiteShell>
   );

@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { atomicWriteJson } from './atomic-write';
 import { createId } from './id';
 import type { Page, Product, SiteData } from './types';
 
@@ -25,7 +26,7 @@ export async function getSiteData(): Promise<SiteData> {
   } catch {
     const { defaultSiteData } = await import('./default-site-data');
     await ensureDataDir(filePath);
-    await fs.writeFile(filePath, JSON.stringify(defaultSiteData, null, 2), 'utf-8');
+    await atomicWriteJson(filePath, defaultSiteData);
     return defaultSiteData;
   }
 }
@@ -33,7 +34,17 @@ export async function getSiteData(): Promise<SiteData> {
 export async function saveSiteData(data: SiteData): Promise<void> {
   const filePath = getDataFilePath();
   await ensureDataDir(filePath);
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  await atomicWriteJson(filePath, data);
+
+  // Rolling snapshots under data/backups (failures must not block save)
+  if (process.env.AUTO_BACKUP !== 'false') {
+    try {
+      const { createSiteBackupFromData } = await import('./backup');
+      await createSiteBackupFromData(data, { label: 'autosave' });
+    } catch (err) {
+      console.error('[backup] auto snapshot failed', err);
+    }
+  }
 }
 
 export async function getPages(): Promise<Page[]> {

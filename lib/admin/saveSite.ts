@@ -1,4 +1,5 @@
 import type { SiteData } from '@/lib/types';
+import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -11,6 +12,10 @@ export async function saveSiteData(data: SiteData): Promise<SaveResult> {
     });
 
     if (!res.ok) {
+      if (res.status === 429) {
+        const seconds = parseRetryAfterSeconds(res, 60);
+        return { ok: false, error: rateLimitMessage(seconds, 'save') };
+      }
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       return { ok: false, error: json.error || `Помилка збереження (${res.status})` };
     }

@@ -47,7 +47,23 @@ export function CallbackForm({
 
     try {
       const response = await fetch('/api/contact', { method: 'POST', body: formData });
-      if (!response.ok) throw new Error('Request failed');
+      if (!response.ok) {
+        if (response.status === 429) {
+          const retry = response.headers.get('Retry-After');
+          const sec = retry ? parseInt(retry, 10) : 60;
+          const wait = Number.isFinite(sec) && sec > 0 && sec < 60 ? `${sec} с` : 'хвилину';
+          setIsError(true);
+          setStatus(`Забагато запитів. Зачекайте ${wait}.`);
+          window.setTimeout(() => setStatus(''), 5000);
+          return;
+        }
+        if (response.status === 400) {
+          setIsError(true);
+          setStatus(MESSAGES.invalid);
+          return;
+        }
+        throw new Error('Request failed');
+      }
       setIsError(false);
       setStatus(MESSAGES.success);
       form.reset();

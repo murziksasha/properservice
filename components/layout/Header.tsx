@@ -34,9 +34,18 @@ export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
         <div className='header__menu'>
           <div className='logo'>
             <Link href='/'>
-              <Image src={settings.logo} alt='Proper Service' width={120} height={40} />
+              <Image src={settings.logo} alt='Proper Service' width={120} height={40} priority />
             </Link>
           </div>
+
+          <a
+            className='header__mobile-call'
+            href={`tel:${settings.headerPhone.tel}`}
+            aria-label={`Подзвонити ${settings.headerPhone.display}`}
+          >
+            <Image src='/img/icons/phone_btn.png' alt='' width={20} height={20} aria-hidden />
+            <span>{settings.headerPhone.display}</span>
+          </a>
 
           <button
             type='button'
@@ -68,6 +77,19 @@ export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
                 </li>
               ))}
             </ul>
+            <div className='menu__mobile-meta'>
+              <p>{settings.hours}</p>
+              <a className='_btn' href={`tel:${settings.headerPhone.tel}`}>
+                {settings.headerPhone.display}
+              </a>
+              <div className='menu__mobile-social'>
+                {settings.social.map((link) => (
+                  <a key={link.id} href={link.url} target='_blank' rel='noreferrer'>
+                    <Image src={link.icon} alt={link.type} width={28} height={28} />
+                  </a>
+                ))}
+              </div>
+            </div>
           </nav>
 
           <div className='header__contact'>

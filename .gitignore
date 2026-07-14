@@ -21,6 +21,8 @@
 
 # data overrides (optional local edits)
 /data/site.json.bak
+/data/backups/
+/data/leads.json
 
 # misc
 .DS_Store
@@ -30,3 +32,9 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

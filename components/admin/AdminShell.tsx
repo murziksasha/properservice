@@ -1,4 +1,3 @@
-import '@/styles/admin.scss';
 import { AdminNav } from './AdminNav';
 import { AdminToastHost } from './AdminToast';
 

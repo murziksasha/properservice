@@ -1,0 +1,31 @@
+{
+  "name": "Proper Service",
+  "short_name": "Proper Service",
+  "description": "Сервіс ремонту техніки — Чорноморськ",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#02a653",
+  "lang": "uk",
+  "icons": [
+    {
+      "src": "/img/icons/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/icons/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}

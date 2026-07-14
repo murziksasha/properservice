@@ -1,16 +1,39 @@
 'use client';
 
-import '@/styles/admin.scss';
+import {
+  formatCountdown,
+  parseRetryAfterFromBody,
+  rateLimitMessage,
+} from '@/lib/admin/rateLimitUi';
 import { useSearchParams } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lockSeconds, setLockSeconds] = useState(0);
+
+  useEffect(() => {
+    if (lockSeconds <= 0) return;
+    setError(rateLimitMessage(lockSeconds, 'login'));
+    const id = window.setTimeout(() => {
+      setLockSeconds((s) => {
+        const next = s - 1;
+        if (next <= 0) {
+          setError('');
+          return 0;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => window.clearTimeout(id);
+  }, [lockSeconds]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (lockSeconds > 0 || loading) return;
+
     setLoading(true);
     setError('');
 
@@ -26,11 +49,18 @@ export function LoginForm() {
       });
 
       if (!res.ok) {
+        if (res.status === 429) {
+          const seconds = await parseRetryAfterFromBody(res, 60);
+          setLockSeconds(seconds);
+          setError(rateLimitMessage(seconds, 'login'));
+          setLoading(false);
+          return;
+        }
         setError(
           res.status === 503
             ? 'ADMIN_PASSWORD не налаштовано в .env — скопіюйте з .env.example і перезапустіть сервер'
-            : res.status === 429
-              ? 'Забагато спроб. Зачекайте хвилину.'
+            : res.status === 403
+              ? 'Доступ заборонено з цієї IP-адреси'
               : 'Невірний пароль',
         );
         setLoading(false);
@@ -47,9 +77,11 @@ export function LoginForm() {
     }
   }
 
+  const locked = lockSeconds > 0;
+
   return (
     <div className='admin-body admin-login'>
-      <form onSubmit={handleSubmit} className='admin-login-card'>
+      <form onSubmit={handleSubmit} className='admin-login-card' aria-busy={loading}>
         <div className='admin-login-brand'>Proper Service</div>
         <h1>Вхід до адмінки</h1>
         <label htmlFor='admin-password'>
@@ -61,6 +93,7 @@ export function LoginForm() {
             required
             autoFocus
             autoComplete='current-password'
+            disabled={loading || locked}
           />
         </label>
         {error ? (
@@ -68,8 +101,17 @@ export function LoginForm() {
             {error}
           </p>
         ) : null}
-        <button type='submit' className='admin-btn admin-btn--block' disabled={loading}>
-          {loading ? 'Вхід…' : 'Увійти'}
+        {locked ? (
+          <p className='admin-login-lock' role='status' aria-live='polite'>
+            Повтор через <strong>{formatCountdown(lockSeconds)}</strong>
+          </p>
+        ) : null}
+        <button
+          type='submit'
+          className='admin-btn admin-btn--block'
+          disabled={loading || locked}
+        >
+          {loading ? 'Вхід…' : locked ? `Заблоковано (${formatCountdown(lockSeconds)})` : 'Увійти'}
         </button>
       </form>
     </div>

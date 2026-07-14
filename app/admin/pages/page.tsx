@@ -4,15 +4,17 @@ import { useState, useEffect } from 'react';
 import { AdminShell } from '@/components/admin/AdminShell';
 import { showToast } from '@/components/admin/AdminToast';
 import { fetchSiteData, saveSiteData } from '@/lib/admin/saveSite';
+import { createId } from '@/lib/id';
 import { createDefaultPage } from '@/lib/section-factory';
 import Link from 'next/link';
-import type { SiteData } from '@/lib/types';
+import type { Page, SiteData } from '@/lib/types';
 
 export default function AdminPagesList() {
   const [site, setSite] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [newTitle, setNewTitle] = useState('');
   const [newSlug, setNewSlug] = useState('');
+  const [busy, setBusy] = useState(false);
 
   async function load() {
     const data = await fetchSiteData();
@@ -24,6 +26,19 @@ export default function AdminPagesList() {
   useEffect(() => {
     load();
   }, []);
+
+  async function persist(next: SiteData, okMsg: string) {
+    setBusy(true);
+    const result = await saveSiteData(next);
+    setBusy(false);
+    if (result.ok) {
+      setSite(next);
+      showToast(okMsg, 'success');
+      return true;
+    }
+    showToast(result.error, 'error');
+    return false;
+  }
 
   async function addPage() {
     if (!newTitle || !site) {
@@ -44,27 +59,42 @@ export default function AdminPagesList() {
     });
 
     const next = { ...site, pages: [...site.pages, newPage] };
-    const result = await saveSiteData(next);
-    if (result.ok) {
+    if (await persist(next, 'Сторінку створено')) {
       setNewTitle('');
       setNewSlug('');
-      setSite(next);
-      showToast('Сторінку створено', 'success');
-    } else {
-      showToast(result.error, 'error');
     }
   }
 
   async function deletePage(id: string, slug: string) {
     if (!site || slug === '' || !confirm('Видалити сторінку?')) return;
-    const next = { ...site, pages: site.pages.filter((p) => p.id !== id) };
-    const result = await saveSiteData(next);
-    if (result.ok) {
-      setSite(next);
-      showToast('Сторінку видалено', 'success');
-    } else {
-      showToast(result.error || 'Помилка видалення', 'error');
-    }
+    await persist(
+      { ...site, pages: site.pages.filter((p) => p.id !== id) },
+      'Сторінку видалено',
+    );
+  }
+
+  async function toggleVisible(page: Page) {
+    if (!site) return;
+    const pages = site.pages.map((p) => (p.id === page.id ? { ...p, visible: !p.visible } : p));
+    await persist({ ...site, pages }, page.visible ? 'Сторінку приховано' : 'Сторінку опубліковано');
+  }
+
+  async function duplicatePage(page: Page) {
+    if (!site) return;
+    let slug = page.slug ? `${page.slug}-copy` : 'copy';
+    let n = 1;
+    while (site.pages.some((p) => p.slug === slug)) slug = `${page.slug || 'page'}-copy-${n++}`;
+
+    const copy: Page = {
+      ...structuredClone(page),
+      id: createId(),
+      slug,
+      title: `${page.title || page.slug || 'Сторінка'} (копія)`,
+      visible: false,
+      sections: page.sections.map((s) => ({ ...structuredClone(s), id: createId() })),
+    };
+
+    await persist({ ...site, pages: [...site.pages, copy] }, 'Сторінку продубльовано (прихована)');
   }
 
   if (loading || !site) {
@@ -86,47 +116,79 @@ export default function AdminPagesList() {
             placeholder='Назва нової сторінки'
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
+            disabled={busy}
           />
           <input
             className='admin-field-sm'
             placeholder='slug (опціонально)'
             value={newSlug}
             onChange={(e) => setNewSlug(e.target.value)}
+            disabled={busy}
           />
-          <button type='button' className='admin-btn' onClick={addPage}>
+          <button type='button' className='admin-btn' onClick={() => void addPage()} disabled={busy}>
             + Додати сторінку
           </button>
         </div>
         <small className='admin-hint'>
-          Створена сторінка матиме базові секції. Використовуйте Конструктор для редагування тексту, зображень та
-          розміру заголовків.
+          Створена сторінка матиме базові секції. Конструктор: редагування, DnD, Preview, дублювання секцій.
         </small>
       </div>
 
       <div className='admin-card'>
-        {site.pages.map((page) => (
-          <div key={page.id} className='admin-row admin-row--between admin-mb admin-row--wrap'>
-            <span>
-              {page.title || page.slug || 'Головна'}
-              {!page.visible ? ' (приховано)' : ''}
-              {page.slug === '' ? ' — головна' : ''}
-            </span>
-            <div className='admin-row'>
-              <Link href={`/admin/pages/${page.slug || 'home'}`} className='admin-btn admin-btn--secondary'>
-                Конструктор
-              </Link>
-              {page.slug !== '' && (
+        {site.pages.map((page) => {
+          const publicPath = page.slug ? `/${page.slug}` : '/';
+          return (
+            <div key={page.id} className='admin-page-row'>
+              <div className='admin-page-row__meta'>
+                <strong>
+                  {page.title || page.slug || 'Головна'}
+                  {page.slug === '' ? ' — головна' : ''}
+                </strong>
+                <span className='admin-hint'>
+                  {publicPath}
+                  {!page.visible ? ' · прихована' : ''}
+                  {' · '}
+                  {page.sections.length} секц.
+                </span>
+              </div>
+              <div className='admin-row admin-row--wrap'>
+                <label className='admin-check'>
+                  <input
+                    type='checkbox'
+                    checked={page.visible}
+                    disabled={busy}
+                    onChange={() => void toggleVisible(page)}
+                  />
+                  видима
+                </label>
+                <Link href={`/admin/pages/${page.slug || 'home'}`} className='admin-btn admin-btn--secondary'>
+                  Конструктор
+                </Link>
+                <a href={publicPath} target='_blank' rel='noreferrer' className='admin-btn admin-btn--secondary'>
+                  ↗
+                </a>
                 <button
                   type='button'
-                  className='admin-btn admin-btn--danger'
-                  onClick={() => deletePage(page.id, page.slug)}
+                  className='admin-btn admin-btn--secondary'
+                  disabled={busy}
+                  onClick={() => void duplicatePage(page)}
                 >
-                  × Видалити
+                  ⧉
                 </button>
-              )}
+                {page.slug !== '' ? (
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--danger'
+                    disabled={busy}
+                    onClick={() => void deletePage(page.id, page.slug)}
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </AdminShell>
   );

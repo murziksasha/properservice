@@ -13,20 +13,29 @@ export function AboutLinksSection({
   advantages?: AdvantagesSectionType;
 }) {
   return (
-    <div className="about-link">
-      <div className="about-link__wrapper wrapper" id="about_company">
+    <div className='about-link'>
+      <div className='about-link__wrapper wrapper' id='about_company'>
         {advantages ? <AdvantagesSection section={advantages} /> : null}
-        <div className="about-link__line line">
-          <div className="line__circle line__circle_left" />
+        <div className='about-link__line line' aria-hidden>
+          <div className='line__circle line__circle_left' />
         </div>
-        <h2 className="about-link__title _title" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }} />
-        <p className="about-link__paragr">{section.subtitle}</p>
-        <div className="about-link__items-wrapper">
+        <h2
+          className='about-link__title _title'
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }}
+        />
+        {section.subtitle ? <p className='about-link__paragr'>{section.subtitle}</p> : null}
+        <div className='about-link__items-wrapper'>
           {section.items.map((item) => (
-            <div key={item.href + item.label} className="about-link__item">
-              <Link href={item.href} className="about-link__link">
-                <Image src={item.image} alt={item.imageAlt} className="about-link__img" width={120} height={120} />
-                <p className="about-link__descr">{item.label}</p>
+            <div key={`${item.href}-${item.label}`} className='about-link__item'>
+              <Link href={item.href} className='about-link__link'>
+                <Image
+                  src={item.image}
+                  alt={item.imageAlt || item.label}
+                  className='about-link__img'
+                  width={220}
+                  height={220}
+                />
+                <span className='about-link__descr'>{item.label}</span>
               </Link>
             </div>
           ))}

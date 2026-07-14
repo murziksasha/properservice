@@ -7,6 +7,11 @@ services:
       - SESSION_SECRET=${SESSION_SECRET:-}
       # false for local HTTP (localhost). Set true behind HTTPS in real production.
       - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - ADMIN_IP_ALLOWLIST=${ADMIN_IP_ALLOWLIST:-}
+      - AUTO_BACKUP=${AUTO_BACKUP:-true}
+      - BACKUP_KEEP=${BACKUP_KEEP:-20}
+      - BACKUP_CRON_SECRET=${BACKUP_CRON_SECRET:-}
+      - SITE_URL=${SITE_URL:-}
       - DATA_DIR=/app/data
       - HOSTNAME=0.0.0.0
       - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
@@ -21,7 +26,7 @@ services:
     expose:
       - "3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -6,7 +6,11 @@ import { getProducts, getSiteData } from '@/lib/site-data';
 export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
-  return { title: 'Магазин' };
+  const data = await getSiteData();
+  return {
+    title: 'Магазин',
+    description: data.settings.description || 'Каталог товарів Proper Service',
+  };
 }
 
 export default async function ShopPage() {
@@ -14,20 +18,36 @@ export default async function ShopPage() {
   const menu = data.headerMenu.filter((item) => item.visible);
 
   return (
-    <SiteShell settings={data.settings} menu={menu} variant="inner">
-      <section className="shop-page wrapper">
-        <h1 className="shop-page__title _title">Магазин</h1>
-        <p className="shop-page__subtitle _paragr">
+    <SiteShell settings={data.settings} menu={menu} variant='inner'>
+      <section className='shop-page wrapper'>
+        <h1 className='shop-page__title _title'>Магазин</h1>
+        <p className='shop-page__subtitle _paragr'>
           Каталог товарів. Для замовлення зателефонуйте або напишіть у месенджер.
         </p>
-        <ProductGrid products={products} />
-        <p className="shop-page__contact" style={{ marginTop: 32, textAlign: 'center' }}>
-          <a href={`tel:${data.settings.headerPhone.tel}`} className="_btn">
+
+        {products.length ? (
+          <ProductGrid products={products} />
+        ) : (
+          <div className='shop-empty'>
+            <p className='_paragr'>Наразі в каталозі немає опублікованих товарів.</p>
+            <p className='shop-empty__hint'>Зателефонуйте — підберемо комплектуючі під ваш пристрій.</p>
+          </div>
+        )}
+
+        <p className='shop-page__contact'>
+          <a href={`tel:${data.settings.headerPhone.tel}`} className='_btn'>
             Замовити: {data.settings.headerPhone.display}
           </a>
         </p>
-        <p style={{ textAlign: 'center', marginTop: 12 }}>
-          <Link href="/">На головну</Link>
+        <div className='shop-page__messengers'>
+          {data.settings.social.map((link) => (
+            <a key={link.id} href={link.url} target='_blank' rel='noreferrer' className='shop-page__social'>
+              {link.type}
+            </a>
+          ))}
+        </div>
+        <p className='shop-page__home'>
+          <Link href='/'>← На головну</Link>
         </p>
       </section>
     </SiteShell>

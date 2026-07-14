@@ -9,6 +9,7 @@
     "build": "next build",
     "start": "next start",
     "seed": "tsx scripts/seed.ts",
+    "backup": "tsx scripts/backup.ts",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "typecheck": "tsc --noEmit",
@@ -17,7 +18,10 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:smoke": "playwright test e2e/smoke.spec.ts"
   },
   "dependencies": {
     "next": "^15.0.0",
@@ -25,21 +29,23 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sass": "^1.77.0",
+    "sharp": "^0.34.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
+    "@playwright/test": "^1.51.1",
     "@types/node": "^20.0.0",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.20",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.5",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^4.1.10"
+    "vitest": "^3.2.4"
   }
 }
