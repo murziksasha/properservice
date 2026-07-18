@@ -33,6 +33,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# pm2 / autostart runtime logs on host laptop
+/logs/
+
 # playwright
 /test-results/
 /playwright-report/

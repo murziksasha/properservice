@@ -365,16 +365,27 @@ npm run pm2:stop
 
 #### 6.2. Проверка автозапуска
 
+`pm2:setup` создаёт:
+
+1. Задачу Планировщика **`ProperService-pm2`** (при входе + 30 с) → `scripts/pm2-autostart.ps1`
+2. Ярлык в папке **Автозагрузка** (fallback)
+3. Лог: `logs/pm2-autostart.log`
+
+Проверка:
+
 1. `pm2 status` — процесс online.
-2. **Перезагрузите ноутбук** (полный reboot).
-3. Войдите в Windows под **тем же пользователем**, под которым делали setup.
-4. Подождите 30–60 секунд.
-5. `http://localhost:3000/api/health`
+2. Симуляция без reboot: `npm run pm2:autostart` → снова online, в `logs/pm2-autostart.log` строка `OK`.
+3. **Перезагрузите ноутбук** (полный reboot).
+4. Войдите в Windows под **тем же пользователем**, под которым делали setup (например `Administrator`).
+5. Подождите **1–2 минуты** (delay 30 с + старт).
+6. `http://localhost:3000/api/health`
 
 Если не поднялось:
 
 ```powershell
-pm2 resurrect
+cd C:\apps\properservice
+type logs\pm2-autostart.log
+npm run pm2:autostart
 pm2 status
 pm2 logs properservice --lines 50
 ```
@@ -383,34 +394,40 @@ pm2 logs properservice --lines 50
 
 ```powershell
 Get-ScheduledTask -TaskName "ProperService-pm2" | Format-List *
+Get-ScheduledTaskInfo -TaskName "ProperService-pm2"
+# LastTaskResult: 0 = OK
 ```
 
 Планировщик заданий (GUI):
 
 1. `Win + R` → `taskschd.msc` → Enter  
 2. Библиотека планировщика → задача **`ProperService-pm2`**  
-3. Триггер: «При входе в систему»  
-4. Действие: `cmd.exe /c "…\pm2.cmd" resurrect`  
-5. При необходимости: «Выполнить с наивысшими правами» / поправьте путь к `pm2.cmd`
+3. Триггер: «При входе в систему», задержка 30 секунд  
+4. Действие: `powershell.exe ... -File "...\scripts\pm2-autostart.ps1"`  
+5. История: включить «Журнал всех заданий» при отладке  
 
-Узнать, где pm2:
+**Частые причины «после reboot нет сайта»:**
 
-```powershell
-Get-Command pm2 | Format-List *
-```
+| Причина | Что сделать |
+|---------|-------------|
+| Не вошли в учётку (экран входа) | Войти тем же user, что делал setup; или настроить автологин Windows |
+| Setup делали от Admin, а входите под другим user | setup + `pm2 save` **под тем user, под которым работаете** |
+| Задача не создана / LastTaskResult ≠ 0 | setup **от имени администратора**, смотреть `logs\pm2-autostart.log` |
+| Только `pm2 resurrect` без PATH | новый setup: autostart-скрипт сам добавляет Node в PATH |
+| Сон ноутбука | отключить сон при питании от сети |
 
 #### 6.3. Ручная задача Планировщика (если setup не создал)
 
 1. `taskschd.msc` → Создать задачу…  
 2. Имя: `ProperService-pm2`  
-3. Триггер: **При входе в систему** (ваш пользователь).  
+3. Триггер: **При входе в систему** (ваш пользователь), задержка 30 секунд.  
 4. Действие → Запуск программы:
-   - Программа: `cmd.exe`
-   - Аргументы: `/c pm2 resurrect`  
-     (или полный путь: `/c "C:\Users\<user>\AppData\Roaming\npm\pm2.cmd" resurrect`)
+   - Программа: `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
+   - Аргументы: `-NoProfile -ExecutionPolicy Bypass -File "C:\apps\properservice\scripts\pm2-autostart.ps1"`
    - «Рабочая папка»: `C:\apps\properservice`  
-5. Условия: снять «Запускать только при питании от электросети», если нужно от батареи.  
-6. Параметры: при сбое — перезапуск через 1 минуту.
+5. Условия: снять «Запускать только при питании от электросети».  
+6. Параметры: при сбое — перезапуск через 1 минуту.  
+7. На вкладке «Общие»: «Выполнять с наивысшими правами».
 
 Перед этим один раз вручную:
 
@@ -418,6 +435,7 @@ Get-Command pm2 | Format-List *
 cd C:\apps\properservice
 pm2 start ecosystem.config.cjs
 pm2 save
+npm run pm2:autostart
 ```
 
 ### 7. Windows Firewall (доступ из LAN)

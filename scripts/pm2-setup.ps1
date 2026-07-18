@@ -1,4 +1,4 @@
-# ProperService: install/start with pm2 + Windows autostart (no Docker).
+# ProperService: install/start with pm2 + reliable Windows autostart (no Docker).
 # Builds only if .next is missing (via start-prod.ps1 -PrepareOnly).
 $ErrorActionPreference = "Stop"
 $Root = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -6,6 +6,7 @@ Set-Location $Root
 
 $AppName = "properservice"
 $TaskName = "ProperService-pm2"
+$AutostartPs1 = Join-Path $PSScriptRoot "pm2-autostart.ps1"
 
 function Test-HasCommand {
   param([string]$Name)
@@ -32,7 +33,7 @@ function Read-AppPort {
 function Update-SessionPath {
   $machine = [Environment]::GetEnvironmentVariable("Path", "Machine")
   $user = [Environment]::GetEnvironmentVariable("Path", "User")
-  $env:Path = "$machine;$user"
+  $env:Path = "C:\Program Files\nodejs;$env:APPDATA\npm;" + $machine + ";" + $user
 }
 
 if (-not (Test-HasCommand "node")) {
@@ -68,9 +69,7 @@ if (-not (Test-HasCommand "pm2")) {
 }
 
 Write-Host "==> Starting app with pm2..."
-# First run: process does not exist yet. pm2.ps1 turns "not found" into a
-# terminating PowerShell error when ErrorActionPreference is Stop - so delete
-# via cmd and ignore exit code.
+# First run: process does not exist yet. Avoid terminating PowerShell errors from pm2.ps1.
 cmd.exe /c "pm2 delete $AppName >nul 2>&1" | Out-Null
 
 $eco = Join-Path $Root "ecosystem.config.cjs"
@@ -89,72 +88,120 @@ pm2 save
 if ($LASTEXITCODE -ne 0) {
   Write-Warning "pm2 save failed (exit $LASTEXITCODE) - autostart may not restore processes"
 }
+else {
+  $dump = Join-Path $env:USERPROFILE ".pm2\dump.pm2"
+  if (Test-Path $dump) {
+    Write-Host "pm2 dump saved: $dump"
+  }
+  else {
+    Write-Warning "pm2 save ran but dump not found at $dump"
+  }
+}
 
 function Register-SchtasksAutostart {
-  $pm2Cmd = (Get-Command pm2).Source
-  $execute = "cmd.exe"
-  $argument = "/c `"$pm2Cmd`" resurrect"
+  if (-not (Test-Path $AutostartPs1)) {
+    throw "Missing autostart script: $AutostartPs1"
+  }
 
-  $action = New-ScheduledTaskAction -Execute $execute -Argument $argument -WorkingDirectory $Root
-  $trigger = New-ScheduledTaskTrigger -AtLogOn
+  $psExe = Join-Path $env:SystemRoot "System32\WindowsPowerShell\v1.0\powershell.exe"
+  if (-not (Test-Path $psExe)) {
+    $psExe = "powershell.exe"
+  }
+
+  # Full paths only - Task Scheduler has a minimal PATH at logon.
+  $arg = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$AutostartPs1`""
+  $action = New-ScheduledTaskAction -Execute $psExe -Argument $arg -WorkingDirectory $Root
+
+  # At logon + 30s delay (node/profile ready)
+  $triggerLogon = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+  $triggerLogon.Delay = "PT30S"
+
   $settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
     -StartWhenAvailable `
-    -ExecutionTimeLimit ([TimeSpan]::Zero)
+    -ExecutionTimeLimit ([TimeSpan]::Zero) `
+    -RestartCount 3 `
+    -RestartInterval (New-TimeSpan -Minutes 1)
 
-  $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited
+  # Prefer DOMAIN\user or COMPUTER\user form
+  $userId = if ($env:USERDOMAIN) { "$env:USERDOMAIN\$env:USERNAME" } else { $env:USERNAME }
+  $principal = New-ScheduledTaskPrincipal -UserId $userId -LogonType Interactive -RunLevel Highest
 
   Register-ScheduledTask `
     -TaskName $TaskName `
     -Action $action `
-    -Trigger $trigger `
+    -Trigger $triggerLogon `
     -Settings $settings `
     -Principal $principal `
     -Force | Out-Null
 
-  Write-Host "Scheduled task '$TaskName' registered (At logon -> pm2 resurrect)."
+  Write-Host "Scheduled task '$TaskName' registered."
+  Write-Host "  User:    $userId"
+  Write-Host "  Trigger: At logon + 30s"
+  Write-Host "  Action:  $psExe $arg"
+  Write-Host "  Log:     $(Join-Path $Root 'logs\pm2-autostart.log')"
 }
 
-function Install-Pm2WindowsStartup {
-  if (-not (Test-HasCommand "pm2-windows-startup")) {
-    Write-Host "==> Installing pm2-windows-startup..."
-    npm install -g pm2-windows-startup
-    if ($LASTEXITCODE -ne 0) {
-      return $false
-    }
-    Update-SessionPath
+function Register-StartupFolderShortcut {
+  # Extra safety net if Task Scheduler is disabled/blocked
+  try {
+    $startup = [Environment]::GetFolderPath("Startup")
+    $cmdPath = Join-Path $startup "ProperService-pm2.cmd"
+    $lines = @(
+      "@echo off"
+      "rem ProperService pm2 autostart (Startup folder)"
+      "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$AutostartPs1`""
+    )
+    Set-Content -Path $cmdPath -Value $lines -Encoding ASCII
+    Write-Host "Startup folder launcher: $cmdPath"
+    return $true
   }
-  if (-not (Test-HasCommand "pm2-windows-startup")) {
+  catch {
+    Write-Warning "Could not write Startup folder launcher: $_"
     return $false
   }
-  pm2-windows-startup install
-  if ($LASTEXITCODE -ne 0) {
+}
+
+function Test-AutostartNow {
+  Write-Host "==> Dry-run autostart script (same as after reboot)..."
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $AutostartPs1
+  $code = $LASTEXITCODE
+  if ($code -ne 0) {
+    Write-Warning "Autostart dry-run exited $code - see logs\pm2-autostart.log"
     return $false
   }
-  Write-Host "pm2-windows-startup install OK."
   return $true
 }
 
-Write-Host "==> Configuring Windows autostart..."
+Write-Host "==> Configuring Windows autostart (Task Scheduler - primary)..."
 $autostartOk = $false
 try {
-  $autostartOk = Install-Pm2WindowsStartup
+  Register-SchtasksAutostart
+  $autostartOk = $true
 }
 catch {
-  Write-Warning "pm2-windows-startup failed: $_"
-  $autostartOk = $false
+  Write-Warning "Task Scheduler registration failed: $_"
+  Write-Warning "Try running PowerShell as Administrator, then: npm run pm2:setup"
 }
 
-if (-not $autostartOk) {
-  Write-Host "Falling back to Task Scheduler..."
-  try {
-    Register-SchtasksAutostart
-    $autostartOk = $true
+Write-Host "==> Configuring Startup folder fallback..."
+Register-StartupFolderShortcut | Out-Null
+
+# Optional legacy helper (often unreliable alone; do not skip schtasks if this "works")
+try {
+  if (-not (Test-HasCommand "pm2-windows-startup")) {
+    npm install -g pm2-windows-startup 2>$null | Out-Null
+    Update-SessionPath
   }
-  catch {
-    Write-Warning "Could not register scheduled task: $_. Register manually: pm2 resurrect at logon."
+  if (Test-HasCommand "pm2-windows-startup") {
+    cmd.exe /c "pm2-windows-startup install" | Out-Null
   }
+}
+catch { }
+
+if ($autostartOk) {
+  Test-AutostartNow | Out-Null
 }
 
 $port = Read-AppPort
@@ -177,9 +224,22 @@ Write-Host "  npm run build"
 Write-Host "  npm run pm2:restart"
 Write-Host ""
 if ($autostartOk) {
-  Write-Host "Autostart: configured (logon/startup)."
+  Write-Host "Autostart: Task '$TaskName' at logon (+ Startup folder fallback)."
+  Write-Host "IMPORTANT: after reboot you must LOG IN as user '$env:USERNAME' (same account as setup)."
+  Write-Host "If site is down after reboot, open: $(Join-Path $Root 'logs\pm2-autostart.log')"
 }
 else {
-  Write-Host "Autostart: NOT configured - run this script again or create a task for 'pm2 resurrect'."
+  Write-Host "Autostart: Task Scheduler FAILED - run setup as Admin or create task manually."
+  Write-Host "Manual: taskschd.msc -> run at logon:"
+  Write-Host "  powershell -NoProfile -ExecutionPolicy Bypass -File `"$AutostartPs1`""
 }
 Write-Host "LAN: allow inbound TCP $port in Windows Firewall if needed."
+
+# Verify task exists
+$task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+if ($task) {
+  Write-Host "Task state: $($task.State)"
+}
+else {
+  Write-Warning "Task '$TaskName' not found after registration."
+}

@@ -10,6 +10,7 @@
     "start": "next start",
     "start:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-prod.ps1",
     "pm2:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pm2-setup.ps1",
+    "pm2:autostart": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pm2-autostart.ps1",
     "pm2:stop": "pm2 stop properservice",
     "pm2:restart": "pm2 restart properservice",
     "pm2:logs": "pm2 logs properservice",
