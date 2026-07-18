@@ -68,10 +68,20 @@ if (-not (Test-HasCommand "pm2")) {
 }
 
 Write-Host "==> Starting app with pm2..."
-pm2 delete $AppName 2>$null | Out-Null
-pm2 start (Join-Path $Root "ecosystem.config.cjs")
+# First run: process does not exist yet. pm2.ps1 turns "not found" into a
+# terminating PowerShell error when ErrorActionPreference is Stop - so delete
+# via cmd and ignore exit code.
+cmd.exe /c "pm2 delete $AppName >nul 2>&1" | Out-Null
+
+$eco = Join-Path $Root "ecosystem.config.cjs"
+if (-not (Test-Path $eco)) {
+  Write-Error "Missing $eco"
+  exit 1
+}
+
+pm2 start $eco
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "pm2 start failed (exit $LASTEXITCODE)"
+  Write-Error "pm2 start failed (exit $LASTEXITCODE). Try: pm2 start ecosystem.config.cjs"
   exit $LASTEXITCODE
 }
 
