@@ -69,22 +69,45 @@ if (-not (Test-HasCommand "pm2")) {
 }
 
 Write-Host "==> Starting app with pm2..."
-# First run: process does not exist yet. Avoid terminating PowerShell errors from pm2.ps1.
-cmd.exe /c "pm2 delete $AppName >nul 2>&1" | Out-Null
-
 $eco = Join-Path $Root "ecosystem.config.cjs"
 if (-not (Test-Path $eco)) {
   Write-Error "Missing $eco"
   exit 1
 }
 
-pm2 start $eco
+# First run: process may not exist. Avoid terminating errors from pm2.ps1.
+Write-Host "    [1/4] pm2 delete $AppName (ignore if missing)..."
+cmd.exe /c "pm2 delete $AppName >nul 2>&1" | Out-Null
+
+# If an old daemon is wedged, a plain "pm2 start" can hang forever on Windows.
+Write-Host "    [2/4] ensuring pm2 daemon is up (pm2 ping)..."
+$pingOk = $false
+try {
+  $pingOut = cmd.exe /c "pm2 ping" 2>&1 | Out-String
+  if ($pingOut -match "pong|PM2") { $pingOk = $true }
+  Write-Host "    pm2 ping: $($pingOut.Trim())"
+}
+catch {
+  Write-Host "    pm2 ping threw: $_"
+}
+
+if (-not $pingOk) {
+  Write-Host "    daemon not responding - pm2 kill + retry..."
+  cmd.exe /c "pm2 kill >nul 2>&1" | Out-Null
+  Start-Sleep -Seconds 2
+}
+
+Write-Host "    [3/4] pm2 start ecosystem.config.cjs ..."
+Write-Host "    (first time can take 15-60s; if stuck >2 min press Ctrl+C and see docs below)"
+# Use cmd so npm/powershell do not wait on node child stdio oddly
+cmd.exe /c "pm2 start `"$eco`""
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "pm2 start failed (exit $LASTEXITCODE). Try: pm2 start ecosystem.config.cjs"
+  Write-Error "pm2 start failed (exit $LASTEXITCODE). Try manually: pm2 kill && pm2 start ecosystem.config.cjs"
   exit $LASTEXITCODE
 }
 
-pm2 save
+Write-Host "    [4/4] pm2 save ..."
+cmd.exe /c "pm2 save"
 if ($LASTEXITCODE -ne 0) {
   Write-Warning "pm2 save failed (exit $LASTEXITCODE) - autostart may not restore processes"
 }
@@ -97,6 +120,9 @@ else {
     Write-Warning "pm2 save ran but dump not found at $dump"
   }
 }
+
+Write-Host "    pm2 status:"
+cmd.exe /c "pm2 status"
 
 function Register-SchtasksAutostart {
   if (-not (Test-Path $AutostartPs1)) {
