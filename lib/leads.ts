@@ -13,6 +13,8 @@ export interface Lead {
   /** Operator marked as handled */
   handled: boolean;
   note?: string;
+  /** Relative path where the form was submitted (e.g. /phones) */
+  pagePath?: string;
 }
 
 export interface LeadsStore {
@@ -59,6 +61,7 @@ export async function appendLead(input: {
   phone: string;
   emailed: boolean;
   source?: Lead['source'];
+  pagePath?: string;
 }): Promise<Lead> {
   const store = await readStore();
   const lead: Lead = {
@@ -68,6 +71,7 @@ export async function appendLead(input: {
     source: input.source || 'callback',
     emailed: input.emailed,
     handled: false,
+    ...(input.pagePath ? { pagePath: input.pagePath } : {}),
   };
   store.leads.unshift(lead);
   if (store.leads.length > MAX_LEADS) {
@@ -79,7 +83,7 @@ export async function appendLead(input: {
 
 export async function updateLead(
   id: string,
-  patch: Partial<Pick<Lead, 'handled' | 'note'>>,
+  patch: Partial<Pick<Lead, 'handled' | 'note' | 'emailed'>>,
 ): Promise<Lead | null> {
   const store = await readStore();
   const idx = store.leads.findIndex((l) => l.id === id);
@@ -89,6 +93,7 @@ export async function updateLead(
     ...current,
     handled: typeof patch.handled === 'boolean' ? patch.handled : current.handled,
     note: patch.note !== undefined ? patch.note : current.note,
+    emailed: typeof patch.emailed === 'boolean' ? patch.emailed : current.emailed,
   };
   store.leads[idx] = next;
   await writeStore(store);

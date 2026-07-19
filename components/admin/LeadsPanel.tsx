@@ -11,6 +11,7 @@ interface Lead {
   emailed: boolean;
   handled: boolean;
   note?: string;
+  pagePath?: string;
 }
 
 function formatWhen(iso: string): string {
@@ -123,6 +124,11 @@ export function LeadsPanel() {
               <span className='admin-lead-meta'>
                 {lead.emailed ? 'email ✓' : 'без email'} · {lead.source}
               </span>
+              {lead.pagePath ? (
+                <span className='admin-lead-meta' title={lead.pagePath}>
+                  {lead.pagePath}
+                </span>
+              ) : null}
             </div>
             <div className='admin-row'>
               {!lead.handled ? (

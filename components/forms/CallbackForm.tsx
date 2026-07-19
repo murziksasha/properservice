@@ -46,6 +46,12 @@ export function CallbackForm({
     setStatus(MESSAGES.loading);
 
     try {
+      // Service context for the shop notification email / journal
+      const pagePath = `${window.location.pathname}${window.location.search}`.slice(0, 300);
+      const pageTitle = (document.title || '').slice(0, 120);
+      formData.set('pagePath', pagePath);
+      formData.set('pageTitle', pageTitle);
+
       const response = await fetch('/api/contact', { method: 'POST', body: formData });
       if (!response.ok) {
         if (response.status === 429) {
