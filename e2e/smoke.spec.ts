@@ -22,6 +22,7 @@ test.describe('public smoke', () => {
       uptimeSec: number;
       backups: { count: number };
       leads: { total: number };
+      orders: { total: number };
       offsiteHint: string;
     };
     expect(json.ok).toBe(true);
@@ -29,6 +30,7 @@ test.describe('public smoke', () => {
     expect(typeof json.uptimeSec).toBe('number');
     expect(json.backups).toBeTruthy();
     expect(json.leads).toBeTruthy();
+    expect(json.orders).toBeTruthy();
     expect(json.offsiteHint.length).toBeGreaterThan(10);
   });
 
@@ -92,6 +94,14 @@ test.describe('public smoke', () => {
       expect(json.ok).toBe(true);
     }
   });
+
+  test('order rejects missing product', async ({ request }) => {
+    const res = await request.post('/api/orders', {
+      data: { phone: '+380501112233', productId: 'nonexistent-product-id' },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect([400, 429]).toContain(res.status());
+  });
 });
 
 test.describe('admin smoke', () => {
@@ -128,6 +138,9 @@ test.describe.serial('admin happy-path', () => {
 
     await page.goto('/admin/leads');
     await expect(page.locator('h1')).toHaveText(/заявки/i);
+
+    await page.goto('/admin/orders');
+    await expect(page.locator('h1')).toHaveText(/замовлення/i);
 
     await page.goto('/admin/media');
     await expect(page.locator('h1')).toHaveText(/медіатека/i);

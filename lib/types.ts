@@ -55,6 +55,11 @@ export interface Product {
   visible: boolean;
   /** Optional display category for catalog filters (e.g. «Телефони»). */
   category?: string;
+  /**
+   * Optional merchant/SKU-style code. Free text (any language/symbols),
+   * min 2 chars when set; included in catalog search.
+   */
+  code?: string;
   createdAt?: string;
   updatedAt?: string;
 }

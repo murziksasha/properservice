@@ -26,6 +26,7 @@ function emptyProduct(): Product {
     image: '/img/services/technika_img.png',
     visible: true,
     category: '',
+    code: '',
   };
 }
 
@@ -93,11 +94,17 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
 
   async function saveProduct() {
     if (!editing) return;
+    const codeTrimmed = (editing.code || '').trim();
+    if (codeTrimmed.length === 1) {
+      showToast('Код товару: мінімум 2 символи (або залиште порожнім)', 'error');
+      return;
+    }
     const goods = [...data.goods];
     const idx = goods.findIndex((g) => g.id === editing.id);
     const stamped: Product = {
       ...editing,
       category: (editing.category || '').trim() || undefined,
+      code: codeTrimmed.length >= 2 ? codeTrimmed : undefined,
       updatedAt: new Date().toISOString(),
       createdAt: editing.createdAt || new Date().toISOString(),
     };
@@ -187,6 +194,18 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               value={editing.price}
               onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
             />
+          </label>
+          <label>
+            Код товару
+            <input
+              value={editing.code || ''}
+              onChange={(e) => setEditing({ ...editing, code: e.target.value })}
+              placeholder='Напр. SKU-12, АКБ/01…'
+              autoComplete='off'
+            />
+            <span className='admin-hint'>
+              Необов&apos;язково. Мін. 2 символи. Будь-які мови та знаки. Участь у пошуку в адмінці та магазині.
+            </span>
           </label>
           <label>
             Категорія
@@ -301,6 +320,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                 ) : null}
                 <span>
                   {product.title} — {product.price} ₴
+                  {product.code ? ` · ${product.code}` : ''}
                   {product.category ? ` · ${product.category}` : ''}
                   {!product.visible ? ' (приховано)' : ''}
                 </span>

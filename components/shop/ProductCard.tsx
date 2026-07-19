@@ -10,6 +10,7 @@ export function ProductCard({ product }: { product: Product }) {
           <Image src={product.image} alt={product.title} width={240} height={180} />
         </div>
         <h3 className="shop-card__title">{product.title}</h3>
+        {product.code ? <p className="shop-card__code">Код: {product.code}</p> : null}
         <p className="shop-card__price">{product.price.toLocaleString('uk-UA')} ₴</p>
         <p className="shop-card__desc">{product.description}</p>
       </Link>

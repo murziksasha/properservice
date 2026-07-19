@@ -20,10 +20,10 @@ function p(partial: Partial<Product> & Pick<Product, 'id' | 'title' | 'price'>):
 }
 
 const sample: Product[] = [
-  p({ id: '1', title: 'Екран iPhone', price: 1200, description: 'Оригінал', category: 'Телефони' }),
+  p({ id: '1', title: 'Екран iPhone', price: 1200, description: 'Оригінал', category: 'Телефони', code: 'IP-SCR#01' }),
   p({ id: '2', title: 'Блок живлення', price: 350, description: 'TV / монітор', category: 'ТВ', visible: false }),
-  p({ id: '3', title: 'Акумулятор', price: 800, description: 'для телефону', category: 'Телефони' }),
-  p({ id: '4', title: 'Клавіатура', price: 350, description: 'USB', category: 'Ноутбуки' }),
+  p({ id: '3', title: 'Акумулятор', price: 800, description: 'для телефону', category: 'Телефони', code: 'АКБ-12' }),
+  p({ id: '4', title: 'Клавіатура', price: 350, description: 'USB', category: 'Ноутбуки', code: 'sku/орг#1' }),
 ];
 
 describe('normalizeQuery', () => {
@@ -38,6 +38,20 @@ describe('matchesProductQuery', () => {
     expect(matchesProductQuery(sample[0], 'Ориг')).toBe(true);
     expect(matchesProductQuery(sample[0], 'телефон')).toBe(true);
     expect(matchesProductQuery(sample[0], 'xyz')).toBe(false);
+  });
+
+  it('matches product code (case-insensitive, symbols, unicode)', () => {
+    expect(matchesProductQuery(sample[0], 'ip-scr')).toBe(true);
+    expect(matchesProductQuery(sample[0], 'SCR#01')).toBe(true);
+    expect(matchesProductQuery(sample[2], 'акб')).toBe(true);
+    expect(matchesProductQuery(sample[3], 'орг#')).toBe(true);
+    expect(matchesProductQuery(sample[3], 'sku/')).toBe(true);
+    expect(matchesProductQuery(sample[1], 'ip-scr')).toBe(false);
+  });
+
+  it('empty or missing code does not break search', () => {
+    expect(matchesProductQuery(sample[1], 'блок')).toBe(true);
+    expect(matchesProductQuery(p({ id: 'x', title: 'X', price: 1, code: '' }), 'x')).toBe(true);
   });
 
   it('empty query matches all', () => {

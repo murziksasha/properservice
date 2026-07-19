@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 const LINKS = [
   { href: '/admin', label: 'Dashboard', exact: true },
   { href: '/admin/leads', label: 'Заявки' },
+  { href: '/admin/orders', label: 'Замовлення' },
   { href: '/admin/menu', label: 'Меню' },
   { href: '/admin/pages', label: 'Сторінки' },
   { href: '/admin/goods', label: 'Товари' },

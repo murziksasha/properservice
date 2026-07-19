@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { CallbackForm } from '@/components/forms/CallbackForm';
+import { OrderForm } from '@/components/forms/OrderForm';
 import { getProduct, getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -40,6 +41,7 @@ export default async function ProductPage({ params }: PageProps) {
           </div>
           <div className="shop-detail__info">
             <h1 className="shop-detail__title _title">{product.title}</h1>
+            {product.code ? <p className="shop-detail__code">Код: {product.code}</p> : null}
             <p className="shop-detail__price">{product.price.toLocaleString('uk-UA')} ₴</p>
             <p className="shop-detail__desc _paragr">{product.description}</p>
             <div className="shop-detail__actions">
@@ -53,8 +55,9 @@ export default async function ProductPage({ params }: PageProps) {
                 <a href={telegram.url} className="_btn" target="_blank" rel="noreferrer">Telegram</a>
               ) : null}
             </div>
-            <div style={{ marginTop: 32 }}>
-              <p className="_paragr">Або залиште заявку:</p>
+            <OrderForm productId={product.id} productTitle={product.title} />
+            <div className="shop-detail__callback">
+              <p className="_paragr">Або залиште заявку на дзвінок:</p>
               <CallbackForm buttonText="залишити заявку" />
             </div>
           </div>

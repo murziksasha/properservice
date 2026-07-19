@@ -19,7 +19,12 @@ flowchart LR
 - `settings` — title, logo, phones, social, map, `reviewsUrl`…
 - `headerMenu`, `servicesNav`, `shopLink`
 - `pages[]` — кожна сторінка: `slug`, meta, `sections[]`
-- `goods[]` — товари магазину (`Product`: title, price, image, visible, optional `category`, …)
+- `goods[]` — товари магазину (`Product`: title, price, image, visible, optional `category` / `code`, …)
+
+Окремі журнали (не в `site.json`):
+
+- `data/leads.json` — заявки на дзвінок (`source: callback`)
+- `data/orders.json` — замовлення з магазину (`source: shop`, снапшот товару)
 
 Секції типізовані union `Section` (`hero`, `advantages`, `malfunctions`, …).  
 Рендер: `SectionRenderer` → компоненти в `components/sections/`.
@@ -79,9 +84,43 @@ Shared helpers: `lib/admin/saveSite.ts`, `lib/admin/uploadImage.ts`, `lib/sectio
 Заявки завжди в журналі адмінки `/admin/leads` навіть без SMTP.  
 Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend його не викликає.
 
+## Order flow (shop)
+
+```mermaid
+sequenceDiagram
+  participant U as Client
+  participant F as OrderForm
+  participant API as POST /api/orders
+  participant S as site.json
+  participant O as orders.json
+  participant M as SMTP
+
+  U->>F: phone + optional comment
+  F->>API: productId, phone, comment
+  API->>API: rate limit + validate phone
+  API->>S: getProduct(id)
+  alt missing or hidden
+    API-->>F: 400
+  else ok
+    API->>M: send mail try
+    API->>O: appendOrder snapshot
+    API-->>F: ok, emailed
+  end
+```
+
+- Entry: only product page `/shop/[id]` — `OrderForm` («Замовити»)
+- Fields: UA phone (required), comment (optional, max 1000), quantity always **1**
+- Server reloads product; rejects invisible/missing; stores **snapshot** (id, title, price, code, image)
+- Email to `MAIL_TO` only (shop); journal works without SMTP (`emailed: false`)
+- Honeypot field `website` → soft `ok` without persist
+- Admin: `/admin/orders` + `GET/PATCH/DELETE /api/orders` (session + IP allowlist like leads)
+- Store: `lib/orders.ts`, cap 500, atomic write
+
+Leads (callback) and orders (shop) are **separate** files and admin sections.
+
 ## Atomic writes
 
-`lib/atomic-write.ts` — temp file + rename для `site.json`, backups, leads.  
+`lib/atomic-write.ts` — temp file + rename для `site.json`, backups, leads, orders.  
 Захист від truncated JSON при crash mid-save.
 
 ## Media
@@ -103,6 +142,7 @@ In-memory sliding window (`lib/rate-limit.ts`), single-instance:
 |----------|-------|-----|
 | `POST /api/auth` | 10 / хв | LoginForm countdown + disabled submit |
 | `POST /api/contact` | 8 / хв | CallbackForm message |
+| `POST /api/orders` | 8 / хв | OrderForm message |
 | `PUT /api/site` | 30 / хв | `saveSiteData` error string / toast |
 | `POST /api/upload` | 20 / хв | `uploadImage` error string |
 
