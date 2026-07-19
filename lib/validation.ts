@@ -36,6 +36,13 @@ const productSchema = z.object({
   image: z.string(),
   visible: z.boolean(),
   category: z.string().optional(),
+  /** Optional; empty/undefined OK. Non-empty must be ≥2 chars after trim (enforced on save). */
+  code: z
+    .string()
+    .optional()
+    .refine((v) => v == null || v.trim() === '' || v.trim().length >= 2, {
+      message: 'Product code must be at least 2 characters when set',
+    }),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

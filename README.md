@@ -7,11 +7,12 @@
 ## Можливості
 
 - Публічні сторінки з composable-секціями (hero, переваги, контакти, відгуки, магазин…)
-- Каталог товарів `/shop` — пошук, сортування за ціною/назвою, фільтр категорій (замовлення через телефон / месенджери)
-- Форма зворотного дзвінка → email (SMTP / nodemailer)
-- Адмінка `/admin` для меню, сторінок, товарів, заявок, медіатеки і налаштувань
+- Каталог товарів `/shop` — пошук, сортування, фільтр категорій, код товару
+- Замовлення з сторінки товару → `data/orders.json` + email на `MAIL_TO` (SMTP)
+- Форма зворотного дзвінка → `data/leads.json` + email (SMTP / nodemailer)
+- Адмінка `/admin` для меню, сторінок, товарів, заявок, **замовлень**, медіатеки і налаштувань
 - Збереження контенту в `data/site.json` (atomic write, без окремої БД)
-- Журнал заявок `data/leads.json`, media library + WebP optimize
+- Журнали `data/leads.json` / `data/orders.json`, media library + WebP optimize
 - LocalBusiness JSON-LD + mobile sticky call
 
 ## Швидкий старт
@@ -32,7 +33,7 @@ npm run dev
 |--------|------|
 | `ADMIN_PASSWORD` | Пароль адмінки (**обовʼязково**) |
 | `SESSION_SECRET` | Секрет для підпису cookie-сесії (рекомендовано; інакше fallback на пароль) |
-| `SMTP_*` / `MAIL_*` | Налаштування пошти для `/api/contact` |
+| `SMTP_*` / `MAIL_*` | Пошта для `/api/contact` і `/api/orders` |
 | `DATA_DIR` | Каталог для `site.json` (Docker volume) |
 | `NGINX_PORT` | Зовнішній порт nginx у Docker |
 
@@ -75,7 +76,7 @@ npm run docker:up
 - `GET/PUT /api/site` — лише для авторизованих
 - HTML з CMS санітизується при рендері
 - Upload: whitelist MIME + magic bytes, max 5 MB
-- Rate-limit на `/api/auth`, `/api/contact`, `/api/site` (PUT) і `/api/upload`
+- Rate-limit на `/api/auth`, `/api/contact`, `/api/orders`, `/api/site` (PUT) і `/api/upload`
 - Адмінка: countdown UI при 429 (login), toast/message при save/upload
 - PWA: `manifest.webmanifest` + service worker (`/sw.js`) з offline fallback
 

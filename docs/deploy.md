@@ -114,7 +114,7 @@ GitHub Actions (`.github/workflows/ci.yml`):
 - Обмежте `/admin`:
   - `ADMIN_IP_ALLOWLIST=192.168.1.10,127.0.0.1` — лише ці IP (UI + API)
   - або VPN / firewall allowlist / basic auth на nginx
-- Регулярний backup `data/site.json`, `data/backups/`, `data/leads.json`, `public/uploads`
+- Регулярний backup `data/site.json`, `data/backups/`, `data/leads.json`, `data/orders.json`, `public/uploads`
 - Якщо відкриваєте порт у інтернет — обовʼязково HTTPS (і тоді `COOKIE_SECURE=true`)
 
 ## Off-site backup (обовʼязково)
@@ -261,7 +261,7 @@ C:\apps\properservice
 Минимально нужные папки/файлы на хосте:
 
 - исходники (`app/`, `lib/`, `public/`, `scripts/`, `package.json`, `package-lock.json`, `ecosystem.config.cjs`, …)
-- `data/` (контент `site.json`, leads, backups) — если уже есть боевые данные
+- `data/` (контент `site.json`, leads, orders, backups) — если уже есть боевые данные
 - `public/uploads/` — загруженные картинки
 - `.env` — секреты и SMTP
 
@@ -509,7 +509,7 @@ npm run pm2:restart
 
 Контент живёт в файлах:
 
-- `data/site.json`, `data/leads.json`, `data/backups/`
+- `data/site.json`, `data/leads.json`, `data/orders.json`, `data/backups/`
 - `public/uploads/`
 
 Раз в день/неделю — копия **на другой диск** (не только тот же SSD):

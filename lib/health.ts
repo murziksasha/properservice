@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { listSiteBackups } from './backup';
 import { countLeads } from './leads';
+import { countOrders } from './orders';
 import { uploadsStats } from './media';
 
 const startedAt = Date.now();
@@ -20,6 +21,10 @@ export interface HealthReport {
     last: string | null;
   };
   leads: {
+    total: number;
+    unhandled: number;
+  };
+  orders: {
     total: number;
     unhandled: number;
   };
@@ -54,6 +59,15 @@ export async function getHealthReport(): Promise<HealthReport> {
     // ignore
   }
 
+  let ordersTotal = 0;
+  let ordersUnhandled = 0;
+  try {
+    ordersTotal = await countOrders();
+    ordersUnhandled = await countOrders({ unhandledOnly: true });
+  } catch {
+    // ignore
+  }
+
   let uploads = { count: 0, bytes: 0 };
   try {
     uploads = await uploadsStats();
@@ -81,6 +95,7 @@ export async function getHealthReport(): Promise<HealthReport> {
     smtp: Boolean(process.env.SMTP_USER && process.env.SMTP_PASS),
     backups: { count: backupsCount, last: lastBackup },
     leads: { total: leadsTotal, unhandled: leadsUnhandled },
+    orders: { total: ordersTotal, unhandled: ordersUnhandled },
     uploads,
     autoBackup: process.env.AUTO_BACKUP !== 'false',
     offsiteHint:

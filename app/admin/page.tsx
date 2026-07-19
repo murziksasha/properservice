@@ -1,6 +1,7 @@
 import { AdminShell } from '@/components/admin/AdminShell';
 import { HealthPanel } from '@/components/admin/HealthPanel';
 import { countLeads } from '@/lib/leads';
+import { countOrders } from '@/lib/orders';
 import { getSiteData } from '@/lib/site-data';
 import Link from 'next/link';
 
@@ -23,6 +24,13 @@ export default async function AdminDashboard() {
     openLeads = await countLeads({ unhandledOnly: true });
   } catch {
     openLeads = 0;
+  }
+
+  let openOrders = 0;
+  try {
+    openOrders = await countOrders({ unhandledOnly: true });
+  } catch {
+    openOrders = 0;
   }
 
   return (
@@ -51,6 +59,13 @@ export default async function AdminDashboard() {
           </span>
         </div>
         <div className='admin-stat-card'>
+          <span className='admin-stat-value'>{openOrders}</span>
+          <span className='admin-stat-label'>Нові замовлення</span>
+          <span className='admin-stat-meta'>
+            <Link href='/admin/orders'>відкрити журнал →</Link>
+          </span>
+        </div>
+        <div className='admin-stat-card'>
           <span className='admin-stat-value'>{site.headerMenu.filter((m) => m.visible).length}</span>
           <span className='admin-stat-label'>Пунктів меню</span>
           <span className='admin-stat-meta'>{site.servicesNav.filter((m) => m.visible).length} у послугах</span>
@@ -62,6 +77,9 @@ export default async function AdminDashboard() {
         <div className='admin-row admin-row--wrap'>
           <Link href='/admin/leads' className='admin-btn'>
             Заявки{openLeads > 0 ? ` (${openLeads})` : ''}
+          </Link>
+          <Link href='/admin/orders' className='admin-btn'>
+            Замовлення{openOrders > 0 ? ` (${openOrders})` : ''}
           </Link>
           <Link href='/admin/pages' className='admin-btn'>
             Сторінки
@@ -106,7 +124,9 @@ export default async function AdminDashboard() {
           </li>
           <li className={smtpConfigured ? 'is-ok' : 'is-warn'}>
             {smtpConfigured ? '✓' : '!'} SMTP
-            {!smtpConfigured ? ' — email вимкнено; заявки все одно в /admin/leads' : ''}
+            {!smtpConfigured
+              ? ' — email вимкнено; заявки/замовлення все одно в журналах'
+              : ''}
           </li>
           <li className={process.env.ADMIN_IP_ALLOWLIST ? 'is-ok' : 'is-info'}>
             {process.env.ADMIN_IP_ALLOWLIST

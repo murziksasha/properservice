@@ -22,7 +22,13 @@ export function matchesProductQuery(product: Product, q: string): boolean {
   const title = product.title.toLowerCase();
   const description = product.description.toLowerCase();
   const category = (product.category || '').toLowerCase();
-  return title.includes(normalized) || description.includes(normalized) || category.includes(normalized);
+  const code = (product.code || '').toLowerCase();
+  return (
+    title.includes(normalized) ||
+    description.includes(normalized) ||
+    category.includes(normalized) ||
+    code.includes(normalized)
+  );
 }
 
 export function matchesVisibility(product: Product, visibility: VisibilityFilter = 'all'): boolean {

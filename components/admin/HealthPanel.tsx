@@ -10,6 +10,7 @@ interface HealthReport {
   smtp: boolean;
   backups: { count: number; last: string | null };
   leads: { total: number; unhandled: number };
+  orders?: { total: number; unhandled: number };
   uploads: { count: number; bytes: number };
   autoBackup: boolean;
   offsiteHint: string;
@@ -81,6 +82,13 @@ export function HealthPanel() {
         </li>
         <li className={health.leads.unhandled > 0 ? 'is-warn' : 'is-ok'}>
           Заявки: {health.leads.unhandled} нових / {health.leads.total} усього
+        </li>
+        <li
+          className={
+            (health.orders?.unhandled ?? 0) > 0 ? 'is-warn' : 'is-ok'
+          }
+        >
+          Замовлення: {health.orders?.unhandled ?? 0} нових / {health.orders?.total ?? 0} усього
         </li>
       </ul>
       <p className='admin-hint admin-offsite-hint'>
