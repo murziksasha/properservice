@@ -7,9 +7,11 @@ import {
   sanitizePageTitle,
   truncateMeta,
 } from '@/lib/page-path';
+import { notifyLead } from '@/lib/notify';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { escapeText } from '@/lib/sanitize';
 import { isValidUaPhone, normalizePhoneDisplay } from '@/lib/phone';
+import { formatUtmLine, mergeUtm, parseUtmFromBody, parseUtmFromPagePath } from '@/lib/utm';
 
 function clientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest) {
     let pagePathRaw: unknown;
     let pageTitleRaw: unknown;
     let honeypot = '';
+    let bodyUtm = {};
 
     const contentType = request.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
@@ -39,12 +42,20 @@ export async function POST(request: NextRequest) {
       pagePathRaw = body.pagePath;
       pageTitleRaw = body.pageTitle;
       honeypot = typeof body.website === 'string' ? body.website : '';
+      bodyUtm = parseUtmFromBody(body as Record<string, unknown>);
     } else {
       const formData = await request.formData();
       phone = String(formData.get('phone') || '');
       pagePathRaw = formData.get('pagePath');
       pageTitleRaw = formData.get('pageTitle');
       honeypot = String(formData.get('website') || '');
+      bodyUtm = parseUtmFromBody({
+        utm_source: formData.get('utm_source'),
+        utm_medium: formData.get('utm_medium'),
+        utm_campaign: formData.get('utm_campaign'),
+        utm_content: formData.get('utm_content'),
+        utm_term: formData.get('utm_term'),
+      });
     }
 
     // Honeypot: bots that fill hidden field get soft success
@@ -64,6 +75,8 @@ export async function POST(request: NextRequest) {
 
     const pagePath = sanitizePagePath(pagePathRaw);
     const pageTitle = sanitizePageTitle(pageTitleRaw);
+    const utm = mergeUtm(parseUtmFromPagePath(pagePath), bodyUtm);
+    const utmLine = formatUtmLine(utm);
     const ip = clientIp(request);
     const userAgent = truncateMeta(request.headers.get('user-agent'), 200);
     const referer = truncateMeta(request.headers.get('referer'), 300);
@@ -87,11 +100,27 @@ export async function POST(request: NextRequest) {
         emailed: false,
         source: 'callback',
         pagePath,
+        utm,
       });
     } catch (err) {
       console.error('[leads] failed to persist', err);
-      // Without journal we still try email so the shop can call back
       lead = null;
+    }
+
+    // Fire-and-await Telegram (non-blocking for failure)
+    let telegram = false;
+    try {
+      telegram = await notifyLead({
+        phone,
+        leadId: lead?.id,
+        pagePath,
+        utmLine,
+      });
+      if (lead && telegram) {
+        // re-read not needed; flag only for response/logging
+      }
+    } catch {
+      telegram = false;
     }
 
     const when = new Date().toLocaleString('uk-UA');
@@ -146,6 +175,7 @@ export async function POST(request: NextRequest) {
         <p><strong>IP:</strong> ${safeIp}</p>
         <p><strong>User-Agent:</strong> ${safeUa}</p>
         <p><strong>Мова браузера:</strong> ${safeLang}</p>
+        <p><strong>UTM:</strong> ${escapeText(utmLine)}</p>
         ${
           safeAdmin
             ? `<p><strong>Журнал:</strong> <a href="${safeAdmin}">${safeAdmin}</a></p>`
@@ -165,6 +195,7 @@ export async function POST(request: NextRequest) {
           `IP: ${ip}`,
           `User-Agent: ${userAgent || '—'}`,
           `Мова браузера: ${language || '—'}`,
+          `UTM: ${utmLine}`,
         ];
         if (adminLeadsUrl) textLines.push(`Журнал: ${adminLeadsUrl}`);
 
@@ -195,7 +226,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to save lead' }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, emailed, dev: !smtpUser || !smtpPass });
+    return NextResponse.json({
+      ok: true,
+      emailed,
+      telegram,
+      dev: !smtpUser || !smtpPass,
+    });
   } catch (err) {
     console.error('Contact error:', err);
     return NextResponse.json({ error: 'Failed to send' }, { status: 500 });

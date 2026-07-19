@@ -8,7 +8,7 @@ import { SESSION_COOKIE } from '@/lib/session';
  * Edge Middleware does not reliably receive Docker runtime env vars for signing secrets.
  *
  * ADMIN_IP_ALLOWLIST (comma-separated): when set, only those client IPs may hit
- * /admin, /api/auth, /api/site, /api/upload, /api/backup, /api/leads, /api/media.
+ * /admin, /api/auth, /api/site, /api/upload, /api/backup, /api/leads, /api/media, /api/smtp-test.
  */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -20,7 +20,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/upload') ||
     pathname.startsWith('/api/backup') ||
     pathname.startsWith('/api/leads') ||
-    pathname.startsWith('/api/media');
+    pathname.startsWith('/api/media') ||
+    pathname.startsWith('/api/smtp-test');
 
   if (!isAdminUi && !isProtectedApi) {
     return NextResponse.next();
@@ -84,5 +85,7 @@ export const config = {
     '/api/leads/:path*',
     '/api/media',
     '/api/media/:path*',
+    '/api/smtp-test',
+    '/api/smtp-test/:path*',
   ],
 };

@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { OrderForm } from '@/components/forms/OrderForm';
+import { ProductCard } from '@/components/shop/ProductCard';
 import { formatTelHref } from '@/lib/phone';
-import { getProduct, getSiteData } from '@/lib/site-data';
+import { getRelatedProducts } from '@/lib/related-products';
+import { getProduct, getProducts, getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +22,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
   const title = product.title;
   const description = product.description || product.title;
+  const images = [product.image, ...(product.images || [])].filter(Boolean);
   return {
     title,
     description,
@@ -27,10 +30,10 @@ export async function generateMetadata({ params }: PageProps) {
       title,
       description,
       type: 'website',
-      images: product.image ? [{ url: product.image }] : undefined,
+      images: images.slice(0, 4).map((url) => ({ url })),
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
     },
@@ -39,7 +42,11 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const [data, product] = await Promise.all([getSiteData(), getProduct(id)]);
+  const [data, product, allProducts] = await Promise.all([
+    getSiteData(),
+    getProduct(id),
+    getProducts(),
+  ]);
 
   if (!product || !product.visible) {
     notFound();
@@ -48,12 +55,8 @@ export default async function ProductPage({ params }: PageProps) {
   const menu = data.headerMenu.filter((item) => item.visible);
   const viber = data.settings.social.find((s) => s.type === 'viber');
   const telegram = data.settings.social.find((s) => s.type === 'telegram');
-  const socialLabel: Record<string, string> = {
-    viber: 'Viber',
-    telegram: 'Telegram',
-    instagram: 'Instagram',
-    youtube: 'YouTube',
-  };
+  const gallery = [product.image, ...(product.images || []).filter((u) => u && u !== product.image)];
+  const related = getRelatedProducts(allProducts, product, 4);
 
   return (
     <SiteShell settings={data.settings} menu={menu} variant='inner'>
@@ -64,12 +67,22 @@ export default async function ProductPage({ params }: PageProps) {
         <div className='shop-detail__grid'>
           <div className='shop-detail__image'>
             <Image
-              src={product.image}
+              src={gallery[0]}
               alt={product.title}
               width={480}
               height={360}
+              sizes='(max-width: 768px) 100vw, 480px'
+              priority
               style={{ width: '100%', height: 'auto' }}
             />
+            {gallery.length > 1 ? (
+              <div className='shop-detail__thumbs'>
+                {gallery.map((src) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={src} src={src} alt='' className='shop-detail__thumb' loading='lazy' />
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className='shop-detail__info'>
             <h1 className='shop-detail__title _title'>{product.title}</h1>
@@ -82,18 +95,29 @@ export default async function ProductPage({ params }: PageProps) {
               </a>
               {viber ? (
                 <a href={viber.url} className='_btn' target='_blank' rel='noopener noreferrer'>
-                  {socialLabel.viber}
+                  Viber
                 </a>
               ) : null}
               {telegram ? (
                 <a href={telegram.url} className='_btn' target='_blank' rel='noopener noreferrer'>
-                  {socialLabel.telegram}
+                  Telegram
                 </a>
               ) : null}
             </div>
             <OrderForm productId={product.id} productTitle={product.title} />
           </div>
         </div>
+
+        {related.length > 0 ? (
+          <section className='shop-related' aria-label='Схожі товари'>
+            <h2 className='_title shop-related__title'>Схожі товари</h2>
+            <div className='shop-grid'>
+              {related.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        ) : null}
       </article>
     </SiteShell>
   );

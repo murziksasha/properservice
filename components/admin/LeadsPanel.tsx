@@ -1,8 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { TimeFilter } from '@/lib/journal-filter';
+import { matchesPhoneQuery, matchesTimeFilter } from '@/lib/journal-filter';
 import { formatTelHref } from '@/lib/phone';
 import { showToast } from './AdminToast';
+
+interface LeadAudit {
+  at: string;
+  action: string;
+  detail?: string;
+}
 
 interface Lead {
   id: string;
@@ -13,6 +21,11 @@ interface Lead {
   handled: boolean;
   note?: string;
   pagePath?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  handledAt?: string;
+  audit?: LeadAudit[];
 }
 
 function formatWhen(iso: string): string {
@@ -27,6 +40,8 @@ export function LeadsPanel() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [phoneQ, setPhoneQ] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
 
@@ -83,8 +98,7 @@ export function LeadsPanel() {
         body: JSON.stringify({ id }),
       });
       if (!res.ok) {
-        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
-        else showToast('Не вдалося видалити', 'error');
+        showToast('Не вдалося видалити', 'error');
         return;
       }
       showToast('Видалено', 'success');
@@ -96,11 +110,15 @@ export function LeadsPanel() {
     }
   }
 
-  const visible = leads.filter((l) => {
-    if (filter === 'open') return !l.handled;
-    if (filter === 'done') return l.handled;
-    return true;
-  });
+  const visible = useMemo(() => {
+    return leads.filter((l) => {
+      if (filter === 'open' && l.handled) return false;
+      if (filter === 'done' && !l.handled) return false;
+      if (!matchesTimeFilter(l.createdAt, timeFilter)) return false;
+      if (!matchesPhoneQuery(l.phone, phoneQ)) return false;
+      return true;
+    });
+  }, [leads, filter, timeFilter, phoneQ]);
 
   const openCount = leads.filter((l) => !l.handled).length;
 
@@ -110,17 +128,38 @@ export function LeadsPanel() {
         <h2 className='admin-h2' style={{ margin: 0 }}>
           Журнал {openCount > 0 ? <span className='admin-badge'>{openCount} нових</span> : null}
         </h2>
-        <div className='admin-row'>
+        <div className='admin-row admin-row--wrap'>
           <select
             className='admin-select'
             value={filter}
             onChange={(e) => setFilter(e.target.value as typeof filter)}
-            aria-label='Фільтр заявок'
+            aria-label='Статус'
           >
             <option value='open'>Нові</option>
             <option value='done'>Опрацьовані</option>
             <option value='all'>Усі</option>
           </select>
+          <select
+            className='admin-select'
+            value={timeFilter}
+            onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+            aria-label='Період'
+          >
+            <option value='all'>Весь час</option>
+            <option value='today'>Сьогодні</option>
+            <option value='week'>7 днів</option>
+          </select>
+          <input
+            type='search'
+            className='admin-field-sm'
+            placeholder='Телефон…'
+            value={phoneQ}
+            onChange={(e) => setPhoneQ(e.target.value)}
+            aria-label='Пошук за телефоном'
+          />
+          <a className='admin-btn admin-btn--secondary' href='/api/leads?format=csv'>
+            CSV
+          </a>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
             Оновити
           </button>
@@ -128,15 +167,13 @@ export function LeadsPanel() {
       </div>
 
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-
-      {!loading && visible.length === 0 ? (
-        <p className='admin-hint'>Немає заявок у цьому фільтрі.</p>
-      ) : null}
+      {!loading && visible.length === 0 ? <p className='admin-hint'>Немає заявок у цьому фільтрі.</p> : null}
 
       <ul className='admin-leads-list'>
         {visible.map((lead) => {
           const noteVal = noteDraft[lead.id] ?? lead.note ?? '';
           const busy = busyId === lead.id;
+          const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign].filter(Boolean).join(' / ');
           return (
             <li key={lead.id} className={`admin-lead-item${lead.handled ? ' is-handled' : ''}`}>
               <div className='admin-lead-main'>
@@ -146,10 +183,17 @@ export function LeadsPanel() {
                 <span className='admin-lead-meta'>{formatWhen(lead.createdAt)}</span>
                 <span className='admin-lead-meta'>
                   {lead.emailed ? 'email ✓' : 'без email'} · {lead.source}
+                  {lead.handledAt ? ` · оброблено ${formatWhen(lead.handledAt)}` : ''}
                 </span>
                 {lead.pagePath ? (
                   <span className='admin-lead-meta' title={lead.pagePath}>
                     {lead.pagePath}
+                  </span>
+                ) : null}
+                {utm ? <span className='admin-lead-meta'>UTM: {utm}</span> : null}
+                {lead.audit && lead.audit.length > 0 ? (
+                  <span className='admin-lead-meta' title={lead.audit.map((a) => `${a.action} ${a.at}`).join('\n')}>
+                    Історія: {lead.audit.slice(-3).map((a) => a.action).join(' → ')}
                   </span>
                 ) : null}
                 <label className='admin-lead-meta' style={{ display: 'block', marginTop: 6 }}>

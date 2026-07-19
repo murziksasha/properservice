@@ -34,6 +34,7 @@ const productSchema = z.object({
   description: z.string(),
   price: z.number(),
   image: z.string(),
+  images: z.array(z.string()).optional(),
   visible: z.boolean(),
   category: z.string().optional(),
   /** Optional; empty/undefined OK. Non-empty must be ≥2 chars after trim (enforced on save). */

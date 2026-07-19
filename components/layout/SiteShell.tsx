@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import type { MenuItem, SiteSettings } from '@/lib/types';
+import { FaqJsonLd } from '@/components/seo/FaqJsonLd';
 import { LocalBusinessJsonLd } from '@/components/seo/LocalBusinessJsonLd';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -25,6 +26,7 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
   return (
     <div className='container' id='up' style={style}>
       <LocalBusinessJsonLd settings={settings} siteUrl={siteUrl} />
+      {variant === 'home' ? <FaqJsonLd /> : null}
       <a className='skip-link' href='#main-content'>
         Перейти до вмісту
       </a>

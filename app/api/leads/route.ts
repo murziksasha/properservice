@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import { toCsv } from '@/lib/csv';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { deleteLead, listLeads, updateLead } from '@/lib/leads';
 
@@ -17,11 +18,47 @@ async function guard() {
   return { ok: true as const };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const g = await guard();
   if (!g.ok) return g.response;
 
   const leads = await listLeads();
+  const format = request.nextUrl.searchParams.get('format');
+  if (format === 'csv') {
+    const csv = toCsv(
+      [
+        'id',
+        'createdAt',
+        'phone',
+        'pagePath',
+        'utmSource',
+        'utmMedium',
+        'utmCampaign',
+        'handled',
+        'note',
+        'emailed',
+      ],
+      leads.map((l) => [
+        l.id,
+        l.createdAt,
+        l.phone,
+        l.pagePath || '',
+        l.utmSource || '',
+        l.utmMedium || '',
+        l.utmCampaign || '',
+        l.handled,
+        l.note || '',
+        l.emailed,
+      ]),
+    );
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="leads.csv"',
+      },
+    });
+  }
   return NextResponse.json({
     leads,
     total: leads.length,

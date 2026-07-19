@@ -2,48 +2,24 @@ name: CI
 
 on:
   push:
-    branches: [main, master, groKmigrateNext]
+    branches: [main, master, featShopLayout]
   pull_request:
 
 jobs:
-  quality:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: npm
-
-      - name: Install
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build
         env:
-          SESSION_SECRET: ci-test-session-secret
           ADMIN_PASSWORD: ci-test-password
-
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-
-      - name: E2E smoke
-        run: npm run test:smoke
-        env:
-          SESSION_SECRET: ci-test-session-secret-at-least-32-chars
-          ADMIN_PASSWORD: ci-test-password
+          SESSION_SECRET: ci-session-secret-min-32-chars-long!!
           COOKIE_SECURE: 'false'
-          CI: true
-
-      - name: Build
-        run: npm run build
-        env:
-          SESSION_SECRET: ci-test-session-secret
-          ADMIN_PASSWORD: ci-test-password

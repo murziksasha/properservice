@@ -51,7 +51,10 @@ export interface Product {
   title: string;
   description: string;
   price: number;
+  /** Primary image (also first of gallery). */
   image: string;
+  /** Extra gallery images (primary is image). */
+  images?: string[];
   visible: boolean;
   /** Optional display category for catalog filters (e.g. «Телефони»). */
   category?: string;

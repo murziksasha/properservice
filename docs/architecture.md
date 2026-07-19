@@ -157,7 +157,22 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 ### Health
 
 - `GET /api/health` **public**: `{ ok, service, time, uptimeSec }`
-- **Session**: full report (backups, leads, SMTP, uploads…) for Dashboard
+- **Session**: full report (backups, leads, SMTP, Telegram, TOTP, SITE_URL, uploads…) for Dashboard
+
+### Notifications
+
+- Email: nodemailer → `MAIL_TO` (contact + orders)
+- Telegram: `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` (`lib/notify.ts`)
+- Admin SMTP test: `POST /api/smtp-test` (session)
+
+### Partial site API
+
+- `PUT /api/site` — full document + `updatedAt` concurrency
+- `PATCH /api/site` — `{ section, data, expectedUpdatedAt }` for `goods|settings|headerMenu|servicesNav|pages|shopLink`
+
+### Auth 2FA
+
+- Optional `ADMIN_TOTP_SECRET` (base32). Login body: `{ password, totp }`.
 
 ## Atomic writes
 
