@@ -12,6 +12,7 @@
     "start:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/start-prod.ps1",
     "backup:offsite": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/backup-offsite.ps1",
     "seed:catalog": "node scripts/seed-catalog.mjs",
+    "rotate-secrets": "node scripts/rotate-secrets.mjs",
     "pm2:setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pm2-setup.ps1",
     "pm2:autostart": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/pm2-autostart.ps1",
     "pm2:register-autostart": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/register-autostart.ps1",

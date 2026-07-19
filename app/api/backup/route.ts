@@ -32,7 +32,7 @@ async function requireAdminOrCron(request: NextRequest) {
   return { ok: true as const, via: 'admin' as const };
 }
 
-async function requireAdminOnly(request: NextRequest) {
+async function requireAdminOnly(_request: NextRequest) {
   const ipGate = await assertAdminIp();
   if (!ipGate.ok) return { ok: false as const, status: ipGate.status, error: ipGate.error };
   const session = await getSession();

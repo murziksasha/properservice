@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import type { TimeFilter } from '@/lib/journal-filter';
 import { matchesPhoneQuery, matchesTimeFilter } from '@/lib/journal-filter';
 import { formatTelHref } from '@/lib/phone';
@@ -157,9 +158,9 @@ export function LeadsPanel() {
             onChange={(e) => setPhoneQ(e.target.value)}
             aria-label='Пошук за телефоном'
           />
-          <a className='admin-btn admin-btn--secondary' href='/api/leads?format=csv'>
+          <Link className='admin-btn admin-btn--secondary' href='/api/leads?format=csv'>
             CSV
-          </a>
+          </Link>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
             Оновити
           </button>
