@@ -31,20 +31,25 @@ export async function getSiteData(): Promise<SiteData> {
   }
 }
 
-export async function saveSiteData(data: SiteData): Promise<void> {
+export async function saveSiteData(data: SiteData): Promise<SiteData> {
   const filePath = getDataFilePath();
   await ensureDataDir(filePath);
-  await atomicWriteJson(filePath, data);
+  const next: SiteData = {
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+  await atomicWriteJson(filePath, next);
 
   // Rolling snapshots under data/backups (failures must not block save)
   if (process.env.AUTO_BACKUP !== 'false') {
     try {
       const { createSiteBackupFromData } = await import('./backup');
-      await createSiteBackupFromData(data, { label: 'autosave' });
+      await createSiteBackupFromData(next, { label: 'autosave' });
     } catch (err) {
       console.error('[backup] auto snapshot failed', err);
     }
   }
+  return next;
 }
 
 export async function getPages(): Promise<Page[]> {

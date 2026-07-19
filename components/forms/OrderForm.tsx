@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
-import { isValidUaPhone } from '@/lib/phone';
+import { FormEvent, useId, useState } from 'react';
+import { isValidUaPhone, PHONE_PLACEHOLDER } from '@/lib/phone';
 import { PhoneInput } from './PhoneInput';
 
 const MESSAGES = {
@@ -10,6 +10,15 @@ const MESSAGES = {
   failure: 'Щось пішло не так...',
   invalid: 'Введіть коректний номер телефону',
 };
+
+function formatRetryWait(sec: number): string {
+  if (Number.isFinite(sec) && sec > 0 && sec < 60) return `${sec} с`;
+  if (Number.isFinite(sec) && sec >= 60) {
+    const m = Math.ceil(sec / 60);
+    return m === 1 ? 'хвилину' : `${m} хв`;
+  }
+  return 'хвилину';
+}
 
 export function OrderForm({
   productId,
@@ -21,6 +30,8 @@ export function OrderForm({
   const [status, setStatus] = useState('');
   const [isError, setIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const statusId = useId();
+  const phoneId = useId();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,9 +56,8 @@ export function OrderForm({
         if (response.status === 429) {
           const retry = response.headers.get('Retry-After');
           const sec = retry ? parseInt(retry, 10) : 60;
-          const wait = Number.isFinite(sec) && sec > 0 && sec < 60 ? `${sec} с` : 'хвилину';
           setIsError(true);
-          setStatus(`Забагато запитів. Зачекайте ${wait}.`);
+          setStatus(`Забагато запитів. Зачекайте ${formatRetryWait(sec)}.`);
           window.setTimeout(() => setStatus(''), 5000);
           return;
         }
@@ -82,9 +92,17 @@ export function OrderForm({
       <p className='shop-order__hint'>
         Залиште номер — ми передзвонимо щодо «{productTitle}». Кількість і деталі узгодимо по телефону.
       </p>
-      <label className='shop-order__label'>
+      <label className='shop-order__label' htmlFor={phoneId}>
         Телефон
-        <PhoneInput name='phone' className='shop-order__phone' placeholder='+38( ___ ) __ __ ___' />
+        <PhoneInput
+          id={phoneId}
+          name='phone'
+          className='shop-order__phone'
+          placeholder={PHONE_PLACEHOLDER}
+          aria-invalid={isError}
+          aria-describedby={status ? statusId : undefined}
+          required
+        />
       </label>
       <label className='shop-order__label'>
         Коментар <span className='shop-order__optional'>(необов&apos;язково)</span>
@@ -96,8 +114,7 @@ export function OrderForm({
           placeholder='Наприклад: колір, під замовлення…'
         />
       </label>
-      {/* Honeypot — hide from humans */}
-      <div className='shop-order__hp' aria-hidden='true'>
+      <div className='form-hp' aria-hidden='true'>
         <label>
           Website
           <input type='text' name='website' tabIndex={-1} autoComplete='off' />
@@ -107,7 +124,12 @@ export function OrderForm({
         Замовити
       </button>
       {status ? (
-        <div className={`status${isError ? ' status--error' : ''}`} role='status' aria-live='polite'>
+        <div
+          id={statusId}
+          className={`status${isError ? ' status--error' : ' status--ok'}`}
+          role='status'
+          aria-live='polite'
+        >
           {status}
         </div>
       ) : null}

@@ -36,6 +36,24 @@ export interface HealthReport {
   offsiteHint: string;
 }
 
+/** Minimal probe for load balancers / unauthenticated monitors. */
+export async function getPublicHealth(): Promise<{
+  ok: boolean;
+  service: string;
+  time: string;
+  uptimeSec: number;
+}> {
+  const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+  const sitePath = path.join(dataDir, 'site.json');
+  const ok = existsSync(sitePath);
+  return {
+    ok,
+    service: 'properservice',
+    time: new Date().toISOString(),
+    uptimeSec: Math.floor((Date.now() - startedAt) / 1000),
+  };
+}
+
 export async function getHealthReport(): Promise<HealthReport> {
   const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
   const sitePath = path.join(dataDir, 'site.json');

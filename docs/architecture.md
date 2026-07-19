@@ -79,10 +79,12 @@ Shared helpers: `lib/admin/saveSite.ts`, `lib/admin/uploadImage.ts`, `lib/sectio
 
 ## Contact flow
 
-`CallbackForm` → `POST /api/contact` → validate UA phone → rate-limit → **append lead** (`data/leads.json`, `emailed: false`) → nodemailer (optional) → mark `emailed: true` on success  
+`CallbackForm` → `POST /api/contact` → honeypot `website` → validate UA phone (`380`+9 або `0`+9) → rate-limit → **append lead** (`data/leads.json`, `emailed: false`) → nodemailer (optional) → mark `emailed: true` on success  
 
 Заявки завжди в журналі адмінки `/admin/leads` навіть без SMTP.  
 Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend його не викликає.
+
+Маска/placeholder телефону: `+38 (___) ___ __ __` (`lib/phone.ts` → `PHONE_PLACEHOLDER`).
 
 ### Service metadata in callback email
 
@@ -106,6 +108,16 @@ Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend й
 
 У `leads.json` зберігається `pagePath` (без IP/UA). Subject: `Новий дзвінок з сайту · {phone}`.  
 Санітизація path: `lib/page-path.ts`.
+
+### Section render notes
+
+- `advantages` не дублюється: standalone skip, якщо є `malfunctions` або `about-links` (вони інжектять переваги).
+- `services-nav` рендериться лише без hero (інакше nav у hero).
+- Сторінка товару: лише `OrderForm` + call/messengers (без другої callback-форми).
+
+### Site save concurrency
+
+`SiteData.updatedAt` — optimistic lock. `PUT /api/site` → **409** якщо клієнтська ревізія ≠ серверна.
 
 ## Order flow (shop)
 
@@ -135,11 +147,17 @@ sequenceDiagram
 - Fields: UA phone (required), comment (optional, max 1000), quantity always **1**
 - Server reloads product; rejects invisible/missing; stores **snapshot** (id, title, price, code, image)
 - Email to `MAIL_TO` only (shop); journal works without SMTP (`emailed: false`)
-- Honeypot field `website` → soft `ok` without persist
-- Admin: `/admin/orders` + `GET/PATCH/DELETE /api/orders` (session + IP allowlist like leads)
+- Honeypot field `website` → soft `ok` without persist (same on contact)
+- Admin: `/admin/orders` + `GET/PATCH/DELETE /api/orders` (session + IP allowlist at route)
 - Store: `lib/orders.ts`, cap 500, atomic write
+- Notes: PATCH `note` + UI в Leads/Orders panels
 
 Leads (callback) and orders (shop) are **separate** files and admin sections.
+
+### Health
+
+- `GET /api/health` **public**: `{ ok, service, time, uptimeSec }`
+- **Session**: full report (backups, leads, SMTP, uploads…) for Dashboard
 
 ## Atomic writes
 

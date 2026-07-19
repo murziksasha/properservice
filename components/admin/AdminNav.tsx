@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const LINKS = [
-  { href: '/admin', label: 'Dashboard', exact: true },
+  { href: '/admin', label: 'Огляд', exact: true },
   { href: '/admin/leads', label: 'Заявки' },
   { href: '/admin/orders', label: 'Замовлення' },
   { href: '/admin/menu', label: 'Меню' },
@@ -68,6 +68,7 @@ export function AdminNav() {
           type='button'
           className='admin-btn admin-btn--secondary admin-nav-logout'
           onClick={async () => {
+            if (!window.confirm('Вийти з адмінки? Незбережені зміни в інших вкладках можуть втратитися.')) return;
             await fetch('/api/auth', { method: 'DELETE' });
             window.location.href = '/admin/login';
           }}

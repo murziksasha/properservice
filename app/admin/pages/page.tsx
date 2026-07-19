@@ -12,19 +12,28 @@ import type { Page, SiteData } from '@/lib/types';
 export default function AdminPagesList() {
   const [site, setSite] = useState<SiteData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [busy, setBusy] = useState(false);
 
   async function load() {
+    setLoading(true);
+    setLoadError(false);
     const data = await fetchSiteData();
-    if (data) setSite(data);
-    else showToast('Не вдалося завантажити дані (потрібна авторизація)', 'error');
+    if (data) {
+      setSite(data);
+      setLoadError(false);
+    } else {
+      setSite(null);
+      setLoadError(true);
+      showToast('Не вдалося завантажити дані (потрібна авторизація)', 'error');
+    }
     setLoading(false);
   }
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function persist(next: SiteData, okMsg: string) {
@@ -32,7 +41,7 @@ export default function AdminPagesList() {
     const result = await saveSiteData(next);
     setBusy(false);
     if (result.ok) {
-      setSite(next);
+      setSite({ ...next, updatedAt: result.updatedAt || next.updatedAt });
       showToast(okMsg, 'success');
       return true;
     }
@@ -97,11 +106,25 @@ export default function AdminPagesList() {
     await persist({ ...site, pages: [...site.pages, copy] }, 'Сторінку продубльовано (прихована)');
   }
 
-  if (loading || !site) {
+  if (loading) {
     return (
       <AdminShell>
         <h1>Сторінки</h1>
-        <p>Завантаження...</p>
+        <p className='admin-hint'>Завантаження...</p>
+      </AdminShell>
+    );
+  }
+
+  if (loadError || !site) {
+    return (
+      <AdminShell>
+        <h1>Сторінки</h1>
+        <div className='admin-card'>
+          <p className='admin-hint admin-login-error'>Не вдалося завантажити список сторінок.</p>
+          <button type='button' className='admin-btn' onClick={() => void load()}>
+            Спробувати знову
+          </button>
+        </div>
       </AdminShell>
     );
   }
@@ -147,6 +170,7 @@ export default function AdminPagesList() {
                 <span className='admin-hint'>
                   {publicPath}
                   {!page.visible ? ' · прихована' : ''}
+                  {page.contentHtml?.trim() ? ' · HTML-режим' : ''}
                   {' · '}
                   {page.sections.length} секц.
                 </span>

@@ -94,7 +94,7 @@ export function ContactsSection({
         </div>
         <div className='contacts__callback _callback'>
           <p className='_callback__title _paragr'>Залишіть заявку та отримайте первинну консультацію:</p>
-          <CallbackForm buttonText='залишити заявку' placeholder='+38( ___ ) __ __ ___' />
+          <CallbackForm buttonText='залишити заявку' />
         </div>
       </div>
     </div>

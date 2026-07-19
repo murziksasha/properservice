@@ -20,6 +20,7 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
   if (titleSize) style['--title-size'] = `${titleSize}rem`;
   if (textScale) style['--text-scale'] = String(textScale);
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, '') || undefined;
+  const gincore = process.env.GINCORE_WIDGETS !== 'false';
 
   return (
     <div className='container' id='up' style={style}>
@@ -34,8 +35,18 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
       <PageUp />
       <Footer settings={settings} />
       <StickyCallBar settings={settings} />
-      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0' strategy='lazyOnload' />
-      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0' strategy='lazyOnload' />
+      {gincore ? (
+        <>
+          <Script
+            src='https://remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0'
+            strategy='lazyOnload'
+          />
+          <Script
+            src='https://remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0'
+            strategy='lazyOnload'
+          />
+        </>
+      ) : null}
     </div>
   );
 }

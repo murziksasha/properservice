@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { formatTelHref } from '@/lib/phone';
 import { showToast } from './AdminToast';
 
 interface OrderProduct {
@@ -35,12 +36,15 @@ export function OrdersPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/orders');
       if (!res.ok) {
-        showToast('Не вдалося завантажити замовлення', 'error');
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося завантажити замовлення', 'error');
         return;
       }
       const json = (await res.json()) as { orders?: Order[] };
@@ -56,33 +60,49 @@ export function OrdersPanel() {
     void load();
   }, [load]);
 
-  async function setHandled(id: string, handled: boolean) {
-    const res = await fetch('/api/orders', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, handled }),
-    });
-    if (!res.ok) {
-      showToast('Не вдалося оновити', 'error');
-      return;
+  async function patchOrder(id: string, body: { handled?: boolean; note?: string }, okMsg: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...body }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося оновити', 'error');
+        return;
+      }
+      showToast(okMsg, 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    } finally {
+      setBusyId(null);
     }
-    showToast(handled ? 'Позначено обробленим' : 'Повернуто в нові', 'success');
-    await load();
   }
 
   async function remove(id: string) {
     if (!confirm('Видалити замовлення?')) return;
-    const res = await fetch('/api/orders', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    if (!res.ok) {
-      showToast('Не вдалося видалити', 'error');
-      return;
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося видалити', 'error');
+        return;
+      }
+      showToast('Видалено', 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    } finally {
+      setBusyId(null);
     }
-    showToast('Видалено', 'success');
-    await load();
   }
 
   const visible = orders.filter((o) => {
@@ -123,48 +143,84 @@ export function OrdersPanel() {
       ) : null}
 
       <ul className='admin-leads-list'>
-        {visible.map((order) => (
-          <li key={order.id} className={`admin-lead-item${order.handled ? ' is-handled' : ''}`}>
-            <div className='admin-lead-main'>
-              <a className='admin-lead-phone' href={`tel:${order.phone.replace(/\D/g, '')}`}>
-                {order.phone}
-              </a>
-              <span className='admin-lead-meta'>{formatWhen(order.createdAt)}</span>
-              <span className='admin-lead-meta'>
-                <strong>{order.product.title}</strong>
-                {order.product.code ? ` · ${order.product.code}` : ''}
-                {' · '}
-                {order.product.price.toLocaleString('uk-UA')} ₴ × {order.quantity}
-              </span>
-              {order.comment ? <span className='admin-lead-meta'>Коментар: {order.comment}</span> : null}
-              <span className='admin-lead-meta'>
-                {order.emailed ? 'email ✓' : 'без email'} · {order.source}
-                {order.note ? ` · нотатка: ${order.note}` : ''}
-              </span>
-              <a className='admin-lead-meta' href={`/shop/${order.product.id}`} target='_blank' rel='noreferrer'>
-                Сторінка товару ↗
-              </a>
-            </div>
-            <div className='admin-row'>
-              {!order.handled ? (
-                <button type='button' className='admin-btn' onClick={() => void setHandled(order.id, true)}>
-                  Оброблено
-                </button>
-              ) : (
+        {visible.map((order) => {
+          const noteVal = noteDraft[order.id] ?? order.note ?? '';
+          const busy = busyId === order.id;
+          return (
+            <li key={order.id} className={`admin-lead-item${order.handled ? ' is-handled' : ''}`}>
+              <div className='admin-lead-main'>
+                <a className='admin-lead-phone' href={formatTelHref(order.phone)}>
+                  {order.phone}
+                </a>
+                <span className='admin-lead-meta'>{formatWhen(order.createdAt)}</span>
+                <span className='admin-lead-meta'>
+                  <strong>{order.product.title}</strong>
+                  {order.product.code ? ` · ${order.product.code}` : ''}
+                  {' · '}
+                  {order.product.price.toLocaleString('uk-UA')} ₴ × {order.quantity}
+                </span>
+                {order.comment ? <span className='admin-lead-meta'>Коментар: {order.comment}</span> : null}
+                <span className='admin-lead-meta'>
+                  {order.emailed ? 'email ✓' : 'без email'} · {order.source}
+                </span>
+                <a
+                  className='admin-lead-meta'
+                  href={`/shop/${order.product.id}`}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  Сторінка товару ↗
+                </a>
+                <label className='admin-lead-meta' style={{ display: 'block', marginTop: 6 }}>
+                  Нотатка
+                  <input
+                    className='admin-grow'
+                    style={{ display: 'block', width: '100%', marginTop: 4 }}
+                    value={noteVal}
+                    disabled={busy}
+                    onChange={(e) => setNoteDraft((d) => ({ ...d, [order.id]: e.target.value }))}
+                    onBlur={() => {
+                      const next = (noteDraft[order.id] ?? order.note ?? '').trim();
+                      const prev = (order.note || '').trim();
+                      if (next === prev) return;
+                      void patchOrder(order.id, { note: next }, 'Нотатку збережено');
+                    }}
+                    placeholder='Коментар оператора…'
+                  />
+                </label>
+              </div>
+              <div className='admin-row'>
+                {!order.handled ? (
+                  <button
+                    type='button'
+                    className='admin-btn'
+                    disabled={busy}
+                    onClick={() => void patchOrder(order.id, { handled: true }, 'Позначено обробленим')}
+                  >
+                    Оброблено
+                  </button>
+                ) : (
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--secondary'
+                    disabled={busy}
+                    onClick={() => void patchOrder(order.id, { handled: false }, 'Повернуто в нові')}
+                  >
+                    Відкрити знову
+                  </button>
+                )}
                 <button
                   type='button'
-                  className='admin-btn admin-btn--secondary'
-                  onClick={() => void setHandled(order.id, false)}
+                  className='admin-btn admin-btn--danger'
+                  disabled={busy}
+                  onClick={() => void remove(order.id)}
                 >
-                  Відкрити знову
+                  Видалити
                 </button>
-              )}
-              <button type='button' className='admin-btn admin-btn--danger' onClick={() => void remove(order.id)}>
-                Видалити
-              </button>
-            </div>
-          </li>
-        ))}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

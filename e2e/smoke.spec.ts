@@ -13,25 +13,24 @@ test.describe('public smoke', () => {
     expect(jsonText).toContain('LocalBusiness');
   });
 
-  test('health endpoint extended', async ({ request }) => {
+  test('health endpoint public is minimal', async ({ request }) => {
     const res = await request.get('/api/health');
     expect(res.ok()).toBeTruthy();
     const json = (await res.json()) as {
       ok: boolean;
       service: string;
       uptimeSec: number;
-      backups: { count: number };
-      leads: { total: number };
-      orders: { total: number };
-      offsiteHint: string;
+      backups?: unknown;
+      leads?: unknown;
+      offsiteHint?: string;
     };
     expect(json.ok).toBe(true);
     expect(json.service).toBe('properservice');
     expect(typeof json.uptimeSec).toBe('number');
-    expect(json.backups).toBeTruthy();
-    expect(json.leads).toBeTruthy();
-    expect(json.orders).toBeTruthy();
-    expect(json.offsiteHint.length).toBeGreaterThan(10);
+    // Unauthenticated probe must not leak ops details
+    expect(json.backups).toBeUndefined();
+    expect(json.leads).toBeUndefined();
+    expect(json.offsiteHint).toBeUndefined();
   });
 
   test('robots.txt', async ({ request }) => {

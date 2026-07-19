@@ -1,6 +1,5 @@
 body.nav-open {
   overflow: hidden;
-  touch-action: none;
 }
 
 .header {
@@ -20,11 +19,16 @@ body.nav-open {
     font-size: 1.3rem;
     font-weight: 600;
     white-space: nowrap;
-    z-index: 30;
+    z-index: 110;
 
     img {
       width: 1.8rem;
       height: 1.8rem;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
     }
   }
 
@@ -40,7 +44,12 @@ body.nav-open {
     border: none;
     background: transparent;
     cursor: pointer;
-    z-index: 30;
+    z-index: 110;
+
+    &:focus-visible {
+      outline: 2px solid #02a653;
+      outline-offset: 2px;
+    }
 
     span {
       display: block;
@@ -67,7 +76,7 @@ body.nav-open {
     inset: 0;
     background: rgba(0, 0, 0, 0.35);
     border: none;
-    z-index: 20;
+    z-index: 100;
     cursor: pointer;
   }
 
@@ -105,10 +114,8 @@ body.nav-open {
       }
     }
 
-    &_phone {
-      & a {
-        letter-spacing: 0.9rem;
-      }
+    &_number {
+      letter-spacing: 0.04em;
     }
 
     &_social {
@@ -196,7 +203,7 @@ body.nav-open {
       right: 0;
       bottom: 0;
       width: min(80vw, 320px);
-      z-index: 25;
+      z-index: 110;
       background: #fff;
       padding: 7rem 2.4rem 2.4rem;
       box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);

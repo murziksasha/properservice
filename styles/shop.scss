@@ -447,5 +447,22 @@
 
   .status {
     margin-top: 10px;
+    width: 100%;
+  }
+
+  &__phone[aria-invalid='true'] {
+    border-color: #c0392b;
+  }
+}
+
+.shop-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.6rem 0;
+
+  ._btn {
+    flex: 1 1 auto;
+    min-width: min(100%, 14rem);
   }
 }

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { ShopCatalog } from '@/components/shop/ShopCatalog';
+import { formatTelHref } from '@/lib/phone';
 import { getProducts, getSiteData } from '@/lib/site-data';
 import { parseProductSort } from '@/lib/shop-catalog';
 
@@ -8,15 +9,28 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata() {
   const data = await getSiteData();
+  const description = data.settings.description || 'Каталог товарів Proper Service';
   return {
     title: 'Магазин',
-    description: data.settings.description || 'Каталог товарів Proper Service',
+    description,
+    openGraph: {
+      title: 'Магазин | Proper Service',
+      description,
+      type: 'website',
+    },
   };
 }
 
 interface PageProps {
   searchParams: Promise<{ q?: string; sort?: string; category?: string }>;
 }
+
+const SOCIAL_LABELS: Record<string, string> = {
+  viber: 'Viber',
+  telegram: 'Telegram',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+};
 
 export default async function ShopPage({ searchParams }: PageProps) {
   const [data, products, sp] = await Promise.all([getSiteData(), getProducts(), searchParams]);
@@ -41,14 +55,20 @@ export default async function ShopPage({ searchParams }: PageProps) {
         />
 
         <p className='shop-page__contact'>
-          <a href={`tel:${data.settings.headerPhone.tel}`} className='_btn'>
+          <a href={formatTelHref(data.settings.headerPhone.tel)} className='_btn'>
             Замовити: {data.settings.headerPhone.display}
           </a>
         </p>
         <div className='shop-page__messengers'>
           {data.settings.social.map((link) => (
-            <a key={link.id} href={link.url} target='_blank' rel='noreferrer' className='shop-page__social'>
-              {link.type}
+            <a
+              key={link.id}
+              href={link.url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='shop-page__social'
+            >
+              {SOCIAL_LABELS[link.type] || link.type}
             </a>
           ))}
         </div>

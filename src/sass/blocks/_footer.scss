@@ -9,11 +9,14 @@
   }
 
   .logo {
-    flex: 0 1 20rem;
+    flex: 0 1 14rem;
     img{
       position: unset;
-      width: 18rem;
-      height: 13rem;
+      width: auto;
+      height: auto;
+      max-height: 5.6rem;
+      max-width: 14rem;
+      object-fit: contain;
     }
   }
 }

@@ -109,14 +109,13 @@ export function FeedbackSection({
         </div>
 
         {count > 1 ? (
-          <div className='feedback__dots' role='tablist' aria-label='Слайди відгуків'>
+          <div className='feedback__dots' role='group' aria-label='Слайди відгуків'>
             {images.map((_, i) => (
               <button
                 key={i}
                 type='button'
-                role='tab'
-                aria-selected={i === index}
-                aria-label={`Слайд ${i + 1}`}
+                aria-current={i === index ? 'true' : undefined}
+                aria-label={`Слайд ${i + 1} з ${count}`}
                 className={`feedback__dot${i === index ? ' is-active' : ''}`}
                 onClick={() => setIndex(i)}
               />

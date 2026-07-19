@@ -22,12 +22,14 @@ export async function generateMetadata({ params }: PageProps) {
   const data = await getSiteData();
   const page = data.pages.find((p) => p.slug === slug && p.visible);
   if (!page) return { title: 'Не знайдено' };
+  const description = page.description || data.settings.description;
   return {
     title: page.title,
-    description: page.description || data.settings.description,
+    description,
     openGraph: {
       title: page.title,
-      description: page.description || data.settings.description,
+      description,
+      type: 'website',
     },
   };
 }
@@ -43,16 +45,22 @@ export default async function SlugPage({ params }: PageProps) {
 
   const menu = data.headerMenu.filter((item) => item.visible);
 
-  if (page.contentHtml) {
+  if (page.contentHtml?.trim()) {
     return (
       <SiteShell
         settings={data.settings}
         menu={menu}
-        variant="inner"
+        variant='inner'
         titleSize={page.titleSize}
         textScale={page.textScale}
       >
-        <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }} />
+        <article className='content-page wrapper'>
+          <h1 className='content-page__title _title'>{page.title}</h1>
+          <div
+            className='content-page__body'
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }}
+          />
+        </article>
       </SiteShell>
     );
   }
@@ -61,7 +69,7 @@ export default async function SlugPage({ params }: PageProps) {
     <SiteShell
       settings={data.settings}
       menu={menu}
-      variant="inner"
+      variant='inner'
       titleSize={page.titleSize}
       textScale={page.textScale}
     >

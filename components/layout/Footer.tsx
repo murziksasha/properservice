@@ -10,6 +10,9 @@ export function Footer({ settings }: { settings: SiteSettings }) {
     copyright = copyright.replace(/^©\s*/, `© ${year} `);
   }
 
+  const policyUrl = settings.privacyPolicyUrl || '/confident';
+  const isExternal = /^https?:\/\//i.test(policyUrl);
+
   return (
     <footer className='footer'>
       <div className='footer__wrapper wrapper'>
@@ -20,9 +23,13 @@ export function Footer({ settings }: { settings: SiteSettings }) {
         </div>
         <div className='policy'>
           Використовуючи веб-сайт, Ви погоджуєтесь з умовами{' '}
-          <Link href={settings.privacyPolicyUrl} target='_blank'>
-            {settings.privacyPolicyText}
-          </Link>
+          {isExternal ? (
+            <a href={policyUrl} target='_blank' rel='noopener noreferrer'>
+              {settings.privacyPolicyText}
+            </a>
+          ) : (
+            <Link href={policyUrl}>{settings.privacyPolicyText}</Link>
+          )}
         </div>
         <div className='copy'>{copyright}</div>
       </div>

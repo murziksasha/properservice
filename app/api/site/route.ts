@@ -48,8 +48,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
 
-    await saveSiteData(parsed.data);
-    return NextResponse.json({ ok: true });
+    const current = await getSiteData();
+    const clientRev = parsed.data.updatedAt;
+    const serverRev = current.updatedAt;
+    // Optimistic concurrency: if both have a revision and they differ, reject
+    if (clientRev && serverRev && clientRev !== serverRev) {
+      return NextResponse.json(
+        {
+          error: 'Дані змінені іншим сеансом. Оновіть сторінку та повторіть.',
+          code: 'CONFLICT',
+          updatedAt: serverRev,
+        },
+        { status: 409 },
+      );
+    }
+
+    const saved = await saveSiteData(parsed.data);
+    return NextResponse.json({ ok: true, updatedAt: saved.updatedAt });
   } catch {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });
   }

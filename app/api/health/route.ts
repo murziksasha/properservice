@@ -1,19 +1,27 @@
 import { NextResponse } from 'next/server';
-import { getHealthReport } from '@/lib/health';
+import { getSession } from '@/lib/auth';
+import { getHealthReport, getPublicHealth } from '@/lib/health';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * Health probe for Docker / Keen DNS / admin dashboard.
- * Does not expose secrets.
+ * Public: minimal ok/uptime. Authenticated session: full ops report.
  */
 export async function GET() {
-  const report = await getHealthReport();
+  const authed = await getSession().catch(() => false);
 
-  return NextResponse.json(report, {
-    status: report.ok ? 200 : 503,
-    headers: {
-      'Cache-Control': 'no-store',
-    },
+  if (authed) {
+    const report = await getHealthReport();
+    return NextResponse.json(report, {
+      status: report.ok ? 200 : 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const publicReport = await getPublicHealth();
+  return NextResponse.json(publicReport, {
+    status: publicReport.ok ? 200 : 503,
+    headers: { 'Cache-Control': 'no-store' },
   });
 }

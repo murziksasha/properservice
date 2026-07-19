@@ -51,7 +51,13 @@ export async function createSession(): Promise<void> {
 
 export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.set(SESSION_COOKIE, '', {
+    httpOnly: true,
+    secure: cookieSecureEnabled(),
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
 }
 
 export async function getSession(): Promise<boolean> {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { formatTelHref } from '@/lib/phone';
 import { showToast } from './AdminToast';
 
 interface Lead {
@@ -26,12 +27,15 @@ export function LeadsPanel() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
       const res = await fetch('/api/leads');
       if (!res.ok) {
-        showToast('Не вдалося завантажити заявки', 'error');
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося завантажити заявки', 'error');
         return;
       }
       const json = (await res.json()) as { leads?: Lead[] };
@@ -47,33 +51,49 @@ export function LeadsPanel() {
     void load();
   }, [load]);
 
-  async function setHandled(id: string, handled: boolean) {
-    const res = await fetch('/api/leads', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, handled }),
-    });
-    if (!res.ok) {
-      showToast('Не вдалося оновити', 'error');
-      return;
+  async function patchLead(id: string, body: { handled?: boolean; note?: string }, okMsg: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...body }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося оновити', 'error');
+        return;
+      }
+      showToast(okMsg, 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    } finally {
+      setBusyId(null);
     }
-    showToast(handled ? 'Позначено обробленою' : 'Повернуто в нові', 'success');
-    await load();
   }
 
   async function remove(id: string) {
     if (!confirm('Видалити заявку?')) return;
-    const res = await fetch('/api/leads', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    if (!res.ok) {
-      showToast('Не вдалося видалити', 'error');
-      return;
+    setBusyId(id);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) {
+        if (res.status === 401) showToast('Сесія закінчилась — увійдіть знову', 'error');
+        else showToast('Не вдалося видалити', 'error');
+        return;
+      }
+      showToast('Видалено', 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    } finally {
+      setBusyId(null);
     }
-    showToast('Видалено', 'success');
-    await load();
   }
 
   const visible = leads.filter((l) => {
@@ -114,42 +134,74 @@ export function LeadsPanel() {
       ) : null}
 
       <ul className='admin-leads-list'>
-        {visible.map((lead) => (
-          <li key={lead.id} className={`admin-lead-item${lead.handled ? ' is-handled' : ''}`}>
-            <div className='admin-lead-main'>
-              <a className='admin-lead-phone' href={`tel:${lead.phone.replace(/\D/g, '')}`}>
-                {lead.phone}
-              </a>
-              <span className='admin-lead-meta'>{formatWhen(lead.createdAt)}</span>
-              <span className='admin-lead-meta'>
-                {lead.emailed ? 'email ✓' : 'без email'} · {lead.source}
-              </span>
-              {lead.pagePath ? (
-                <span className='admin-lead-meta' title={lead.pagePath}>
-                  {lead.pagePath}
+        {visible.map((lead) => {
+          const noteVal = noteDraft[lead.id] ?? lead.note ?? '';
+          const busy = busyId === lead.id;
+          return (
+            <li key={lead.id} className={`admin-lead-item${lead.handled ? ' is-handled' : ''}`}>
+              <div className='admin-lead-main'>
+                <a className='admin-lead-phone' href={formatTelHref(lead.phone)}>
+                  {lead.phone}
+                </a>
+                <span className='admin-lead-meta'>{formatWhen(lead.createdAt)}</span>
+                <span className='admin-lead-meta'>
+                  {lead.emailed ? 'email ✓' : 'без email'} · {lead.source}
                 </span>
-              ) : null}
-            </div>
-            <div className='admin-row'>
-              {!lead.handled ? (
-                <button type='button' className='admin-btn' onClick={() => void setHandled(lead.id, true)}>
-                  Оброблено
-                </button>
-              ) : (
+                {lead.pagePath ? (
+                  <span className='admin-lead-meta' title={lead.pagePath}>
+                    {lead.pagePath}
+                  </span>
+                ) : null}
+                <label className='admin-lead-meta' style={{ display: 'block', marginTop: 6 }}>
+                  Нотатка
+                  <input
+                    className='admin-grow'
+                    style={{ display: 'block', width: '100%', marginTop: 4 }}
+                    value={noteVal}
+                    disabled={busy}
+                    onChange={(e) => setNoteDraft((d) => ({ ...d, [lead.id]: e.target.value }))}
+                    onBlur={() => {
+                      const next = (noteDraft[lead.id] ?? lead.note ?? '').trim();
+                      const prev = (lead.note || '').trim();
+                      if (next === prev) return;
+                      void patchLead(lead.id, { note: next }, 'Нотатку збережено');
+                    }}
+                    placeholder='Коментар оператора…'
+                  />
+                </label>
+              </div>
+              <div className='admin-row'>
+                {!lead.handled ? (
+                  <button
+                    type='button'
+                    className='admin-btn'
+                    disabled={busy}
+                    onClick={() => void patchLead(lead.id, { handled: true }, 'Позначено обробленою')}
+                  >
+                    Оброблено
+                  </button>
+                ) : (
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--secondary'
+                    disabled={busy}
+                    onClick={() => void patchLead(lead.id, { handled: false }, 'Повернуто в нові')}
+                  >
+                    Відкрити знову
+                  </button>
+                )}
                 <button
                   type='button'
-                  className='admin-btn admin-btn--secondary'
-                  onClick={() => void setHandled(lead.id, false)}
+                  className='admin-btn admin-btn--danger'
+                  disabled={busy}
+                  onClick={() => void remove(lead.id)}
                 >
-                  Відкрити знову
+                  Видалити
                 </button>
-              )}
-              <button type='button' className='admin-btn admin-btn--danger' onClick={() => void remove(lead.id)}>
-                Видалити
-              </button>
-            </div>
-          </li>
-        ))}
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

@@ -26,9 +26,10 @@ export function AdminToastHost() {
   const push = useCallback((toast: Omit<ToastMessage, 'id'>) => {
     const id = nextId++;
     setToasts((prev) => [...prev, { ...toast, id }]);
+    const ttl = toast.kind === 'error' ? 6000 : 3200;
     window.setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3200);
+    }, ttl);
   }, []);
 
   useEffect(() => {
@@ -40,12 +41,24 @@ export function AdminToastHost() {
 
   if (!toasts.length) return null;
 
+  const hasError = toasts.some((t) => t.kind === 'error');
+
   return (
-    <div className='admin-toast-host' role='status' aria-live='polite'>
+    <div
+      className='admin-toast-host'
+      role='status'
+      aria-live={hasError ? 'assertive' : 'polite'}
+    >
       {toasts.map((t) => (
-        <div key={t.id} className={`admin-toast admin-toast--${t.kind}`}>
+        <button
+          key={t.id}
+          type='button'
+          className={`admin-toast admin-toast--${t.kind}`}
+          onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
+          title='Закрити'
+        >
           {t.text}
-        </div>
+        </button>
       ))}
     </div>
   );

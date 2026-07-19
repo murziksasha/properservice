@@ -184,7 +184,9 @@ export interface SiteData {
   settings: SiteSettings;
   headerMenu: MenuItem[];
   servicesNav: ServiceNavItem[];
-  shopLink: MenuItem;
+  shopLink?: MenuItem;
   pages: Page[];
   goods: Product[];
+  /** ISO timestamp for optimistic concurrency on full-site saves */
+  updatedAt?: string;
 }

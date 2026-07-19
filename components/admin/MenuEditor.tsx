@@ -30,6 +30,7 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
     const result = await saveSiteData(data);
     setSaving(false);
     if (result.ok) {
+      if (result.updatedAt) setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
       setDirty(false);
       showToast('Збережено', 'success');
     } else {

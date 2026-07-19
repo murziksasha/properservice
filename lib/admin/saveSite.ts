@@ -1,7 +1,9 @@
 import type { SiteData } from '@/lib/types';
 import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
-export type SaveResult = { ok: true } | { ok: false; error: string };
+export type SaveResult =
+  | { ok: true; updatedAt?: string }
+  | { ok: false; error: string; conflict?: boolean };
 
 export async function saveSiteData(data: SiteData): Promise<SaveResult> {
   try {
@@ -16,11 +18,20 @@ export async function saveSiteData(data: SiteData): Promise<SaveResult> {
         const seconds = parseRetryAfterSeconds(res, 60);
         return { ok: false, error: rateLimitMessage(seconds, 'save') };
       }
+      if (res.status === 409) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        return {
+          ok: false,
+          conflict: true,
+          error: json.error || 'Дані змінені іншим сеансом. Оновіть сторінку.',
+        };
+      }
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       return { ok: false, error: json.error || `Помилка збереження (${res.status})` };
     }
 
-    return { ok: true };
+    const json = (await res.json().catch(() => ({}))) as { updatedAt?: string };
+    return { ok: true, updatedAt: json.updatedAt };
   } catch {
     return { ok: false, error: 'Мережева помилка' };
   }

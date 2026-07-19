@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
     let phone = '';
     let pagePathRaw: unknown;
     let pageTitleRaw: unknown;
+    let honeypot = '';
 
     const contentType = request.headers.get('content-type') || '';
     if (contentType.includes('application/json')) {
@@ -37,11 +38,18 @@ export async function POST(request: NextRequest) {
       phone = typeof body.phone === 'string' ? body.phone : '';
       pagePathRaw = body.pagePath;
       pageTitleRaw = body.pageTitle;
+      honeypot = typeof body.website === 'string' ? body.website : '';
     } else {
       const formData = await request.formData();
       phone = String(formData.get('phone') || '');
       pagePathRaw = formData.get('pagePath');
       pageTitleRaw = formData.get('pageTitle');
+      honeypot = String(formData.get('website') || '');
+    }
+
+    // Honeypot: bots that fill hidden field get soft success
+    if (honeypot.trim()) {
+      return NextResponse.json({ ok: true, emailed: false });
     }
 
     phone = normalizePhoneDisplay(phone);
