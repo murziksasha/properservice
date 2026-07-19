@@ -53,6 +53,8 @@ export interface Product {
   price: number;
   image: string;
   visible: boolean;
+  /** Optional display category for catalog filters (e.g. «Телефони»). */
+  category?: string;
   createdAt?: string;
   updatedAt?: string;
 }

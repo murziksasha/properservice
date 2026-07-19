@@ -35,6 +35,7 @@ const productSchema = z.object({
   price: z.number(),
   image: z.string(),
   visible: z.boolean(),
+  category: z.string().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
