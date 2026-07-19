@@ -30,7 +30,7 @@
   }
 
   &__title {
-    font-family: 'Roboto';
+    font-family: Circe400, ProximaNova, sans-serif;
     font-weight: 700;
     font-size: 4.7rem;
     line-height: 128%;
@@ -38,7 +38,7 @@
   }
 
   &__par-bold {
-    font-family: 'Roboto';
+    font-family: Circe400, ProximaNova, sans-serif;
     font-weight: 700;
     font-size: 2.5rem;
     line-height: 125%;
@@ -53,7 +53,7 @@
   }
 
   &__phone {
-    font-family: 'Roboto';
+    font-family: Circe400, ProximaNova, sans-serif;
     font-weight: 700;
     font-size: 20px;
     line-height: 125%;
@@ -90,17 +90,20 @@
   }
 
   &__callback {
-    font-family: 'Roboto';
+    font-family: Circe400, ProximaNova, sans-serif;
     font-weight: 700;
     font-size: 2rem;
     line-height: 130%;
     color: #fff;
     margin: 0 auto;
-    min-width: 75rem;
+    min-width: 0;
+    width: 100%;
+    max-width: 75rem;
     background: $main-color;
     box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.35);
     & input._callback__phone{
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.85);
+      color: #1a1a1a;
     }
     & button._callback__btn{
       background: #FFFFFF;
@@ -110,10 +113,15 @@
       font-size: 1.8rem;
       line-height: 130%;
       text-transform: uppercase;
-      &:hover{
-        background: gray;
-        color: #fff;
-        scale: 1.05;
+      @media (hover: hover) {
+        &:hover{
+          background: #e8f7ef;
+          color: $main-color;
+        }
+      }
+      &:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
       }
     }
   }

@@ -34,6 +34,27 @@ export interface HealthReport {
   };
   autoBackup: boolean;
   offsiteHint: string;
+  telegram: boolean;
+  totp: boolean;
+  siteUrl: boolean;
+}
+
+/** Minimal probe for load balancers / unauthenticated monitors. */
+export async function getPublicHealth(): Promise<{
+  ok: boolean;
+  service: string;
+  time: string;
+  uptimeSec: number;
+}> {
+  const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+  const sitePath = path.join(dataDir, 'site.json');
+  const ok = existsSync(sitePath);
+  return {
+    ok,
+    service: 'properservice',
+    time: new Date().toISOString(),
+    uptimeSec: Math.floor((Date.now() - startedAt) / 1000),
+  };
 }
 
 export async function getHealthReport(): Promise<HealthReport> {
@@ -99,6 +120,9 @@ export async function getHealthReport(): Promise<HealthReport> {
     uploads,
     autoBackup: process.env.AUTO_BACKUP !== 'false',
     offsiteHint:
-      'Копіюйте data/ і public/uploads/ на інший диск / SMB / rclone (див. docs/deploy.md).',
+      'Копіюйте data/ і public/uploads/ на інший диск / SMB / rclone (див. docs/deploy.md). Скрипт: npm run backup:offsite',
+    telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim() && process.env.TELEGRAM_CHAT_ID?.trim()),
+    totp: Boolean(process.env.ADMIN_TOTP_SECRET?.trim()),
+    siteUrl: Boolean(process.env.SITE_URL?.trim()),
   };
 }

@@ -1,4 +1,5 @@
 import type { SiteSettings } from '@/lib/types';
+import { formatTelHref } from '@/lib/phone';
 
 interface StickyCallBarProps {
   settings: SiteSettings;
@@ -11,7 +12,7 @@ export function StickyCallBar({ settings }: StickyCallBarProps) {
   const phone = settings.headerPhone;
   if (!phone?.tel || !phone.display) return null;
 
-  const telHref = phone.tel.startsWith('tel:') ? phone.tel : `tel:${phone.tel.replace(/\s/g, '')}`;
+  const telHref = formatTelHref(phone.tel);
   const viber = settings.social?.find((s) => s.type === 'viber');
   const telegram = settings.social?.find((s) => s.type === 'telegram');
 
@@ -23,7 +24,13 @@ export function StickyCallBar({ settings }: StickyCallBarProps) {
       </a>
       <div className='sticky-call__messengers'>
         {viber?.url ? (
-          <a className='sticky-call__msg sticky-call__msg--viber' href={viber.url} target='_blank' rel='noreferrer'>
+          <a
+            className='sticky-call__msg sticky-call__msg--viber'
+            href={viber.url}
+            target='_blank'
+            rel='noopener noreferrer'
+            aria-label='Написати у Viber'
+          >
             Viber
           </a>
         ) : null}
@@ -32,9 +39,10 @@ export function StickyCallBar({ settings }: StickyCallBarProps) {
             className='sticky-call__msg sticky-call__msg--tg'
             href={telegram.url}
             target='_blank'
-            rel='noreferrer'
+            rel='noopener noreferrer'
+            aria-label='Написати у Telegram'
           >
-            TG
+            Telegram
           </a>
         ) : null}
       </div>

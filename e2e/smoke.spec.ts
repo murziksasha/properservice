@@ -13,25 +13,24 @@ test.describe('public smoke', () => {
     expect(jsonText).toContain('LocalBusiness');
   });
 
-  test('health endpoint extended', async ({ request }) => {
+  test('health endpoint public is minimal', async ({ request }) => {
     const res = await request.get('/api/health');
     expect(res.ok()).toBeTruthy();
     const json = (await res.json()) as {
       ok: boolean;
       service: string;
       uptimeSec: number;
-      backups: { count: number };
-      leads: { total: number };
-      orders: { total: number };
-      offsiteHint: string;
+      backups?: unknown;
+      leads?: unknown;
+      offsiteHint?: string;
     };
     expect(json.ok).toBe(true);
     expect(json.service).toBe('properservice');
     expect(typeof json.uptimeSec).toBe('number');
-    expect(json.backups).toBeTruthy();
-    expect(json.leads).toBeTruthy();
-    expect(json.orders).toBeTruthy();
-    expect(json.offsiteHint.length).toBeGreaterThan(10);
+    // Unauthenticated probe must not leak ops details
+    expect(json.backups).toBeUndefined();
+    expect(json.leads).toBeUndefined();
+    expect(json.offsiteHint).toBeUndefined();
   });
 
   test('robots.txt', async ({ request }) => {
@@ -84,7 +83,10 @@ test.describe('public smoke', () => {
 
   test('contact creates lead in journal', async ({ request }) => {
     const res = await request.post('/api/contact', {
-      data: { phone: '+380501112233' },
+      data: {
+        phone: '+380501112233',
+        pagePath: '/phones?utm_source=e2e&utm_medium=test',
+      },
       headers: { 'Content-Type': 'application/json' },
     });
     // May be 200 even without SMTP
@@ -101,6 +103,36 @@ test.describe('public smoke', () => {
       headers: { 'Content-Type': 'application/json' },
     });
     expect([400, 429]).toContain(res.status());
+  });
+
+  test('shop catalog has products', async ({ page }) => {
+    await page.goto('/shop');
+    await expect(page.getByRole('heading', { name: /магазин/i })).toBeVisible();
+    const empty = page.locator('.shop-empty');
+    const cards = page.locator('.shop-card');
+    // Either products exist or empty state is shown — no crash
+    await expect(page.locator('body')).toBeVisible();
+    if ((await empty.count()) === 0) {
+      expect(await cards.count()).toBeGreaterThan(0);
+    }
+  });
+
+  test('privacy page loads', async ({ page }) => {
+    await page.goto('/confident');
+    await expect(page.locator('body')).toBeVisible();
+    await expect(page.getByText(/конфіденційності/i).first()).toBeVisible();
+  });
+
+  test('home has FAQ JSON-LD', async ({ page }) => {
+    await page.goto('/');
+    const scripts = page.locator('script[type="application/ld+json"]');
+    const n = await scripts.count();
+    let found = false;
+    for (let i = 0; i < n; i++) {
+      const t = (await scripts.nth(i).textContent()) || '';
+      if (t.includes('FAQPage')) found = true;
+    }
+    expect(found).toBe(true);
   });
 });
 

@@ -13,6 +13,7 @@ export function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [lockSeconds, setLockSeconds] = useState(0);
+  const [needTotp, setNeedTotp] = useState(false);
 
   useEffect(() => {
     if (lockSeconds <= 0) return;
@@ -39,12 +40,13 @@ export function LoginForm() {
 
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get('password') ?? '');
+    const totp = String(formData.get('totp') ?? '');
 
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, totp: totp || undefined }),
         credentials: 'same-origin',
       });
 
@@ -56,18 +58,26 @@ export function LoginForm() {
           setLoading(false);
           return;
         }
+        const json = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          needTotp?: boolean;
+        };
+        if (json.needTotp) setNeedTotp(true);
         setError(
           res.status === 503
             ? 'ADMIN_PASSWORD не налаштовано в .env — скопіюйте з .env.example і перезапустіть сервер'
             : res.status === 403
               ? 'Доступ заборонено з цієї IP-адреси'
-              : 'Невірний пароль',
+              : json.needTotp
+                ? 'Потрібен код 2FA (TOTP)'
+                : json.error === 'Invalid 2FA code'
+                  ? 'Невірний код 2FA'
+                  : 'Невірний пароль',
         );
         setLoading(false);
         return;
       }
 
-      // Full navigation so the browser always sends the new session cookie
       const from = searchParams.get('from') || '/admin';
       const target = from.startsWith('/admin') ? from : '/admin';
       window.location.assign(target);
@@ -96,6 +106,20 @@ export function LoginForm() {
             disabled={loading || locked}
           />
         </label>
+        <label htmlFor='admin-totp'>
+          Код 2FA {needTotp ? '(обовʼязково)' : '(якщо увімкнено)'}
+          <input
+            id='admin-totp'
+            type='text'
+            name='totp'
+            inputMode='numeric'
+            autoComplete='one-time-code'
+            pattern='[0-9]*'
+            maxLength={6}
+            placeholder='000000'
+            disabled={loading || locked}
+          />
+        </label>
         {error ? (
           <p className='admin-login-error' role='alert' aria-live='assertive'>
             {error}
@@ -106,11 +130,7 @@ export function LoginForm() {
             Повтор через <strong>{formatCountdown(lockSeconds)}</strong>
           </p>
         ) : null}
-        <button
-          type='submit'
-          className='admin-btn admin-btn--block'
-          disabled={loading || locked}
-        >
+        <button type='submit' className='admin-btn admin-btn--block' disabled={loading || locked}>
           {loading ? 'Вхід…' : locked ? `Заблоковано (${formatCountdown(lockSeconds)})` : 'Увійти'}
         </button>
       </form>

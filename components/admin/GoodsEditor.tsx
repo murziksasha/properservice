@@ -2,7 +2,7 @@
 
 import type { Product, SiteData } from '@/lib/types';
 import { createId } from '@/lib/id';
-import { saveSiteData } from '@/lib/admin/saveSite';
+import { patchSiteSection, saveSiteData } from '@/lib/admin/saveSite';
 import { uploadImage } from '@/lib/admin/uploadImage';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
@@ -24,6 +24,7 @@ function emptyProduct(): Product {
     description: '',
     price: 0,
     image: '/img/services/technika_img.png',
+    images: [],
     visible: true,
     category: '',
     code: '',
@@ -47,13 +48,26 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     async (nextData?: SiteData) => {
       const payload = nextData ?? data;
       setSaving(true);
-      const result = await saveSiteData(payload);
+      // Partial PATCH for goods reduces races with other editors
+      const result = await patchSiteSection('goods', payload.goods, payload.updatedAt);
       setSaving(false);
       if (!result.ok) {
+        // Fallback full save if partial validation fails on older servers
+        if (!result.conflict) {
+          const full = await saveSiteData(payload);
+          if (full.ok) {
+            setData({ ...payload, updatedAt: full.updatedAt || payload.updatedAt });
+            setDirty(false);
+            showToast('Збережено', 'success');
+            return true;
+          }
+          showToast(full.error, 'error');
+          return false;
+        }
         showToast(result.error, 'error');
         return false;
       }
-      setData(payload);
+      setData({ ...payload, updatedAt: result.updatedAt || payload.updatedAt });
       setDirty(false);
       showToast('Збережено', 'success');
       return true;
@@ -191,8 +205,18 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             Ціна
             <input
               type='number'
-              value={editing.price}
-              onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
+              min={0}
+              step={1}
+              value={Number.isFinite(editing.price) ? editing.price : 0}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') {
+                  setEditing({ ...editing, price: 0 });
+                  return;
+                }
+                const n = Number(raw);
+                setEditing({ ...editing, price: Number.isFinite(n) ? Math.max(0, n) : 0 });
+              }}
             />
           </label>
           <label>
@@ -206,6 +230,37 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             <span className='admin-hint'>
               Необов&apos;язково. Мін. 2 символи. Будь-які мови та знаки. Участь у пошуку в адмінці та магазині.
             </span>
+          </label>
+          <ImageField
+            label='Головне фото'
+            value={editing.image}
+            onChange={(url) => setEditing({ ...editing, image: url })}
+            onUpload={async (file) => {
+              const { url, error } = await uploadImage(file);
+              if (!url) {
+                showToast(error || 'Upload failed', 'error');
+                return '';
+              }
+              return url;
+            }}
+          />
+          <label>
+            Галерея (URL через новий рядок)
+            <textarea
+              rows={3}
+              value={(editing.images || []).join('\n')}
+              onChange={(e) =>
+                setEditing({
+                  ...editing,
+                  images: e.target.value
+                    .split('\n')
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                })
+              }
+              placeholder='/uploads/…'
+            />
+            <span className='admin-hint'>Додаткові фото крім головного. По одному URL на рядок.</span>
           </label>
           <label>
             Категорія
@@ -230,18 +285,6 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               onChange={(e) => setEditing({ ...editing, description: e.target.value })}
             />
           </label>
-          <ImageField
-            value={editing.image}
-            onChange={(url) => setEditing({ ...editing, image: url })}
-            onUpload={async (file) => {
-              const { url, error } = await uploadImage(file);
-              if (!url) {
-                showToast(error || 'Помилка завантаження', 'error');
-                return '';
-              }
-              return url;
-            }}
-          />
           <label className='admin-check'>
             <input
               type='checkbox'
@@ -254,7 +297,16 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             <button type='button' className='admin-btn' onClick={() => void saveProduct()} disabled={saving}>
               OK
             </button>
-            <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setEditing(null)}>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary'
+              onClick={() => {
+                if (dirty || editing) {
+                  if (!confirm('Скасувати зміни товару?')) return;
+                }
+                setEditing(null);
+              }}
+            >
               Скасувати
             </button>
           </div>

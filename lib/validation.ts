@@ -34,6 +34,7 @@ const productSchema = z.object({
   description: z.string(),
   price: z.number(),
   image: z.string(),
+  images: z.array(z.string()).optional(),
   visible: z.boolean(),
   category: z.string().optional(),
   /** Optional; empty/undefined OK. Non-empty must be ≥2 chars after trim (enforced on save). */
@@ -97,9 +98,10 @@ export const siteDataSchema = z.object({
   settings: settingsSchema,
   headerMenu: z.array(menuItemSchema),
   servicesNav: z.array(serviceNavItemSchema),
-  shopLink: menuItemSchema,
+  shopLink: menuItemSchema.optional(),
   pages: z.array(pageSchema),
   goods: z.array(productSchema),
+  updatedAt: z.string().optional(),
 });
 
 export type SiteDataValidated = z.infer<typeof siteDataSchema>;

@@ -17,6 +17,13 @@ export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdPr
 
   const uniquePhones = [...new Set(phones)];
 
+  // Prefer locality from free-text address (e.g. «м. Чорноморськ, …»)
+  let addressLocality = 'Чорноморськ';
+  const localityMatch = settings.address?.match(/(?:м\.|місто)\s*([^,]+)/i);
+  if (localityMatch?.[1]) {
+    addressLocality = localityMatch[1].trim();
+  }
+
   const data: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -28,13 +35,24 @@ export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdPr
         : settings.logo
       : undefined,
     url: siteUrl || undefined,
-    telephone: uniquePhones[0] || undefined,
+    telephone: uniquePhones.length === 1 ? uniquePhones[0] : uniquePhones[0] || undefined,
+    ...(uniquePhones.length > 1
+      ? {
+          // Multiple lines as contact points
+          contactPoint: uniquePhones.map((tel) => ({
+            '@type': 'ContactPoint',
+            telephone: tel,
+            contactType: 'customer service',
+            availableLanguage: ['uk', 'ru'],
+          })),
+        }
+      : {}),
     email: settings.email || undefined,
     address: settings.address
       ? {
           '@type': 'PostalAddress',
           streetAddress: settings.address,
-          addressLocality: 'Чорноморськ',
+          addressLocality,
           addressCountry: 'UA',
         }
       : undefined,
@@ -42,7 +60,6 @@ export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdPr
     priceRange: '$$',
   };
 
-  // Strip undefined keys for cleaner JSON
   const clean = JSON.parse(JSON.stringify(data)) as Record<string, unknown>;
 
   return (

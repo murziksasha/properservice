@@ -7,6 +7,8 @@ import { assertAdminIp } from '@/lib/require-admin-ip';
 import { escapeText } from '@/lib/sanitize';
 import { isValidUaPhone, normalizePhoneDisplay } from '@/lib/phone';
 import { getProduct } from '@/lib/site-data';
+import { notifyOrder } from '@/lib/notify';
+import { toCsv } from '@/lib/csv';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,35 +155,69 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let telegram = false;
+    try {
+      telegram = await notifyOrder({
+        phone,
+        productTitle: product.title,
+        price: product.price,
+      });
+    } catch {
+      telegram = false;
+    }
+
     try {
       await appendOrder({
         phone,
         comment: comment || undefined,
         product: snapshot,
         emailed,
+        telegram,
       });
     } catch (err) {
       console.error('[orders] failed to persist', err);
-      if (!emailed && smtpUser && smtpPass) {
-        return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
-      }
-      if (!emailed) {
+      if (!emailed && !telegram) {
         return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
       }
     }
 
-    return NextResponse.json({ ok: true, emailed, dev: !smtpUser || !smtpPass });
+    return NextResponse.json({ ok: true, emailed, telegram, dev: !smtpUser || !smtpPass });
   } catch (err) {
     console.error('Order error:', err);
     return NextResponse.json({ error: 'Failed to place order' }, { status: 500 });
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const g = await guard();
   if (!g.ok) return g.response;
 
   const orders = await listOrders();
+  const format = request.nextUrl.searchParams.get('format');
+  if (format === 'csv') {
+    const csv = toCsv(
+      ['id', 'createdAt', 'phone', 'product', 'code', 'price', 'comment', 'handled', 'note', 'emailed'],
+      orders.map((o) => [
+        o.id,
+        o.createdAt,
+        o.phone,
+        o.product.title,
+        o.product.code || '',
+        o.product.price,
+        o.comment || '',
+        o.handled,
+        o.note || '',
+        o.emailed,
+      ]),
+    );
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="orders.csv"',
+      },
+    });
+  }
   return NextResponse.json({
     orders,
     total: orders.length,

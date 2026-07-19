@@ -21,7 +21,7 @@ export function ImageField({ label = 'Зображення', value, onChange, on
         Завантажити файл
         <input
           type='file'
-          accept='image/*'
+          accept='image/jpeg,image/png,image/webp,image/gif'
           onChange={async (e) => {
             const file = e.target.files?.[0];
             e.target.value = '';

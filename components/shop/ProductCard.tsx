@@ -7,7 +7,13 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="shop-card">
       <Link href={`/shop/${product.id}`} className="shop-card__link">
         <div className="shop-card__image">
-          <Image src={product.image} alt={product.title} width={240} height={180} />
+          <Image
+            src={product.image}
+            alt={product.title}
+            width={240}
+            height={180}
+            sizes='(max-width: 600px) 50vw, 240px'
+          />
         </div>
         <h3 className="shop-card__title">{product.title}</h3>
         {product.code ? <p className="shop-card__code">Код: {product.code}</p> : null}

@@ -43,6 +43,9 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
     const result = await saveSiteData(data);
     setSaving(false);
     if (result.ok) {
+      if (result.updatedAt) {
+        setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
+      }
       setDirty(false);
       showToast('Збережено', 'success');
       reloadPreview();
@@ -173,6 +176,48 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
             Опис (meta)
             <input value={page.description} onChange={(e) => updatePage({ description: e.target.value })} />
           </label>
+          <div
+            className='admin-card'
+            style={
+              page.contentHtml
+                ? { background: '#fff8e6', border: '1px solid #f0d78c' }
+                : undefined
+            }
+          >
+            {page.contentHtml ? (
+              <p className='admin-hint' style={{ marginTop: 0 }}>
+                <strong>HTML-режим активний:</strong> на публічному сайті показується лише цей HTML —
+                секції конструктора <strong>ігноруються</strong>. Очистіть поле, щоб увімкнути секції.
+              </p>
+            ) : (
+              <p className='admin-hint' style={{ marginTop: 0 }}>
+                Опційний HTML (політика тощо). Якщо заповнено — секції на сайті не рендеряться.
+              </p>
+            )}
+            <label>
+              contentHtml
+              <textarea
+                rows={page.contentHtml ? 10 : 4}
+                value={page.contentHtml || ''}
+                onChange={(e) => updatePage({ contentHtml: e.target.value })}
+                style={{ width: '100%', fontFamily: 'monospace', fontSize: '13px' }}
+                placeholder='Залиште порожнім, щоб використовувати секції'
+              />
+            </label>
+            {page.contentHtml ? (
+              <button
+                type='button'
+                className='admin-btn admin-btn--secondary'
+                onClick={() => {
+                  if (confirm('Очистити HTML і показувати секції конструктора?')) {
+                    updatePage({ contentHtml: '' });
+                  }
+                }}
+              >
+                Очистити HTML → секції
+              </button>
+            ) : null}
+          </div>
           <div className='admin-row admin-row--wrap'>
             <label className='admin-check'>
               <input

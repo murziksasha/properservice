@@ -1,6 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { uploadImage } from '@/lib/admin/uploadImage';
+import { parseRetryAfterSeconds, rateLimitMessage } from '@/lib/admin/rateLimitUi';
 import { showToast } from './AdminToast';
 
 interface MediaItem {
@@ -21,6 +23,7 @@ export function MediaLibrary() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -46,19 +49,16 @@ export function MediaLibrary() {
     if (!file) return;
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        showToast(j.error || 'Помилка upload', 'error');
+      const { url, error } = await uploadImage(file);
+      if (!url) {
+        showToast(error || 'Помилка upload', 'error');
         return;
       }
-      const j = (await res.json()) as { url?: string; optimized?: boolean };
-      showToast(j.optimized ? 'Завантажено (оптимізовано WebP)' : 'Завантажено', 'success');
+      showToast(url.endsWith('.webp') ? 'Завантажено (оптимізовано WebP)' : 'Завантажено', 'success');
       await load();
     } finally {
       setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   }
 
@@ -73,17 +73,26 @@ export function MediaLibrary() {
 
   async function remove(name: string) {
     if (!confirm(`Видалити ${name}? Посилання на сторінках можуть зламатися.`)) return;
-    const res = await fetch('/api/media', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    });
-    if (!res.ok) {
-      showToast('Не вдалося видалити', 'error');
-      return;
+    try {
+      const res = await fetch('/api/media', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        if (res.status === 429) {
+          const sec = parseRetryAfterSeconds(res, 60);
+          showToast(rateLimitMessage(sec, 'upload'), 'error');
+          return;
+        }
+        showToast('Не вдалося видалити', 'error');
+        return;
+      }
+      showToast('Видалено', 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
     }
-    showToast('Видалено', 'success');
-    await load();
   }
 
   const filtered = items.filter((i) => !q || i.name.toLowerCase().includes(q.toLowerCase()));
@@ -101,9 +110,10 @@ export function MediaLibrary() {
       </div>
 
       <div className='admin-row admin-mb'>
-        <label className='admin-btn' style={{ cursor: 'pointer' }}>
+        <label className='admin-btn' style={{ cursor: uploading ? 'wait' : 'pointer' }}>
           {uploading ? 'Завантаження…' : 'Завантажити зображення'}
           <input
+            ref={fileRef}
             type='file'
             accept='image/jpeg,image/png,image/webp,image/gif'
             hidden
@@ -124,33 +134,27 @@ export function MediaLibrary() {
         </button>
       </div>
 
-      <p className='admin-hint admin-mb'>
-        Нові фото стискаються та конвертуються у WebP (макс. 1920px). GIF без змін.
-      </p>
-
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-      {!loading && filtered.length === 0 ? <p className='admin-hint'>Порожньо.</p> : null}
+      {!loading && filtered.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
 
       <div className='admin-media-grid'>
         {filtered.map((item) => (
-          <article key={item.name} className='admin-media-card'>
+          <div key={item.name} className='admin-media-card'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={item.url} alt={item.name} loading='lazy' />
             <div className='admin-media-meta'>
-              <code title={item.name}>{item.name}</code>
-              <span>
-                {formatBytes(item.size)} · {new Date(item.mtime).toLocaleDateString('uk-UA')}
-              </span>
+              <span title={item.name}>{item.name}</span>
+              <span>{formatBytes(item.size)}</span>
             </div>
             <div className='admin-row'>
               <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void copyUrl(item.url)}>
-                Copy URL
+                Копіювати URL
               </button>
               <button type='button' className='admin-btn admin-btn--danger' onClick={() => void remove(item.name)}>
                 Видалити
               </button>
             </div>
-          </article>
+          </div>
         ))}
       </div>
     </div>

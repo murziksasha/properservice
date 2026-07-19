@@ -14,6 +14,9 @@ interface HealthReport {
   uploads: { count: number; bytes: number };
   autoBackup: boolean;
   offsiteHint: string;
+  telegram?: boolean;
+  totp?: boolean;
+  siteUrl?: boolean;
 }
 
 function formatUptime(sec: number): string {
@@ -68,6 +71,16 @@ export function HealthPanel() {
         <li className={health.smtp ? 'is-ok' : 'is-warn'}>
           {health.smtp ? '✓' : '!'} SMTP {health.smtp ? 'налаштовано' : '— заявки лише в журналі'}
         </li>
+        <li className={health.telegram ? 'is-ok' : 'is-info'}>
+          {health.telegram ? '✓' : '·'} Telegram notify{' '}
+          {health.telegram ? 'увімкнено' : '— TELEGRAM_BOT_TOKEN / CHAT_ID'}
+        </li>
+        <li className={health.totp ? 'is-ok' : 'is-info'}>
+          {health.totp ? '✓' : '·'} 2FA TOTP {health.totp ? 'увімкнено' : 'вимкнено'}
+        </li>
+        <li className={health.siteUrl ? 'is-ok' : 'is-warn'}>
+          {health.siteUrl ? '✓' : '!'} SITE_URL {health.siteUrl ? 'задано' : '— для sitemap/OG'}
+        </li>
         <li className={health.backups.count > 0 ? 'is-ok' : 'is-warn'}>
           {health.backups.count > 0 ? '✓' : '!'} Backups: {health.backups.count}
           {health.backups.last
@@ -94,6 +107,27 @@ export function HealthPanel() {
       <p className='admin-hint admin-offsite-hint'>
         <strong>Off-site backup:</strong> {health.offsiteHint}
       </p>
+      <div className='admin-row admin-mb'>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/smtp-test', { method: 'POST' });
+              const j = (await res.json().catch(() => ({}))) as { error?: string; to?: string };
+              if (!res.ok) {
+                alert(j.error || 'SMTP тест не вдався');
+                return;
+              }
+              alert(`Тестовий лист надіслано на ${j.to || 'MAIL_TO'}`);
+            } catch {
+              alert('Мережева помилка');
+            }
+          }}
+        >
+          Тест SMTP
+        </button>
+      </div>
       <p className='admin-hint'>
         Оновлено: {new Date(health.time).toLocaleTimeString('uk-UA')} ·{' '}
         <button type='button' className='admin-link-btn' onClick={() => void load()}>

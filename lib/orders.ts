@@ -11,18 +11,26 @@ export interface OrderProductSnapshot {
   image?: string;
 }
 
+export interface OrderAuditEntry {
+  at: string;
+  action: 'created' | 'handled' | 'reopened' | 'note';
+  detail?: string;
+}
+
 export interface Order {
   id: string;
   createdAt: string;
   phone: string;
   comment?: string;
-  /** Always 1 in v1 */
   quantity: 1;
   product: OrderProductSnapshot;
   source: 'shop';
   emailed: boolean;
   handled: boolean;
   note?: string;
+  handledAt?: string;
+  audit?: OrderAuditEntry[];
+  telegram?: boolean;
 }
 
 export interface OrdersStore {
@@ -30,6 +38,7 @@ export interface OrdersStore {
 }
 
 const MAX_ORDERS = 500;
+const MAX_AUDIT = 30;
 
 function dataRoot(): string {
   return process.env.DATA_DIR || path.join(process.cwd(), 'data');
@@ -54,6 +63,11 @@ async function writeStore(store: OrdersStore): Promise<void> {
   await atomicWriteJson(ordersFilePath(), store);
 }
 
+function pushAudit(order: Order, entry: OrderAuditEntry): OrderAuditEntry[] {
+  const list = [...(order.audit || []), entry];
+  return list.slice(-MAX_AUDIT);
+}
+
 export async function listOrders(): Promise<Order[]> {
   const store = await readStore();
   return store.orders;
@@ -70,12 +84,14 @@ export async function appendOrder(input: {
   comment?: string;
   product: OrderProductSnapshot;
   emailed: boolean;
+  telegram?: boolean;
 }): Promise<Order> {
   const store = await readStore();
   const comment = (input.comment || '').trim();
+  const now = new Date().toISOString();
   const order: Order = {
     id: createId(),
-    createdAt: new Date().toISOString(),
+    createdAt: now,
     phone: input.phone,
     comment: comment || undefined,
     quantity: 1,
@@ -83,6 +99,8 @@ export async function appendOrder(input: {
     source: 'shop',
     emailed: input.emailed,
     handled: false,
+    ...(typeof input.telegram === 'boolean' ? { telegram: input.telegram } : {}),
+    audit: [{ at: now, action: 'created' }],
   };
   store.orders.unshift(order);
   if (store.orders.length > MAX_ORDERS) {
@@ -100,10 +118,33 @@ export async function updateOrder(
   const idx = store.orders.findIndex((o) => o.id === id);
   if (idx < 0) return null;
   const current = store.orders[idx];
+  const now = new Date().toISOString();
+  let audit = current.audit || [];
+
+  if (typeof patch.handled === 'boolean' && patch.handled !== current.handled) {
+    audit = pushAudit(
+      { ...current, audit },
+      { at: now, action: patch.handled ? 'handled' : 'reopened' },
+    );
+  }
+  if (patch.note !== undefined && patch.note !== current.note) {
+    audit = pushAudit(
+      { ...current, audit },
+      { at: now, action: 'note', detail: String(patch.note).slice(0, 200) },
+    );
+  }
+
   const next: Order = {
     ...current,
     handled: typeof patch.handled === 'boolean' ? patch.handled : current.handled,
     note: patch.note !== undefined ? patch.note : current.note,
+    audit,
+    handledAt:
+      typeof patch.handled === 'boolean'
+        ? patch.handled
+          ? now
+          : undefined
+        : current.handledAt,
   };
   store.orders[idx] = next;
   await writeStore(store);

@@ -1,5 +1,6 @@
 import Script from 'next/script';
 import type { MenuItem, SiteSettings } from '@/lib/types';
+import { FaqJsonLd } from '@/components/seo/FaqJsonLd';
 import { LocalBusinessJsonLd } from '@/components/seo/LocalBusinessJsonLd';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -20,10 +21,12 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
   if (titleSize) style['--title-size'] = `${titleSize}rem`;
   if (textScale) style['--text-scale'] = String(textScale);
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, '') || undefined;
+  const gincore = process.env.GINCORE_WIDGETS !== 'false';
 
   return (
     <div className='container' id='up' style={style}>
       <LocalBusinessJsonLd settings={settings} siteUrl={siteUrl} />
+      {variant === 'home' ? <FaqJsonLd /> : null}
       <a className='skip-link' href='#main-content'>
         Перейти до вмісту
       </a>
@@ -34,8 +37,18 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
       <PageUp />
       <Footer settings={settings} />
       <StickyCallBar settings={settings} />
-      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0' strategy='lazyOnload' />
-      <Script src='//remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0' strategy='lazyOnload' />
+      {gincore ? (
+        <>
+          <Script
+            src='https://remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0'
+            strategy='lazyOnload'
+          />
+          <Script
+            src='https://remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0'
+            strategy='lazyOnload'
+          />
+        </>
+      ) : null}
     </div>
   );
 }

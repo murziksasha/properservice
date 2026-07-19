@@ -32,7 +32,7 @@ const CONTACTS_SECTION = {
   visible: true,
   title: 'Наші контакти:',
   inviteText: 'Будемо раді бачити Вас у нашому офісі:',
-  addressHtml: 'м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в "Снігова Королева") ПН - ПТ с 08:00 до 17:00',
+  addressHtml: 'м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в "Снігова Королева") ПН - ПТ з 08:00 до 17:00',
   phones: [
     { display: '+38 099 538 56 55', tel: '+380995385655' },
     { display: '+38 063 556 70 90', tel: '+380635567090' },
@@ -48,10 +48,10 @@ const CONTACTS_SECTION = {
 };
 
 const CALLBACK_TAIL = [
-  { id: 'callback-1', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію та діагностику!', buttonText: 'залишити заявку', placeholder: '+38( ___ ) __ __ ___' },
+  { id: 'callback-1', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію та діагностику!', buttonText: 'залишити заявку', placeholder: '+38 (___) ___ __ __' },
   { id: 'feedback', type: 'feedback' as const, visible: true, images: FEEDBACK_IMAGES, moreReviewsButtonText: 'Більше відгуків' },
   CONTACTS_SECTION,
-  { id: 'callback-2', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію:', buttonText: 'залишити заявку', placeholder: '+38( ___ ) __ __ ___' },
+  { id: 'callback-2', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію:', buttonText: 'залишити заявку', placeholder: '+38 (___) ___ __ __' },
 ];
 
 function servicePage(
@@ -87,7 +87,7 @@ function servicePage(
         callbackTitleHtml: 'Вирішуємо питання навіть <span>віддалено!</span>',
         callbackButtonText: 'записатися на безкоштовну діагностику',
         callbackButtonHtml: '<span>записатися на</span> <br>безкоштовну діагностику',
-        callbackPlaceholder: '+38( ___ ) __ __ ___',
+        callbackPlaceholder: '+38 (___) ___ __ __',
         image: hero.image,
         imageAlt: hero.imageAlt,
         imageClass: hero.imageClass,
@@ -113,7 +113,7 @@ function servicePage(
 export const defaultSiteData: SiteData = {
   settings: {
     title: "Ремонт комп'ютерної та побутової техніки, телефонів та планшетів",
-    description: 'Качественно ремонтируем, восстанавливаем устройства, гарантия качества, лояльные цены!',
+    description: 'Якісний ремонт, відновлюємо пристрої, гарантія якості, лояльні ціни!',
     logo: '/img/icons/logo.png',
     favicon: '/img/icons/favicon.ico',
     phones: [
@@ -125,7 +125,7 @@ export const defaultSiteData: SiteData = {
     hours: 'Працюємо з 10:00 до 18:00',
     address: 'м. Чорноморськ, вул. Віталія Шума 2-Б',
     addressNote: '(цоколь зліва від входу в "Снігова Королева")',
-    officeHours: 'ПН - ПТ с 08:00 до 17:00',
+    officeHours: 'ПН - ПТ з 08:00 до 17:00',
     email: 'remontmailshop@gmail.com',
     mapEmbedUrl: CONTACTS_SECTION.mapEmbedUrl,
     copyright: '© Proper Service',
@@ -155,7 +155,7 @@ export const defaultSiteData: SiteData = {
       id: 'home',
       slug: '',
       title: "Ремонт комп'ютерної та побутової техніки, телефонів та планшетів",
-      description: 'Качественно ремонтируем, восстанавливаем устройства, гарантия качества, лояльные цены!',
+      description: 'Якісний ремонт, відновлюємо пристрої, гарантія якості, лояльні ціни!',
       visible: true,
       sections: [
         { id: 'nav', type: 'services-nav', visible: true },
@@ -163,7 +163,7 @@ export const defaultSiteData: SiteData = {
           id: 'hero',
           type: 'hero',
           visible: true,
-          titleHtml: 'Відремонтуємо побутову техніку. та цифрову техніку <span>у Чорноморську </span> з гарантією!',
+          titleHtml: 'Відремонтуємо побутову та цифрову техніку <span>у Чорноморську</span> з гарантією!',
           aboutLines: [
             'Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення',
             'Постійно підвищуємо <span>якість</span> послуг, що надаються',
@@ -172,7 +172,7 @@ export const defaultSiteData: SiteData = {
           callbackTitleHtml: 'Вирішуємо питання навіть <span>віддалено!</span>',
           callbackButtonText: 'записатися на безкоштовну діагностику',
           callbackButtonHtml: '<span>записатися на</span> <br>безкоштовну діагностику',
-          callbackPlaceholder: '+38( ___ ) __ __ ___',
+          callbackPlaceholder: '+38 (___) ___ __ __',
           image: '/img/services/technika_img.png',
           imageAlt: 'technique',
         },

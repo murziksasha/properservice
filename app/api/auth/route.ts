@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSession, destroySession, verifyPassword } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
+import { totpEnabled, verifyTotp } from '@/lib/totp';
 
 export async function POST(request: NextRequest) {
   const ipGate = await assertAdminIp();
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const password = typeof body.password === 'string' ? body.password : '';
+    const totp = typeof body.totp === 'string' ? body.totp : '';
 
     if (!process.env.ADMIN_PASSWORD) {
       return NextResponse.json(
@@ -33,8 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
+    if (totpEnabled()) {
+      const secret = process.env.ADMIN_TOTP_SECRET!.trim();
+      if (!verifyTotp(secret, totp)) {
+        return NextResponse.json({ error: 'Invalid 2FA code', needTotp: true }, { status: 401 });
+      }
+    }
+
     await createSession();
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, totp: totpEnabled() });
   } catch {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });
   }

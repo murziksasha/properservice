@@ -38,7 +38,7 @@ export function newSection(type: SectionType | string): Section {
         aboutLines: [''],
         callbackTitle: 'Залиште заявку',
         callbackButtonText: 'Надіслати',
-        callbackPlaceholder: '+38( ___ ) __ __ ___',
+        callbackPlaceholder: '+38 (___) ___ __ __',
         image: '/img/services/technika_img.png',
         imageAlt: 'image',
       };
@@ -71,7 +71,7 @@ export function newSection(type: SectionType | string): Section {
         visible: true,
         title: 'Залиште заявку',
         buttonText: 'Надіслати',
-        placeholder: '+38( ___ ) __ __ ___',
+        placeholder: '+38 (___) ___ __ __',
       };
     case 'feedback':
       return {
@@ -123,7 +123,6 @@ export function createDefaultPage(opts: {
     description: opts.title,
     visible: true,
     sections: [
-      newSection('services-nav'),
       { ...newSection('hero'), titleHtml: opts.title } as Section,
       newSection('advantages'),
       newSection('callback'),

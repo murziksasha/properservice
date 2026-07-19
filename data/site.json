@@ -1,7 +1,7 @@
 {
   "settings": {
     "title": "Ремонт комп'ютерної та побутової техніки, телефонів та планшетів",
-    "description": "Качественно ремонтируем, восстанавливаем устройства, гарантия качества, лояльные цены!",
+    "description": "Якісний ремонт, відновлюємо пристрої, гарантія якості, лояльні ціни!",
     "logo": "/uploads/1782074591013-cituuf.jpg",
     "favicon": "/img/icons/favicon.ico",
     "phones": [
@@ -34,7 +34,7 @@
       {
         "id": "instagram",
         "type": "instagram",
-        "url": "http://instagram.com/_u/remont_servis_chernomorsk",
+        "url": "https://instagram.com/_u/remont_servis_chernomorsk",
         "icon": "/img/icons/instagram.svg"
       },
       {
@@ -47,7 +47,7 @@
     "hours": "Працюємо з 10:00 до 19:00",
     "address": "м. Чорноморськ, вул. Віталія Шума 2-Б",
     "addressNote": "(цоколь зліва від входу в \"Снігова Королева\")",
-    "officeHours": "ПН - ПТ с 08:00 до 17:00",
+    "officeHours": "ПН - ПТ з 08:00 до 17:00",
     "email": "remontmailshop@gmail.com",
     "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d669.5547639817211!2d30.639834534575012!3d46.295996529895035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c7c9103c986d39%3A0x60ee4de500df2374!2z0KDQtdC80L7QvdGCINCh0LXRgNCy0LjRgQ!5e0!3m2!1sen!2sua!4v1671553101368!5m2!1sen!2sua",
     "copyright": "© 2017",
@@ -155,7 +155,7 @@
           "id": "hero",
           "visible": true,
           "type": "hero",
-          "titleHtml": "Відремонтуємо побутову техніку. та цифрову техніку <span>у Чорноморську </span> з гарантією!",
+          "titleHtml": "Відремонтуємо побутову та цифрову техніку <span>у Чорноморську </span> з гарантією!",
           "aboutLines": [
             "Ми - <span>спеціалісти</span> своєї справи. Пропонуємо оптимальне рішення",
             "Постійно підвищуємо <span>якість</span> послуг, що надаються"
@@ -164,7 +164,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/services/technika_img.png",
           "imageAlt": "technique"
         },
@@ -206,7 +206,7 @@
               "href": "/coffee-machines",
               "image": "/img/about-link/coff_machine_log.png",
               "imageAlt": "coffee machine",
-              "label": "Кофемашина"
+              "label": "Кавомашина"
             },
             {
               "href": "/televizoru",
@@ -265,7 +265,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -286,7 +286,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -332,7 +332,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -362,7 +362,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/coffee-machines/upper_coffee_machine.png",
           "imageAlt": "coffee machine",
           "activeServiceSlug": "coffee-machines"
@@ -399,7 +399,7 @@
           "visible": true,
           "type": "malfunctions",
           "title": "Усуваємо будь-які несправності",
-          "intro": "Якісно допоможемо, якщо Ваша кофемашина:",
+          "intro": "Якісно допоможемо, якщо Ваша кавомашина:",
           "items": [
             "не варить каву",
             "не робить пінку",
@@ -418,7 +418,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -439,7 +439,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 10:00 до 19:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 10:00 до 19:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -485,7 +485,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -515,7 +515,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/televizoru/tv-set.png",
           "imageAlt": "tv set",
           "imageClass": "tv__set",
@@ -572,7 +572,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -593,7 +593,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -639,7 +639,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -669,7 +669,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/laptop-pc/main-bg.png",
           "imageAlt": "laptop",
           "activeServiceSlug": "laptop-pc"
@@ -724,7 +724,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -745,7 +745,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -791,7 +791,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -821,7 +821,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/vacuum-cleaner/vac-cleaner-main.jpg",
           "imageAlt": "vacuum cleaner",
           "activeServiceSlug": "vacuum-cleaner"
@@ -875,7 +875,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -896,7 +896,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -942,7 +942,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -972,7 +972,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/bake/bake_main.jpg",
           "imageAlt": "microwave",
           "activeServiceSlug": "bake"
@@ -1026,7 +1026,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -1047,7 +1047,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -1093,7 +1093,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -1123,7 +1123,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/phones/phones_main.png",
           "imageAlt": "phones",
           "imageClass": "tv__set",
@@ -1182,7 +1182,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -1203,7 +1203,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -1249,7 +1249,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -1279,7 +1279,7 @@
           "callbackTitleHtml": "Вирішуємо питання навіть <span>віддалено!</span>",
           "callbackButtonText": "записатися на безкоштовну діагностику",
           "callbackButtonHtml": "<span>записатися на</span> <br>безкоштовну діагностику",
-          "callbackPlaceholder": "+38( ___ ) __ __ ___",
+          "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/services/technika_img.png",
           "imageAlt": "devices",
           "activeServiceSlug": "others"
@@ -1333,7 +1333,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію та діагностику!",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         },
         {
           "id": "feedback",
@@ -1354,7 +1354,7 @@
           "type": "contacts",
           "title": "Наші контакти:",
           "inviteText": "Будемо раді бачити Вас у нашому офісі:",
-          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ с 08:00 до 17:00",
+          "addressHtml": "м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в \"Снігова Королева\") ПН - ПТ з 08:00 до 17:00",
           "phones": [
             {
               "display": "+38 099 538 56 55",
@@ -1400,7 +1400,7 @@
           "type": "callback",
           "title": "Залишіть заявку та отримайте первинну консультацію:",
           "buttonText": "залишити заявку",
-          "placeholder": "+38( ___ ) __ __ ___"
+          "placeholder": "+38 (___) ___ __ __"
         }
       ]
     },
@@ -1408,20 +1408,86 @@
       "id": "confident",
       "slug": "confident",
       "title": "Політика конфіденційності",
-      "description": "Політика конфіденційності персональних даних",
+      "description": "Як Proper Service обробляє персональні дані клієнтів і відвідувачів сайту",
       "visible": true,
       "sections": [],
-      "contentHtml": "<div class=\"wrapper\" style=\"padding:40px 20px\"><h1 class=\"_title\">Політика конфіденційності персональних даних</h1><p class=\"_paragr\">Використовуючи веб-сайт, Ви погоджуєтесь з умовами політики конфіденційності персональних даних.</p></div>"
+      "contentHtml": "<div class=\"wrapper\" style=\"padding:40px 20px;max-width:800px;margin:0 auto\">\n  <h1 class=\"_title\">Політика конфіденційності персональних даних</h1>\n  <p class=\"_paragr\">Ця Політика описує, як Proper Service (далі — «Сервіс») обробляє персональні дані відвідувачів сайту та клієнтів.</p>\n  <h2>1. Які дані ми збираємо</h2>\n  <ul>\n    <li>номер телефону, залишений у формі зворотного дзвінка або замовлення;</li>\n    <li>коментар до замовлення (за бажанням);</li>\n    <li>технічні дані запиту: IP, User-Agent, сторінка, UTM-мітки (для якості сервісу та захисту від спаму);</li>\n    <li>cookie сесії адміністратора (лише для входу в адмінку).</li>\n  </ul>\n  <h2>2. Мета обробки</h2>\n  <p class=\"_paragr\">Зв’язок з клієнтом щодо ремонту / замовлення, облік заявок, покращення роботи сайту, запобігання зловживанням.</p>\n  <h2>3. Зберігання</h2>\n  <p class=\"_paragr\">Заявки зберігаються локально в журналі Сервісу. Доступ мають лише уповноважені оператори. Термін зберігання — до виконання запиту та обґрунтованого архіву, але не довше ніж потрібно для мети обробки.</p>\n  <h2>4. Передача третім особам</h2>\n  <p class=\"_paragr\">Дані можуть передаватися постачальникам послуг зв’язку (SMTP, Telegram) виключно для доставки сповіщень про заявку. Ми не продаємо персональні дані.</p>\n  <h2>5. Ваші права</h2>\n  <p class=\"_paragr\">Ви можете звернутися з проханням виправити або видалити дані, написавши на email з розділу контактів сайту або зателефонувавши.</p>\n  <h2>6. Безпека</h2>\n  <p class=\"_paragr\">Застосовуємо обмеження доступу до адмінки, rate-limit форм, honeypot від ботів. Рекомендуємо використовувати HTTPS у production.</p>\n  <h2>7. Зміни</h2>\n  <p class=\"_paragr\">Ми можемо оновлювати цю політику. Актуальна версія завжди доступна на цій сторінці.</p>\n  <p class=\"_paragr\"><em>Оновлено: 2026-07-19</em></p>\n</div>"
     }
   ],
   "goods": [
+    {
+      "id": "eb5fa00c5d9a",
+      "title": "Акумулятор iPhone 11 (OEM-сумісний)",
+      "description": "Якісний акумулятор, встановлення в сервісі, перевірка після монтажу.",
+      "price": 1290,
+      "image": "/img/phones/phones_main.png",
+      "images": [
+        "/img/phones/tablet.jpg"
+      ],
+      "visible": true,
+      "category": "Телефони",
+      "code": "AKB-IP11"
+    },
+    {
+      "id": "cfbe9a30daff",
+      "title": "Захисне скло 9H універсальне 6.1\"",
+      "description": "Загартоване скло з олеофобним покриттям. Підійде для більшості моделей 6.1\".",
+      "price": 199,
+      "image": "/img/phones/phones_main.png",
+      "visible": true,
+      "category": "Телефони",
+      "code": "GLASS-61"
+    },
+    {
+      "id": "fc12f57dd225",
+      "title": "Термопаста CPU (шприц 2г)",
+      "description": "Для ноутбуків і ПК. Нанесення майстром — за домовленістю.",
+      "price": 150,
+      "image": "/img/laptop-pc/laptop-1.jpg",
+      "images": [
+        "/img/laptop-pc/pc.jpg"
+      ],
+      "visible": true,
+      "category": "Ноутбуки та ПК",
+      "code": "TP-2G"
+    },
+    {
+      "id": "3260cadd7c6a",
+      "title": "Блок живлення ноутбука 19V 3.42A (універсальний)",
+      "description": "Універсальний адаптер з набором роз’ємів. Перед покупкою узгодьте модель.",
+      "price": 890,
+      "image": "/img/laptop-pc/laptop-2.jpg",
+      "visible": true,
+      "category": "Ноутбуки та ПК",
+      "code": "PSU-19-342"
+    },
+    {
+      "id": "8539e016ae91",
+      "title": "Пульт ДК універсальний для TV",
+      "description": "Підходить до більшості популярних брендів. Налаштування за інструкцією.",
+      "price": 250,
+      "image": "/img/televizoru/tv-set.png",
+      "visible": true,
+      "category": "Телевізори",
+      "code": "RC-UNI"
+    },
+    {
+      "id": "afdee2babc98",
+      "title": "Фільтр для кавомашини (водопідготовка)",
+      "description": "Зменшує накип, подовжує ресурс. Уточніть сумісність моделі у майстра.",
+      "price": 450,
+      "image": "/img/coffee-machines/upper_coffee_machine.png",
+      "visible": true,
+      "category": "Кавомашини",
+      "code": "CF-FILTER"
+    },
     {
       "id": "nsfi1onk",
       "title": "test",
       "description": "super goods with love from remont service",
       "price": 500,
       "image": "/uploads/1782059169408-621vs3.png",
-      "visible": true
+      "visible": false
     },
     {
       "id": "2da1a0bd362e",
@@ -1429,7 +1495,8 @@
       "description": "the best Goods in the world",
       "price": 1050,
       "image": "/img/services/technika_img.png",
-      "visible": true
+      "visible": false
     }
-  ]
+  ],
+  "updatedAt": "2026-07-19T09:09:31.829Z"
 }

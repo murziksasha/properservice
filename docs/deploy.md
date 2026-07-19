@@ -90,12 +90,6 @@ npm run docker:dev
 # default nginx port often 8080 — see docker-compose.dev.yml
 ```
 
-## CI
-
-GitHub Actions (`.github/workflows/ci.yml`):
-
-`typecheck` → `lint` → `test` → `test:smoke` (Playwright) → `build`
-
 ## Laptop + Keenetic DNS (LAN)
 
 Типовий сценарій: сайт крутиться на ноутбуці, роутер роздає імʼя через Keen DNS.

@@ -33,12 +33,20 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       siteName: 'Proper Service',
-      images: data.settings.logo ? [{ url: data.settings.logo }] : undefined,
+      images: [
+        {
+          url: data.settings.logo || '/img/icons/logo.png',
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title,
       description,
+      images: [data.settings.logo || '/img/icons/logo.png'],
     },
     robots: {
       index: true,

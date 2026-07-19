@@ -1,7 +1,9 @@
 import type { SiteData } from '@/lib/types';
 import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
-export type SaveResult = { ok: true } | { ok: false; error: string };
+export type SaveResult =
+  | { ok: true; updatedAt?: string }
+  | { ok: false; error: string; conflict?: boolean };
 
 export async function saveSiteData(data: SiteData): Promise<SaveResult> {
   try {
@@ -16,11 +18,20 @@ export async function saveSiteData(data: SiteData): Promise<SaveResult> {
         const seconds = parseRetryAfterSeconds(res, 60);
         return { ok: false, error: rateLimitMessage(seconds, 'save') };
       }
+      if (res.status === 409) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        return {
+          ok: false,
+          conflict: true,
+          error: json.error || 'Дані змінені іншим сеансом. Оновіть сторінку.',
+        };
+      }
       const json = (await res.json().catch(() => ({}))) as { error?: string };
       return { ok: false, error: json.error || `Помилка збереження (${res.status})` };
     }
 
-    return { ok: true };
+    const json = (await res.json().catch(() => ({}))) as { updatedAt?: string };
+    return { ok: true, updatedAt: json.updatedAt };
   } catch {
     return { ok: false, error: 'Мережева помилка' };
   }
@@ -33,5 +44,40 @@ export async function fetchSiteData(): Promise<SiteData | null> {
     return (await res.json()) as SiteData;
   } catch {
     return null;
+  }
+}
+
+/** Partial save of one top-level section (reduces overwrite races). */
+export async function patchSiteSection(
+  section: 'goods' | 'settings' | 'headerMenu' | 'servicesNav' | 'pages' | 'shopLink',
+  data: unknown,
+  expectedUpdatedAt?: string,
+): Promise<SaveResult> {
+  try {
+    const res = await fetch('/api/site', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section, data, expectedUpdatedAt }),
+    });
+    if (!res.ok) {
+      if (res.status === 429) {
+        const seconds = parseRetryAfterSeconds(res, 60);
+        return { ok: false, error: rateLimitMessage(seconds, 'save') };
+      }
+      if (res.status === 409) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        return {
+          ok: false,
+          conflict: true,
+          error: json.error || 'Дані змінені іншим сеансом. Оновіть сторінку.',
+        };
+      }
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
+      return { ok: false, error: json.error || `Помилка збереження (${res.status})` };
+    }
+    const json = (await res.json().catch(() => ({}))) as { updatedAt?: string };
+    return { ok: true, updatedAt: json.updatedAt };
+  } catch {
+    return { ok: false, error: 'Мережева помилка' };
   }
 }
