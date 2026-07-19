@@ -1,7 +1,10 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { SiteShell } from '@/components/layout/SiteShell';
+import { ShopCatalog } from '@/components/shop/ShopCatalog';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 import { getProducts, getSiteData } from '@/lib/site-data';
+import { parseProductSort } from '@/lib/shop-catalog';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,9 +16,16 @@ export async function generateMetadata() {
   };
 }
 
-export default async function ShopPage() {
-  const [data, products] = await Promise.all([getSiteData(), getProducts()]);
+interface PageProps {
+  searchParams: Promise<{ q?: string; sort?: string; category?: string }>;
+}
+
+export default async function ShopPage({ searchParams }: PageProps) {
+  const [data, products, sp] = await Promise.all([getSiteData(), getProducts(), searchParams]);
   const menu = data.headerMenu.filter((item) => item.visible);
+  const initialQuery = typeof sp.q === 'string' ? sp.q : '';
+  const initialSort = parseProductSort(typeof sp.sort === 'string' ? sp.sort : undefined);
+  const initialCategory = typeof sp.category === 'string' ? sp.category : '';
 
   return (
     <SiteShell settings={data.settings} menu={menu} variant='inner'>
@@ -25,14 +35,24 @@ export default async function ShopPage() {
           Каталог товарів. Для замовлення зателефонуйте або напишіть у месенджер.
         </p>
 
-        {products.length ? (
-          <ProductGrid products={products} />
-        ) : (
-          <div className='shop-empty'>
-            <p className='_paragr'>Наразі в каталозі немає опублікованих товарів.</p>
-            <p className='shop-empty__hint'>Зателефонуйте — підберемо комплектуючі під ваш пристрій.</p>
-          </div>
-        )}
+        <Suspense
+          fallback={
+            products.length ? (
+              <ProductGrid products={products} />
+            ) : (
+              <div className='shop-empty'>
+                <p className='_paragr'>Наразі в каталозі немає опублікованих товарів.</p>
+              </div>
+            )
+          }
+        >
+          <ShopCatalog
+            products={products}
+            initialQuery={initialQuery}
+            initialSort={initialSort}
+            initialCategory={initialCategory}
+          />
+        </Suspense>
 
         <p className='shop-page__contact'>
           <a href={`tel:${data.settings.headerPhone.tel}`} className='_btn'>

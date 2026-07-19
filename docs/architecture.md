@@ -19,10 +19,19 @@ flowchart LR
 - `settings` — title, logo, phones, social, map, `reviewsUrl`…
 - `headerMenu`, `servicesNav`, `shopLink`
 - `pages[]` — кожна сторінка: `slug`, meta, `sections[]`
-- `goods[]` — товари магазину
+- `goods[]` — товари магазину (`Product`: title, price, image, visible, optional `category`, …)
 
 Секції типізовані union `Section` (`hero`, `advantages`, `malfunctions`, …).  
 Рендер: `SectionRenderer` → компоненти в `components/sections/`.
+
+### Каталог: пошук / фільтри / сортування
+
+Без окремої БД — in-memory над `goods[]`:
+
+- `lib/shop-catalog.ts` — `filterAndSortProducts`, `parseProductSort`, `collectCategories` (+ unit tests)
+- Публічний UI: `components/shop/ShopCatalog.tsx` на `/shop` (client toolbar + URL `?q=&sort=&category=`)
+- Адмінка: ті самі утиліти в `GoodsEditor` (видимість + view-sort; DnD лише в «чистому» режимі)
+- Default sort `manual` = порядок масиву після DnD; `shop-grid` на головній — перші 8 без toolbar
 
 ## Data access
 
@@ -47,7 +56,7 @@ Secret: `SESSION_SECRET` (або fallback `ADMIN_PASSWORD` / dev default).
 
 - `app/page.tsx` — home (`slug === ''`)
 - `app/[slug]/page.tsx` — CMS pages
-- `app/shop/*` — catalog
+- `app/shop/*` — catalog (`ShopCatalog`: search / sort / category)
 - `force-dynamic` — актуальний контент без ISR (file CMS)
 
 HTML з CMS проходить `sanitizeHtml()` перед `dangerouslySetInnerHTML`.

@@ -6,6 +6,13 @@ import { saveSiteData } from '@/lib/admin/saveSite';
 import { uploadImage } from '@/lib/admin/uploadImage';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
+import {
+  PRODUCT_SORT_OPTIONS,
+  collectCategories,
+  filterAndSortProducts,
+  type ProductSort,
+  type VisibilityFilter,
+} from '@/lib/shop-catalog';
 import { useCallback, useMemo, useState } from 'react';
 import { showToast } from './AdminToast';
 import { ImageField } from './ImageField';
@@ -18,6 +25,7 @@ function emptyProduct(): Product {
     price: 0,
     image: '/img/services/technika_img.png',
     visible: true,
+    category: '',
   };
 }
 
@@ -27,6 +35,8 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
+  const [visibility, setVisibility] = useState<VisibilityFilter>('all');
+  const [viewSort, setViewSort] = useState<ProductSort>('manual');
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -58,20 +68,36 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     { dirty, enabled: !saving && !editing },
   );
 
+  const counts = useMemo(() => {
+    const all = data.goods.length;
+    const visible = data.goods.filter((g) => g.visible).length;
+    return { all, visible, hidden: all - visible };
+  }, [data.goods]);
+
+  const categorySuggestions = useMemo(() => collectCategories(data.goods), [data.goods]);
+
+  /** List for display; each item keeps original index in goods[] for DnD. */
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return data.goods.map((g, index) => ({ g, index }));
-    return data.goods
-      .map((g, index) => ({ g, index }))
-      .filter(({ g }) => g.title.toLowerCase().includes(q) || g.description.toLowerCase().includes(q));
-  }, [data.goods, query]);
+    const list = filterAndSortProducts(data.goods, {
+      query,
+      sort: viewSort,
+      visibility,
+    });
+    return list.map((g) => ({
+      g,
+      index: data.goods.findIndex((item) => item.id === g.id),
+    }));
+  }, [data.goods, query, viewSort, visibility]);
+
+  const canReorder = !query.trim() && visibility === 'all' && viewSort === 'manual';
 
   async function saveProduct() {
     if (!editing) return;
     const goods = [...data.goods];
     const idx = goods.findIndex((g) => g.id === editing.id);
-    const stamped = {
+    const stamped: Product = {
       ...editing,
+      category: (editing.category || '').trim() || undefined,
       updatedAt: new Date().toISOString(),
       createdAt: editing.createdAt || new Date().toISOString(),
     };
@@ -110,13 +136,42 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
         <input
           className='admin-field-sm'
           style={{ minWidth: 180, maxWidth: 240 }}
+          type='search'
           placeholder='Пошук…'
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          aria-label='Пошук товарів'
         />
+        <select
+          className='admin-select admin-field-sm'
+          style={{ width: 'auto', marginBottom: 0, minWidth: 160 }}
+          value={visibility}
+          onChange={(e) => setVisibility(e.target.value as VisibilityFilter)}
+          aria-label='Фільтр видимості'
+        >
+          <option value='all'>Усі ({counts.all})</option>
+          <option value='visible'>Опубліковані ({counts.visible})</option>
+          <option value='hidden'>Приховані ({counts.hidden})</option>
+        </select>
+        <select
+          className='admin-select admin-field-sm'
+          style={{ width: 'auto', marginBottom: 0, minWidth: 180 }}
+          value={viewSort}
+          onChange={(e) => setViewSort(e.target.value as ProductSort)}
+          aria-label='Сортування списку'
+        >
+          {PRODUCT_SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
         {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
       </div>
-      <p className='admin-hint admin-mb'>Порядок у списку = порядок у каталозі. Перетягуйте ⠿ (коли пошук порожній).</p>
+      <p className='admin-hint admin-mb'>
+        Порядок у каталозі задається перетягуванням ⠿ (коли пошук порожній, фільтр «Усі», сортування «За
+        порядком каталогу»). Сортування списку вище — лише для перегляду, воно не змінює порядок на сайті.
+      </p>
 
       {editing ? (
         <div className='admin-card admin-form'>
@@ -132,6 +187,21 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               value={editing.price}
               onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
             />
+          </label>
+          <label>
+            Категорія
+            <input
+              list='goods-category-suggestions'
+              value={editing.category || ''}
+              onChange={(e) => setEditing({ ...editing, category: e.target.value })}
+              placeholder='Напр. Телефони, ТВ…'
+            />
+            <datalist id='goods-category-suggestions'>
+              {categorySuggestions.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+            <span className='admin-hint'>Опційно. Використовується для фільтрів у магазині.</span>
           </label>
           <label>
             Опис
@@ -174,16 +244,15 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
 
       <div className='admin-card'>
         {filtered.map(({ g: product, index }) => {
-          const canDrag = !query.trim();
           return (
             <div
               key={product.id}
               className={`admin-section-item admin-row admin-row--between admin-mb${
                 dragIndex === index ? ' is-dragging' : ''
               }${dragOverIndex === index && dragIndex !== index ? ' is-drop-target' : ''}`}
-              draggable={canDrag}
+              draggable={canReorder}
               onDragStart={(e) => {
-                if (!canDrag || !(e.target as HTMLElement).closest('.admin-drag-handle')) {
+                if (!canReorder || !(e.target as HTMLElement).closest('.admin-drag-handle')) {
                   e.preventDefault();
                   return;
                 }
@@ -195,7 +264,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                 setDragOverIndex(null);
               }}
               onDragOver={(e) => {
-                if (!canDrag) return;
+                if (!canReorder) return;
                 e.preventDefault();
                 setDragOverIndex(index);
               }}
@@ -207,7 +276,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               }}
             >
               <div className='admin-row'>
-                {canDrag ? (
+                {canReorder ? (
                   <span
                     className='admin-drag-handle'
                     title='Перетягнути'
@@ -231,7 +300,9 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                   </span>
                 ) : null}
                 <span>
-                  {product.title} — {product.price} ₴ {!product.visible ? '(приховано)' : ''}
+                  {product.title} — {product.price} ₴
+                  {product.category ? ` · ${product.category}` : ''}
+                  {!product.visible ? ' (приховано)' : ''}
                 </span>
               </div>
               <div className='admin-row'>
