@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { Product } from '@/lib/types';
 import {
   PRODUCT_SORT_OPTIONS,
@@ -19,6 +19,18 @@ function catalogKey(q: string, sort: ProductSort, category: string): string {
   return `${q.trim()}|${sort}|${category.trim()}`;
 }
 
+function readParamsFromLocation(): { q: string; sort: ProductSort; category: string } {
+  if (typeof window === 'undefined') {
+    return { q: '', sort: 'manual', category: '' };
+  }
+  const params = new URLSearchParams(window.location.search);
+  return {
+    q: params.get('q') || '',
+    sort: parseProductSort(params.get('sort')),
+    category: params.get('category') || '',
+  };
+}
+
 export function ShopCatalog({
   products,
   initialQuery = '',
@@ -32,7 +44,6 @@ export function ShopCatalog({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
@@ -66,19 +77,21 @@ export function ShopCatalog({
     syncUrl({ q: debouncedQuery, sort, category });
   }, [debouncedQuery, sort, category, syncUrl]);
 
-  // Browser back/forward: apply URL only when it differs from what we last wrote
+  // Browser back/forward without useSearchParams (avoids Suspense fallback-only UI)
   useEffect(() => {
-    const q = searchParams.get('q') || '';
-    const s = parseProductSort(searchParams.get('sort'));
-    const c = searchParams.get('category') || '';
-    const key = catalogKey(q, s, c);
-    if (key === lastSyncedKey.current) return;
-    lastSyncedKey.current = key;
-    setQuery(q);
-    setDebouncedQuery(q);
-    setSort(s);
-    setCategory(c);
-  }, [searchParams]);
+    function onPopState() {
+      const next = readParamsFromLocation();
+      const key = catalogKey(next.q, next.sort, next.category);
+      if (key === lastSyncedKey.current) return;
+      lastSyncedKey.current = key;
+      setQuery(next.q);
+      setDebouncedQuery(next.q);
+      setSort(next.sort);
+      setCategory(next.category);
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const categories = useMemo(() => collectCategories(products), [products]);
 
@@ -113,57 +126,61 @@ export function ShopCatalog({
   return (
     <div className='shop-catalog'>
       <div className='shop-toolbar' role='search' aria-label='Фільтри каталогу'>
-        <label className='shop-toolbar__search'>
-          <span className='shop-toolbar__sr-only'>Пошук товару</span>
-          <input
-            type='search'
-            className='shop-toolbar__input'
-            placeholder='Пошук товару…'
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoComplete='off'
-            enterKeyHint='search'
-          />
-        </label>
+        <p className='shop-toolbar__heading'>Пошук і сортування</p>
 
-        <label className='shop-toolbar__field'>
-          <span className='shop-toolbar__label'>Сортування</span>
-          <select
-            className='shop-toolbar__select'
-            value={sort}
-            onChange={(e) => setSort(parseProductSort(e.target.value))}
-          >
-            {PRODUCT_SORT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className='shop-toolbar__row'>
+          <label className='shop-toolbar__search'>
+            <span className='shop-toolbar__label'>Пошук товару</span>
+            <input
+              type='search'
+              className='shop-toolbar__input'
+              placeholder='Назва, опис, категорія…'
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              autoComplete='off'
+              enterKeyHint='search'
+            />
+          </label>
 
-        {categories.length ? (
           <label className='shop-toolbar__field'>
-            <span className='shop-toolbar__label'>Категорія</span>
+            <span className='shop-toolbar__label'>Сортування</span>
             <select
               className='shop-toolbar__select'
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={sort}
+              onChange={(e) => setSort(parseProductSort(e.target.value))}
             >
-              <option value=''>Усі категорії</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
+              {PRODUCT_SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </select>
           </label>
-        ) : null}
 
-        {active ? (
-          <button type='button' className='shop-toolbar__reset' onClick={reset}>
-            Скинути
-          </button>
-        ) : null}
+          {categories.length ? (
+            <label className='shop-toolbar__field'>
+              <span className='shop-toolbar__label'>Категорія</span>
+              <select
+                className='shop-toolbar__select'
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value=''>Усі категорії</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+
+          {active ? (
+            <button type='button' className='shop-toolbar__reset' onClick={reset}>
+              Скинути
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {categories.length ? (
