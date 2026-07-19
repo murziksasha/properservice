@@ -1,8 +1,6 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { ShopCatalog } from '@/components/shop/ShopCatalog';
-import { ProductGrid } from '@/components/shop/ProductGrid';
 import { getProducts, getSiteData } from '@/lib/site-data';
 import { parseProductSort } from '@/lib/shop-catalog';
 
@@ -35,24 +33,12 @@ export default async function ShopPage({ searchParams }: PageProps) {
           Каталог товарів. Для замовлення зателефонуйте або напишіть у месенджер.
         </p>
 
-        <Suspense
-          fallback={
-            products.length ? (
-              <ProductGrid products={products} />
-            ) : (
-              <div className='shop-empty'>
-                <p className='_paragr'>Наразі в каталозі немає опублікованих товарів.</p>
-              </div>
-            )
-          }
-        >
-          <ShopCatalog
-            products={products}
-            initialQuery={initialQuery}
-            initialSort={initialSort}
-            initialCategory={initialCategory}
-          />
-        </Suspense>
+        <ShopCatalog
+          products={products}
+          initialQuery={initialQuery}
+          initialSort={initialSort}
+          initialCategory={initialCategory}
+        />
 
         <p className='shop-page__contact'>
           <a href={`tel:${data.settings.headerPhone.tel}`} className='_btn'>
