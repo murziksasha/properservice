@@ -5,6 +5,7 @@ import { listSiteBackups } from './backup';
 import { countLeads } from './leads';
 import { countOrders } from './orders';
 import { uploadsStats } from './media';
+import { getTotpSecret } from './totp';
 
 const startedAt = Date.now();
 
@@ -122,7 +123,7 @@ export async function getHealthReport(): Promise<HealthReport> {
     offsiteHint:
       'Копіюйте data/ і public/uploads/ на інший диск / SMB / rclone (див. docs/deploy.md). Скрипт: npm run backup:offsite',
     telegram: Boolean(process.env.TELEGRAM_BOT_TOKEN?.trim() && process.env.TELEGRAM_CHAT_ID?.trim()),
-    totp: Boolean(process.env.ADMIN_TOTP_SECRET?.trim()),
+    totp: Boolean(await getTotpSecret()),
     siteUrl: Boolean(process.env.SITE_URL?.trim()),
   };
 }

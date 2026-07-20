@@ -9,6 +9,7 @@ import { useCallback, useState } from 'react';
 import { showToast } from './AdminToast';
 import { BackupPanel } from './BackupPanel';
 import { ImageField } from './ImageField';
+import { TotpSetupPanel } from './TotpSetupPanel';
 
 const SOCIAL_PRESETS: Array<{ type: string; icon: string; label: string }> = [
   { type: 'viber', icon: '/img/icons/viber.svg', label: 'Viber' },
@@ -300,6 +301,8 @@ export function SettingsEditor({ initialData }: { initialData: SiteData }) {
           />
         </label>
       </div>
+
+      <TotpSetupPanel />
 
       <BackupPanel />
     </div>

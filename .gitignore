@@ -24,6 +24,7 @@
 /data/backups/
 /data/leads.json
 /data/orders.json
+/data/admin-totp.json
 
 # misc
 .DS_Store

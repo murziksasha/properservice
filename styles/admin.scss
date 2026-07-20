@@ -558,6 +558,74 @@
   font-size: 0.9rem;
 }
 
+.admin-login-2fa-hint {
+  margin: -4px 0 12px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.admin-totp-panel {
+  .admin-totp-form,
+  .admin-totp-setup {
+    max-width: 420px;
+  }
+
+  .admin-totp-qr-wrap {
+    display: inline-block;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+
+  .admin-totp-qr {
+    display: block;
+    width: 220px;
+    height: 220px;
+  }
+
+  .admin-totp-secret-row {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .admin-totp-secret {
+    display: inline-block;
+    font-size: 0.85rem;
+    word-break: break-all;
+    background: #f3f4f6;
+    padding: 8px 10px;
+    border-radius: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .admin-totp-uri {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    word-break: break-all;
+    color: #555;
+  }
+
+  .admin-totp-env-note {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    color: #5d4e00;
+
+    p {
+      margin: 0 0 6px;
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
 .admin-login-lock {
   margin: 0 0 12px;
   font-size: 0.9rem;

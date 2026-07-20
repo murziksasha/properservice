@@ -50,10 +50,11 @@ Single-instance: цілий файл перезаписується при `save
 
 ## Auth
 
-1. `POST /api/auth` — `verifyPassword` (timing-safe) проти `ADMIN_PASSWORD`
+1. `POST /api/auth` — `verifyPassword` (timing-safe) проти `ADMIN_PASSWORD` + optional TOTP
 2. `createSession` — cookie `admin_session` = `token.expiry.hmac`
 3. `middleware.ts` захищає `/admin/*` (крім login)
 4. API `GET/PUT /api/site`, `POST /api/upload` перевіряють сесію
+5. 2FA setup: `GET/POST /api/auth/totp` (session + password re-auth)
 
 Secret: `SESSION_SECRET` (або fallback `ADMIN_PASSWORD` / dev default).
 
@@ -172,7 +173,11 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 
 ### Auth 2FA
 
-- Optional `ADMIN_TOTP_SECRET` (base32). Login body: `{ password, totp }`.
+- Optional TOTP. Secret resolution: `ADMIN_TOTP_SECRET` env **or** `data/admin-totp.json` (env wins).
+- Login body: `{ password, totp }`.
+- Admin UI setup: `GET/POST /api/auth/totp` — status / begin (QR) / confirm / disable.
+- Confirm flow: generate secret (not stored) → client scans QR → confirm with code + password → write file.
+- `lib/totp.ts` + `lib/admin-totp.ts`; QR via `qrcode` package.
 
 ## Atomic writes
 

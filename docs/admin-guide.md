@@ -4,7 +4,51 @@
 
 1. Відкрийте `/admin/login`
 2. Введіть пароль з `ADMIN_PASSWORD`
-3. Після входу — Dashboard зі статистикою, **Live health** і швидкими діями
+3. Якщо увімкнено 2FA — введіть 6-значний код з Authenticator
+4. Після входу — Dashboard зі статистикою, **Live health** і швидкими діями
+
+## Двофакторна автентифікація (2FA / TOTP)
+
+Опційний другий фактор для входу в адмінку. Код генерує застосунок (Google Authenticator, Aegis, 1Password тощо).
+
+### Увімкнення з адмінки (рекомендовано)
+
+1. Увійдіть у адмінку (поки без 2FA)
+2. **Налаштування → Безпека · 2FA**
+3. Введіть пароль адмінки → **Увімкнути 2FA**
+4. Відскануйте QR (або скопіюйте secret / otpauth URI) у Authenticator
+5. Введіть 6-значний код → **Підтвердити і увімкнути**
+6. Secret зберігається в `data/admin-totp.json` (не в `site.json`, не в git)
+7. На **Огляд** у Live health з’явиться «2FA TOTP увімкнено»
+8. Наступний логін — пароль + код з застосунку
+
+### Вимкнення з адмінки
+
+**Налаштування → Безпека · 2FA → Вимкнути 2FA** — пароль + поточний код 2FA. Видаляє `data/admin-totp.json`.
+
+### Увімкнення через `.env` (ops / Docker)
+
+Якщо задано `ADMIN_TOTP_SECRET`, він **має пріоритет** над файлом; UI setup/вимкнення недоступні.
+
+1. Згенеруйте **base32**-secret (або візьміть з UI / `.env.example`: `JBSWY3DPEHPK3PXP`)
+2. Додайте в Authenticator (TOTP, 30 с, 6 цифр) або:
+   `otpauth://totp/ProperService:admin?secret=ВАШ_SECRET&issuer=ProperService&algorithm=SHA1&digits=6&period=30`
+3. У `.env`:
+   ```env
+   ADMIN_TOTP_SECRET=ВАШ_SECRET
+   ```
+4. Перезапустіть Node / PM2 / Docker
+
+### Вимкнення через `.env`
+
+Приберіть або закоментуйте `ADMIN_TOTP_SECRET` і перезапустіть. Якщо лишився `data/admin-totp.json` — 2FA знову візьметься з файлу (вимкніть у UI або видаліть файл).
+
+### Безпека
+
+- Secret показується **один раз** під час setup (QR + копіювання)
+- Confirm/disable вимагають пароль адмінки; disable — ще й валідний TOTP
+- Off-site backup: якщо копіюєте весь `data/`, туди потрапить і `admin-totp.json` — тримайте backup захищеним
+- Поки 2FA вимкнено, поле «Код 2FA» на логіні можна лишити порожнім
 
 ## Заявки
 
