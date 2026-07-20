@@ -47,7 +47,7 @@
     "hours": "Працюємо з 10:00 до 19:00",
     "address": "м. Чорноморськ, вул. Віталія Шума 2-Б",
     "addressNote": "(цоколь зліва від входу в \"Снігова Королева\")",
-    "officeHours": "ПН - ПТ з 08:00 до 17:00",
+    "officeHours": "ПН - ПТ з 10:00 до 19:00, СБ з 11:00 до 17:00",
     "email": "remontmailshop@gmail.com",
     "mapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d669.5547639817211!2d30.639834534575012!3d46.295996529895035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c7c9103c986d39%3A0x60ee4de500df2374!2z0KDQtdC80L7QvdGCINCh0LXRgNCy0LjRgQ!5e0!3m2!1sen!2sua!4v1671553101368!5m2!1sen!2sua",
     "copyright": "© 2017",
@@ -1498,5 +1498,5 @@
       "visible": false
     }
   ],
-  "updatedAt": "2026-07-19T09:09:31.829Z"
+  "updatedAt": "2026-07-20T02:01:45.354Z"
 }

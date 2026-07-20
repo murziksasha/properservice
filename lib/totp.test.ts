@@ -1,9 +1,19 @@
-import { describe, expect, it } from 'vitest';
-import { createHmac } from 'crypto';
-import { verifyTotp } from './totp';
-
-// Known test vector: secret "JBSWY3DPEHPK3PXP" is "Hello!" in base32 for common demos
-// We generate a valid code for current step using the same algorithm inline for assertion.
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { createHmac, randomBytes } from 'crypto';
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
+import {
+  base32Encode,
+  buildOtpauthUrl,
+  generateTotpSecret,
+  getTotpSecret,
+  getTotpStatus,
+  isValidTotpSecret,
+  normalizeTotpSecret,
+  verifyTotp,
+} from './totp';
+import { deleteAdminTotpSecret, writeAdminTotpSecret } from './admin-totp';
 
 function hotp(secretB32: string, counter: number): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -42,5 +52,85 @@ describe('totp', () => {
   it('rejects bad code', () => {
     expect(verifyTotp('JBSWY3DPEHPK3PXP', '000000')).toBe(false);
     expect(verifyTotp('JBSWY3DPEHPK3PXP', 'abc')).toBe(false);
+  });
+
+  it('generates valid secrets and otpauth URLs', () => {
+    const secret = generateTotpSecret();
+    expect(isValidTotpSecret(secret)).toBe(true);
+    expect(secret.length).toBeGreaterThanOrEqual(16);
+    const url = buildOtpauthUrl(secret);
+    expect(url.startsWith('otpauth://totp/')).toBe(true);
+    expect(url).toContain(`secret=${secret}`);
+    expect(url).toContain('issuer=ProperService');
+  });
+
+  it('base32 encode/decode roundtrip via verify', () => {
+    const raw = randomBytes(20);
+    const b32 = base32Encode(raw);
+    const step = Math.floor(Date.now() / 1000 / 30);
+    const code = hotp(b32, step);
+    expect(verifyTotp(b32, code)).toBe(true);
+  });
+
+  it('normalizes secrets', () => {
+    expect(normalizeTotpSecret(' jbsw y3dp ')).toBe('JBSWY3DP');
+  });
+});
+
+describe('totp secret resolution', () => {
+  let tmpDir: string;
+  let prevDataDir: string | undefined;
+  let prevEnvSecret: string | undefined;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'totp-'));
+    prevDataDir = process.env.DATA_DIR;
+    prevEnvSecret = process.env.ADMIN_TOTP_SECRET;
+    process.env.DATA_DIR = tmpDir;
+    delete process.env.ADMIN_TOTP_SECRET;
+  });
+
+  afterEach(async () => {
+    if (prevDataDir === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = prevDataDir;
+    if (prevEnvSecret === undefined) delete process.env.ADMIN_TOTP_SECRET;
+    else process.env.ADMIN_TOTP_SECRET = prevEnvSecret;
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('returns null when neither env nor file', async () => {
+    expect(await getTotpSecret()).toBeNull();
+    const status = await getTotpStatus();
+    expect(status.enabled).toBe(false);
+    expect(status.source).toBeNull();
+  });
+
+  it('uses file secret when no env', async () => {
+    const secret = 'JBSWY3DPEHPK3PXP';
+    await writeAdminTotpSecret(secret);
+    const active = await getTotpSecret();
+    expect(active?.source).toBe('file');
+    expect(active?.secret).toBe(secret);
+    const status = await getTotpStatus();
+    expect(status.enabled).toBe(true);
+    expect(status.source).toBe('file');
+    expect(status.managedByEnv).toBe(false);
+  });
+
+  it('env overrides file', async () => {
+    await writeAdminTotpSecret('JBSWY3DPEHPK3PXP');
+    process.env.ADMIN_TOTP_SECRET = 'MFRGGZDFMZTWQ2LK';
+    const active = await getTotpSecret();
+    expect(active?.source).toBe('env');
+    expect(active?.secret).toBe('MFRGGZDFMZTWQ2LK');
+    const status = await getTotpStatus();
+    expect(status.managedByEnv).toBe(true);
+    expect(status.fileConfigured).toBe(true);
+  });
+
+  it('delete removes file secret', async () => {
+    await writeAdminTotpSecret('JBSWY3DPEHPK3PXP');
+    await deleteAdminTotpSecret();
+    expect(await getTotpSecret()).toBeNull();
   });
 });

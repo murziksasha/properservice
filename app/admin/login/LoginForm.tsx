@@ -120,6 +120,10 @@ export function LoginForm() {
             disabled={loading || locked}
           />
         </label>
+        <p className='admin-hint admin-login-2fa-hint'>
+          2FA: <strong>Налаштування → Безпека</strong> (QR) або{' '}
+          <code>ADMIN_TOTP_SECRET</code> у <code>.env</code>
+        </p>
         {error ? (
           <p className='admin-login-error' role='alert' aria-live='assertive'>
             {error}

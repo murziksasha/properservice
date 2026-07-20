@@ -11,7 +11,7 @@
 - Замовлення з сторінки товару → `data/orders.json` + email на `MAIL_TO` (SMTP)
 - Форма зворотного дзвінка → `data/leads.json` + email (SMTP / nodemailer) з службовими метаданими (сторінка, IP, UA, ID заявки)
 - Мобільний sticky-call, honeypot на contact/orders, optimistic concurrency / partial PATCH `site.json`
-- Telegram notify, UTM у лідах, CSV export, 2FA TOTP (опційно), FAQ JSON-LD, галерея/схожі товари
+- Telegram notify, UTM у лідах, CSV export, 2FA TOTP (опційно: QR у **Налаштування** або `ADMIN_TOTP_SECRET`), FAQ JSON-LD, галерея/схожі товари
 - Адмінка `/admin` для меню, сторінок, товарів, заявок, **замовлень**, медіатеки і налаштувань
 - Збереження контенту в `data/site.json` (atomic write, без окремої БД)
 - Журнали `data/leads.json` / `data/orders.json`, media library + WebP optimize
@@ -35,6 +35,7 @@ npm run dev
 |--------|------|
 | `ADMIN_PASSWORD` | Пароль адмінки (**обовʼязково**) |
 | `SESSION_SECRET` | Секрет для підпису cookie-сесії (рекомендовано; інакше fallback на пароль) |
+| `ADMIN_TOTP_SECRET` | Опційний 2FA (base32); пріоритет над UI-файлом `data/admin-totp.json` |
 | `SMTP_*` / `MAIL_*` | Пошта для `/api/contact` і `/api/orders` |
 | `DATA_DIR` | Каталог для `site.json` (Docker volume) |
 | `NGINX_PORT` | Зовнішній порт nginx у Docker |
