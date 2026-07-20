@@ -196,12 +196,15 @@
   margin-bottom: 16px;
 }
 
-.admin-sticky-bar {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+/* Toolbar stays in normal document flow (no sticky overlay over sections). */
+.admin-constructor-toolbar {
+  .admin-toolbar {
+    margin-bottom: 0;
+  }
+
+  .admin-hint {
+    margin-top: 10px;
+  }
 }
 
 .admin-h2 {
