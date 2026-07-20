@@ -120,7 +120,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
   return (
     <div className={previewOpen ? 'admin-constructor admin-constructor--split' : 'admin-constructor'}>
       <div className='admin-constructor__editor'>
-      <div className='admin-card admin-sticky-bar'>
+      <div className='admin-card admin-constructor-toolbar'>
         <div className='admin-toolbar'>
           <button type='button' className='admin-btn' onClick={() => void save()} disabled={saving}>
             {saving ? 'Збереження…' : 'Зберегти'}
@@ -166,7 +166,9 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
           {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
         </div>
         <p className='admin-hint'>Перетягуйте секції за ⠿ або кнопками ↑↓. Preview показує збережену версію сторінки.</p>
+      </div>
 
+      <div className='admin-card'>
         <div className='admin-form'>
           <label>
             Назва сторінки
