@@ -132,10 +132,15 @@ export default function AdminPagesList() {
   return (
     <AdminShell>
       <h1>Сторінки</h1>
+      <p className='admin-hint admin-mb-lg'>
+        Список сторінок сайту. Відкрийте конструктор, щоб редагувати секції та контент.
+      </p>
 
-      <div className='admin-card admin-mb-lg'>
+      <div className='admin-card admin-form admin-mb-lg'>
+        <h2 className='admin-h2'>Нова сторінка</h2>
         <div className='admin-row admin-row--wrap'>
           <input
+            className='admin-grow'
             placeholder='Назва нової сторінки'
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}

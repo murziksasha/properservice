@@ -54,7 +54,14 @@ export function MediaLibrary() {
         showToast(error || 'Помилка upload', 'error');
         return;
       }
-      showToast(url.endsWith('.webp') ? 'Завантажено (оптимізовано WebP)' : 'Завантажено', 'success');
+      showToast(
+        url.endsWith('.webp')
+          ? 'Завантажено (JPEG → WebP)'
+          : url.endsWith('.png')
+            ? 'Завантажено (PNG збережено)'
+            : 'Завантажено',
+        'success',
+      );
       await load();
     } finally {
       setUploading(false);
@@ -99,17 +106,17 @@ export function MediaLibrary() {
   const totalBytes = items.reduce((s, i) => s + i.size, 0);
 
   return (
-    <div className='admin-card'>
+    <div className='admin-card admin-form'>
       <div className='admin-row admin-row--between admin-mb'>
         <h2 className='admin-h2' style={{ margin: 0 }}>
-          Медіатека
+          Файли
         </h2>
         <span className='admin-hint' style={{ margin: 0 }}>
           {items.length} файлів · {formatBytes(totalBytes)}
         </span>
       </div>
 
-      <div className='admin-row admin-mb'>
+      <div className='admin-toolbar admin-mb'>
         <label className='admin-btn' style={{ cursor: uploading ? 'wait' : 'pointer' }}>
           {uploading ? 'Завантаження…' : 'Завантажити зображення'}
           <input

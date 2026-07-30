@@ -9,6 +9,9 @@ export default async function AdminSettingsPage() {
   return (
     <AdminShell>
       <h1>Налаштування сайту</h1>
+      <p className='admin-hint admin-mb-lg'>
+        Логотип, контакти, SEO, 2FA. Для логотипу завантажуйте PNG — формат збережеться без WebP.
+      </p>
       <SettingsEditor initialData={site} />
     </AdminShell>
   );
