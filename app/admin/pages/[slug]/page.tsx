@@ -20,6 +20,9 @@ export default async function AdminPageEditor({ params }: Props) {
   return (
     <AdminShell>
       <h1>Конструктор: {page.title || 'Головна'}</h1>
+      <p className='admin-hint admin-mb-lg'>
+        Редагуйте секції, перетягуйте їх порядок. Збереження — Ctrl+S. Прев’ю справа на широкому екрані.
+      </p>
       <PageConstructor initialData={site} pageSlug={pageSlug} />
     </AdminShell>
   );

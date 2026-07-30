@@ -21,6 +21,8 @@
     "pm2:logs": "pm2 logs properservice",
     "seed": "tsx scripts/seed.ts",
     "backup": "tsx scripts/backup.ts",
+    "uploads:reprocess": "node scripts/reprocess-uploads.mjs",
+    "uploads:reprocess:dry": "node scripts/reprocess-uploads.mjs --dry-run",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
     "typecheck": "tsc --noEmit",
@@ -35,6 +37,7 @@
     "test:smoke": "playwright test e2e/smoke.spec.ts"
   },
   "dependencies": {
+    "lucide-react": "^1.28.0",
     "next": "^15.0.0",
     "nodemailer": "^9.0.1",
     "qrcode": "^1.5.4",

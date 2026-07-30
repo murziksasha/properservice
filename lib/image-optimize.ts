@@ -2,6 +2,7 @@ import sharp from 'sharp';
 
 const MAX_EDGE = 1920;
 const WEBP_QUALITY = 82;
+const PNG_MAX_EDGE_KEEP = 2400;
 
 export interface OptimizeResult {
   buffer: Buffer;
@@ -11,8 +12,8 @@ export interface OptimizeResult {
 }
 
 /**
- * Resize large images and convert photos to WebP (gif left as-is).
- * Falls back to original buffer if sharp fails.
+ * Resize large images. JPEG → WebP. PNG stays PNG (logos/UI assets with alpha).
+ * GIF left as-is. Falls back to original buffer if sharp fails.
  */
 export async function optimizeImageUpload(
   input: Buffer,
@@ -36,7 +37,8 @@ export async function optimizeImageUpload(
     const w = meta.width || 0;
     const h = meta.height || 0;
 
-    if (w > MAX_EDGE || h > MAX_EDGE) {
+    const needsResize = w > MAX_EDGE || h > MAX_EDGE;
+    if (needsResize) {
       pipeline = pipeline.resize({
         width: MAX_EDGE,
         height: MAX_EDGE,
@@ -45,13 +47,29 @@ export async function optimizeImageUpload(
       });
     }
 
-    // Prefer WebP for photos; keep PNG if source has alpha and small graphics feel
-    const hasAlpha = Boolean(meta.hasAlpha);
-    if (hasAlpha && ext === '.png' && w > 0 && w <= 800 && h <= 800) {
+    // Never convert PNG → WebP (logos, icons, UI graphics break or lose crisp edges)
+    if (ext === '.png') {
+      const maxEdge = Math.max(w, h);
+      // Very large PNGs still get resized above; re-encode with compression
+      if (!needsResize && maxEdge > 0 && maxEdge <= PNG_MAX_EDGE_KEEP && input.length < 1.5 * 1024 * 1024) {
+        // Light re-encode only if we can shrink a bit; otherwise keep original bytes
+        const buffer = await pipeline.png({ compressionLevel: 9 }).toBuffer();
+        if (buffer.length < input.length * 0.98) {
+          return { buffer, ext: '.png', contentType: 'image/png', optimized: true };
+        }
+        return { buffer: input, ext: '.png', contentType: 'image/png', optimized: false };
+      }
       const buffer = await pipeline.png({ compressionLevel: 9 }).toBuffer();
       return { buffer, ext: '.png', contentType: 'image/png', optimized: true };
     }
 
+    // Incoming WebP: re-encode with quality cap + resize if needed
+    if (ext === '.webp') {
+      const buffer = await pipeline.webp({ quality: WEBP_QUALITY }).toBuffer();
+      return { buffer, ext: '.webp', contentType: 'image/webp', optimized: true };
+    }
+
+    // JPEG (and unknown photo-like) → WebP
     const buffer = await pipeline.webp({ quality: WEBP_QUALITY }).toBuffer();
     return { buffer, ext: '.webp', contentType: 'image/webp', optimized: true };
   } catch (err) {

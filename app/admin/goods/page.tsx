@@ -9,6 +9,9 @@ export default async function AdminGoodsPage() {
   return (
     <AdminShell>
       <h1>Товари</h1>
+      <p className='admin-hint admin-mb-lg'>
+        Каталог магазину. Збереження — Ctrl+S. Порядок у списку можна змінювати перетягуванням.
+      </p>
       <GoodsEditor initialData={site} />
     </AdminShell>
   );
