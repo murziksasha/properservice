@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { uploadImage } from '@/lib/admin/uploadImage';
 import { parseRetryAfterSeconds, rateLimitMessage } from '@/lib/admin/rateLimitUi';
+import {
+  IMAGE_PRESETS,
+  IMAGE_PRESET_IDS,
+  type ImagePresetId,
+} from '@/lib/image-presets';
 import { showToast } from './AdminToast';
 
 interface MediaItem {
@@ -23,6 +28,7 @@ export function MediaLibrary() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [preset, setPreset] = useState<ImagePresetId>('default');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -49,19 +55,18 @@ export function MediaLibrary() {
     if (!file) return;
     setUploading(true);
     try {
-      const { url, error } = await uploadImage(file);
+      const { url, error, width, height } = await uploadImage(file, { preset });
       if (!url) {
         showToast(error || 'Помилка upload', 'error');
         return;
       }
-      showToast(
-        url.endsWith('.webp')
-          ? 'Завантажено (JPEG → WebP)'
-          : url.endsWith('.png')
-            ? 'Завантажено (PNG збережено)'
-            : 'Завантажено',
-        'success',
-      );
+      const dim = width && height ? ` · ${width}×${height}` : '';
+      const fmt = url.endsWith('.webp')
+        ? 'JPEG → WebP'
+        : url.endsWith('.png')
+          ? 'PNG'
+          : 'OK';
+      showToast(`Завантажено (${fmt}${dim})`, 'success');
       await load();
     } finally {
       setUploading(false);
@@ -117,6 +122,22 @@ export function MediaLibrary() {
       </div>
 
       <div className='admin-toolbar admin-mb'>
+        <label className='admin-inline-label'>
+          Розмір
+          <select
+            value={preset}
+            onChange={(e) => setPreset(e.target.value as ImagePresetId)}
+            disabled={uploading}
+            aria-label='Пресет розміру зображення'
+            title={IMAGE_PRESETS[preset].description}
+          >
+            {IMAGE_PRESET_IDS.map((id) => (
+              <option key={id} value={id}>
+                {IMAGE_PRESETS[id].label} — {IMAGE_PRESETS[id].description}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className='admin-btn' style={{ cursor: uploading ? 'wait' : 'pointer' }}>
           {uploading ? 'Завантаження…' : 'Завантажити зображення'}
           <input

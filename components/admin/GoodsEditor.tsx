@@ -3,7 +3,6 @@
 import type { Product, SiteData } from '@/lib/types';
 import { createId } from '@/lib/id';
 import { patchSiteSection, saveSiteData } from '@/lib/admin/saveSite';
-import { uploadImage } from '@/lib/admin/uploadImage';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import {
@@ -235,14 +234,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             label='Головне фото'
             value={editing.image}
             onChange={(url) => setEditing({ ...editing, image: url })}
-            onUpload={async (file) => {
-              const { url, error } = await uploadImage(file);
-              if (!url) {
-                showToast(error || 'Upload failed', 'error');
-                return '';
-              }
-              return url;
-            }}
+            preset='product'
           />
           <label>
             Галерея (URL через новий рядок)

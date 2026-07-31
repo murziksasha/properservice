@@ -2,7 +2,6 @@
 
 import type { PhoneEntry, SiteData, SocialLink } from '@/lib/types';
 import { saveSiteData } from '@/lib/admin/saveSite';
-import { uploadImage } from '@/lib/admin/uploadImage';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import { createId } from '@/lib/id';
 import { useCallback, useState } from 'react';
@@ -100,27 +99,13 @@ export function SettingsEditor({ initialData }: { initialData: SiteData }) {
           label='Логотип'
           value={s.logo}
           onChange={(url) => patchSettings({ logo: url })}
-          onUpload={async (file) => {
-            const { url, error } = await uploadImage(file);
-            if (!url) {
-              showToast(error || 'Помилка завантаження', 'error');
-              return '';
-            }
-            return url;
-          }}
+          preset='logo'
         />
         <ImageField
           label='Favicon'
           value={s.favicon}
           onChange={(url) => patchSettings({ favicon: url })}
-          onUpload={async (file) => {
-            const { url, error } = await uploadImage(file);
-            if (!url) {
-              showToast(error || 'Помилка завантаження', 'error');
-              return '';
-            }
-            return url;
-          }}
+          preset='logo'
         />
         <label>
           Години роботи (шапка)
@@ -270,14 +255,7 @@ export function SettingsEditor({ initialData }: { initialData: SiteData }) {
               label='Іконка'
               value={link.icon}
               onChange={(url) => updateSocial(i, { icon: url })}
-              onUpload={async (file) => {
-                const { url, error } = await uploadImage(file);
-                if (!url) {
-                  showToast(error || 'Помилка завантаження', 'error');
-                  return '';
-                }
-                return url;
-              }}
+              preset='logo'
             />
           </div>
         ))}

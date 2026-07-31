@@ -2,7 +2,6 @@
 
 import type { PhoneEntry, Section, SiteData, SocialLink } from '@/lib/types';
 import { saveSiteData } from '@/lib/admin/saveSite';
-import { uploadImage } from '@/lib/admin/uploadImage';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import { createId } from '@/lib/id';
@@ -106,15 +105,6 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
     const next: Record<string, boolean> = {};
     for (const s of page.sections) next[s.id] = value;
     setCollapsed(next);
-  }
-
-  async function handleUpload(file: File): Promise<string> {
-    const { url, error } = await uploadImage(file);
-    if (!url) {
-      showToast(error || 'Помилка завантаження', 'error');
-      return '';
-    }
-    return url;
   }
 
   return (
@@ -457,7 +447,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                       alt={section.imageAlt}
                       onChange={(url) => patchSection(index, { image: url })}
                       onAltChange={(imageAlt) => patchSection(index, { imageAlt })}
-                      onUpload={handleUpload}
+                      preset='hero'
                     />
                   </>
                 ) : null}
@@ -493,7 +483,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                     <ImageField
                       value={section.image}
                       onChange={(url) => patchSection(index, { image: url })}
-                      onUpload={handleUpload}
+                      preset='default'
                     />
                   </>
                 ) : null}
@@ -511,7 +501,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                             items[i] = { ...items[i], icon: url };
                             patchSection(index, { items });
                           }}
-                          onUpload={handleUpload}
+                          preset='logo'
                         />
                         <label>
                           Текст (HTML)
@@ -600,7 +590,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                             items[i] = { ...items[i], image: url };
                             patchSection(index, { items });
                           }}
-                          onUpload={handleUpload}
+                          preset='default'
                         />
                         <button
                           type='button'
@@ -649,7 +639,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                             imgs[i] = url;
                             patchSection(index, { images: imgs });
                           }}
-                          onUpload={handleUpload}
+                          preset='default'
                         />
                         <button
                           type='button'

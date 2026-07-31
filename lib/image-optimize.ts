@@ -1,6 +1,10 @@
 import sharp from 'sharp';
+import {
+  DEFAULT_MAX_EDGE,
+  resolveOptimizeConstraints,
+  type OptimizeConstraints,
+} from './image-presets';
 
-const MAX_EDGE = 1920;
 const WEBP_QUALITY = 82;
 const PNG_MAX_EDGE_KEEP = 2400;
 
@@ -9,7 +13,16 @@ export interface OptimizeResult {
   ext: '.webp' | '.jpg' | '.png' | '.gif';
   contentType: string;
   optimized: boolean;
+  width?: number;
+  height?: number;
 }
+
+export type OptimizeImageOptions = {
+  maxWidth?: number;
+  maxHeight?: number;
+  fit?: 'inside' | 'cover' | 'contain';
+  preset?: string;
+};
 
 /**
  * Resize large images. JPEG → WebP. PNG stays PNG (logos/UI assets with alpha).
@@ -18,8 +31,15 @@ export interface OptimizeResult {
 export async function optimizeImageUpload(
   input: Buffer,
   sourceExt: string,
+  options?: OptimizeImageOptions,
 ): Promise<OptimizeResult> {
   const ext = sourceExt.toLowerCase();
+  const constraints: OptimizeConstraints = resolveOptimizeConstraints({
+    preset: options?.preset,
+    maxWidth: options?.maxWidth,
+    maxHeight: options?.maxHeight,
+    fit: options?.fit,
+  });
 
   // Animated / simple GIF: keep as-is
   if (ext === '.gif') {
@@ -37,12 +57,15 @@ export async function optimizeImageUpload(
     const w = meta.width || 0;
     const h = meta.height || 0;
 
-    const needsResize = w > MAX_EDGE || h > MAX_EDGE;
+    const maxW = constraints.maxWidth || DEFAULT_MAX_EDGE;
+    const maxH = constraints.maxHeight || DEFAULT_MAX_EDGE;
+    const needsResize = w > maxW || h > maxH;
+
     if (needsResize) {
       pipeline = pipeline.resize({
-        width: MAX_EDGE,
-        height: MAX_EDGE,
-        fit: 'inside',
+        width: maxW,
+        height: maxH,
+        fit: constraints.fit,
         withoutEnlargement: true,
       });
     }
@@ -55,23 +78,62 @@ export async function optimizeImageUpload(
         // Light re-encode only if we can shrink a bit; otherwise keep original bytes
         const buffer = await pipeline.png({ compressionLevel: 9 }).toBuffer();
         if (buffer.length < input.length * 0.98) {
-          return { buffer, ext: '.png', contentType: 'image/png', optimized: true };
+          const outMeta = await sharp(buffer).metadata();
+          return {
+            buffer,
+            ext: '.png',
+            contentType: 'image/png',
+            optimized: true,
+            width: outMeta.width,
+            height: outMeta.height,
+          };
         }
-        return { buffer: input, ext: '.png', contentType: 'image/png', optimized: false };
+        return {
+          buffer: input,
+          ext: '.png',
+          contentType: 'image/png',
+          optimized: false,
+          width: w || undefined,
+          height: h || undefined,
+        };
       }
       const buffer = await pipeline.png({ compressionLevel: 9 }).toBuffer();
-      return { buffer, ext: '.png', contentType: 'image/png', optimized: true };
+      const outMeta = await sharp(buffer).metadata();
+      return {
+        buffer,
+        ext: '.png',
+        contentType: 'image/png',
+        optimized: true,
+        width: outMeta.width,
+        height: outMeta.height,
+      };
     }
 
     // Incoming WebP: re-encode with quality cap + resize if needed
     if (ext === '.webp') {
       const buffer = await pipeline.webp({ quality: WEBP_QUALITY }).toBuffer();
-      return { buffer, ext: '.webp', contentType: 'image/webp', optimized: true };
+      const outMeta = await sharp(buffer).metadata();
+      return {
+        buffer,
+        ext: '.webp',
+        contentType: 'image/webp',
+        optimized: true,
+        width: outMeta.width,
+        height: outMeta.height,
+      };
     }
 
     // JPEG (and unknown photo-like) → WebP
     const buffer = await pipeline.webp({ quality: WEBP_QUALITY }).toBuffer();
-    return { buffer, ext: '.webp', contentType: 'image/webp', optimized: true };
+    const outMeta = await sharp(buffer).metadata();
+    return {
+      buffer,
+      ext: '.webp',
+      contentType: 'image/webp',
+      optimized: true,
+      width: outMeta.width,
+      height: outMeta.height,
+    };
   } catch (err) {
     console.error('[image-optimize] sharp failed, using original', err);
     const fallbackExt =

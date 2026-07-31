@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { createId } from '@/lib/id';
 import { optimizeImageUpload } from '@/lib/image-optimize';
+import { isImagePresetId } from '@/lib/image-presets';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { atomicWriteFile } from '@/lib/atomic-write';
@@ -68,6 +69,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'File too large' }, { status: 400 });
     }
 
+    const presetRaw = String(formData.get('preset') || '').trim();
+    const preset = isImagePresetId(presetRaw) ? presetRaw : undefined;
+    const maxWidthRaw = formData.get('maxWidth');
+    const maxHeightRaw = formData.get('maxHeight');
+    const maxWidth =
+      maxWidthRaw != null && String(maxWidthRaw).trim() !== ''
+        ? Number(maxWidthRaw)
+        : undefined;
+    const maxHeight =
+      maxHeightRaw != null && String(maxHeightRaw).trim() !== ''
+        ? Number(maxHeightRaw)
+        : undefined;
+
     const rawExt = path.extname(file.name).toLowerCase();
     const declaredExt = rawExt === '.jpeg' ? '.jpg' : rawExt;
 
@@ -78,7 +92,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid image content' }, { status: 400 });
     }
 
-    const optimized = await optimizeImageUpload(buffer, safeExt);
+    const optimized = await optimizeImageUpload(buffer, safeExt, {
+      preset,
+      maxWidth: Number.isFinite(maxWidth) ? maxWidth : undefined,
+      maxHeight: Number.isFinite(maxHeight) ? maxHeight : undefined,
+    });
     const safeName = `${Date.now()}-${createId()}${optimized.ext}`;
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
 
@@ -89,6 +107,9 @@ export async function POST(request: NextRequest) {
       url: `/uploads/${safeName}`,
       optimized: optimized.optimized,
       contentType: optimized.contentType,
+      width: optimized.width,
+      height: optimized.height,
+      preset: preset || 'default',
     });
   } catch {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
