@@ -12,7 +12,12 @@
   --admin-nav-w: 240px;
   display: grid;
   grid-template-columns: var(--admin-nav-w) 1fr;
+  /* Viewport-locked shell: only main scrolls; nav stays visible */
+  height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
   transition: grid-template-columns 0.2s ease;
 
   &--nav-collapsed {
@@ -47,8 +52,9 @@
 .admin-nav {
   position: sticky;
   top: 0;
-  align-self: start;
-  height: 100vh;
+  align-self: stretch;
+  height: 100%;
+  max-height: 100%;
   background: #0f3d2e;
   color: #fff;
   padding: 16px 12px;
@@ -59,6 +65,7 @@
   overflow-y: auto;
   transition: width 0.2s ease, padding 0.2s ease;
   box-sizing: border-box;
+  min-height: 0;
 
   a,
   .admin-nav-logout {
@@ -214,6 +221,11 @@
 .admin-main {
   padding: 28px 36px 40px;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 
   > h1 {
     margin: 0 0 8px;
@@ -335,6 +347,27 @@
   border-radius: 12px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.admin-inline-label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 550;
+  color: #4b5563;
+  margin: 0;
+
+  select {
+    min-width: 12rem;
+    max-width: min(28rem, 100%);
+    padding: 8px 10px;
+    border: 1px solid #cfd6dd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: #111;
+  }
 }
 
 .admin-dirty {

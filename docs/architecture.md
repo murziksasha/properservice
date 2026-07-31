@@ -184,11 +184,29 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 `lib/atomic-write.ts` — temp file + rename для `site.json`, backups, leads, orders.  
 Захист від truncated JSON при crash mid-save.
 
+## Admin shell
+
+- Viewport-locked layout (`admin-shell` 100dvh, `overflow: hidden`): only `admin-main` scrolls; sidebar stays visible.
+- Desktop collapse to icons: `AdminShell` + `localStorage` key `admin-nav-collapsed`; labels hidden via `.admin-shell--nav-collapsed`.
+
 ## Media
 
-- Upload: `POST /api/upload` → magic bytes + **sharp** optimize (≤1920px, WebP)
-- Library: `GET/DELETE /api/media` + `/admin/media`
+- Upload: `POST /api/upload` → magic bytes + **sharp** optimize (JPEG → WebP; PNG kept; GIF as-is)
+- Optional form fields: `preset` (`default` | `product` | `logo` | `hero` | `og`), `maxWidth`, `maxHeight` (clamped 64…4096)
+- Presets in `lib/image-presets.ts`:
+
+  | preset | max | use |
+  |--------|-----|-----|
+  | `default` | 1920×1920 inside | general |
+  | `product` | 1200×900 inside | shop cards |
+  | `logo` | 512×512 inside | logo / favicon / icons |
+  | `hero` | 1920×1080 inside | hero / banners |
+  | `og` | 1200×630 inside | social share |
+
+- Client: `lib/admin/uploadImage.ts` + unified `ImageField` (`preset` prop)
+- Library: `GET/DELETE /api/media` + `/admin/media` (preset selector on upload)
 - Files under `public/uploads/`
+- Response may include `width`, `height`, `optimized`, `preset`
 
 ## SEO extras
 
