@@ -1,0 +1,203 @@
+/* Proper Service design tokens — light / dark */
+
+:root {
+  color-scheme: light;
+  --ps-brand: #02a653;
+  --ps-brand-hover: #02964b;
+  --ps-brand-soft: #e8f7ef;
+  --ps-bg: #ececec;
+  --ps-surface: #ffffff;
+  --ps-surface-2: #f8fafc;
+  --ps-text: #1a1a1a;
+  --ps-muted: #555555;
+  --ps-border: #e0e0e0;
+  --ps-header-bg: #ffffff;
+  --ps-card-bg: #ffffff;
+  --ps-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --ps-shadow-hover: 0 12px 28px rgba(2, 166, 83, 0.18);
+  --ps-overlay: rgba(0, 0, 0, 0.35);
+  --ps-input-bg: #ffffff;
+  --ps-input-border: #cfd6dd;
+  --ps-footer-bg: transparent;
+  --ps-chip-bg: #ffffff;
+  --ps-chip-border: #d0d7de;
+  --ps-toolbar-bg: #eefaf3;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --ps-brand: #22c55e;
+  --ps-brand-hover: #16a34a;
+  --ps-brand-soft: #14532d;
+  --ps-bg: #0c1411;
+  --ps-surface: #14201a;
+  --ps-surface-2: #1a2b23;
+  --ps-text: #e8f0ec;
+  --ps-muted: #9cb0a5;
+  --ps-border: #2a3d33;
+  --ps-header-bg: #0f1a15;
+  --ps-card-bg: #14201a;
+  --ps-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --ps-shadow-hover: 0 12px 32px rgba(34, 197, 94, 0.2);
+  --ps-overlay: rgba(0, 0, 0, 0.55);
+  --ps-input-bg: #0f1a15;
+  --ps-input-border: #2a3d33;
+  --ps-footer-bg: #0a100d;
+  --ps-chip-bg: #14201a;
+  --ps-chip-border: #2a3d33;
+  --ps-toolbar-bg: #142a1f;
+}
+
+/* Admin shell is a div.admin-body — keep admin light via :has */
+body:has(.admin-body) {
+  color-scheme: light;
+  background: #f4f6f8;
+  color: #1a1a1a;
+}
+
+/* Public site (no admin shell on page) */
+body:not(:has(.admin-body)) {
+  background: var(--ps-bg);
+  color: var(--ps-text);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+body:not(:has(.admin-body)) .header {
+  background: var(--ps-header-bg);
+  transition: background-color 0.25s ease;
+}
+
+body:not(:has(.admin-body)) .header__overlay {
+  background: var(--ps-overlay);
+}
+
+body:not(:has(.admin-body)) .menu__link {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .footer {
+  background: var(--ps-footer-bg);
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .footer a {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .shop-page,
+body:not(:has(.admin-body)) .shop-section {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .shop-toolbar {
+  background: var(--ps-toolbar-bg);
+  border-color: var(--ps-brand);
+}
+
+body:not(:has(.admin-body)) .shop-toolbar__label,
+body:not(:has(.admin-body)) .shop-toolbar__heading {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .shop-toolbar__input,
+body:not(:has(.admin-body)) .shop-toolbar__select {
+  background: var(--ps-input-bg);
+  color: var(--ps-text);
+  border-color: var(--ps-input-border);
+}
+
+body:not(:has(.admin-body)) .shop-chip {
+  background: var(--ps-chip-bg);
+  color: var(--ps-text);
+  border-color: var(--ps-chip-border);
+}
+
+body:not(:has(.admin-body)) .shop-chip.is-active {
+  background: var(--ps-brand);
+  border-color: var(--ps-brand);
+  color: #fff;
+}
+
+body:not(:has(.admin-body)) .shop-card {
+  background: var(--ps-card-bg);
+  color: var(--ps-text);
+  box-shadow: var(--ps-shadow);
+}
+
+body:not(:has(.admin-body)) .shop-card__title,
+body:not(:has(.admin-body)) .shop-card__price {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .shop-card__desc,
+body:not(:has(.admin-body)) .shop-card__code,
+body:not(:has(.admin-body)) .shop-catalog__meta {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .shop-group__title {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .shop-group__count {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .status {
+  background: var(--ps-brand-soft);
+  color: var(--ps-text);
+  border-color: var(--ps-brand);
+}
+
+/* Theme toggle */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--ps-border);
+  background: var(--ps-surface);
+  color: var(--ps-text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    border-color: var(--ps-brand);
+    color: var(--ps-brand);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-brand);
+    outline-offset: 2px;
+  }
+}
+
+.theme-toggle__icon {
+  display: flex;
+  line-height: 0;
+}
+
+.menu__mobile-theme {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Dark: burger lines */
+html[data-theme='dark'] body:not(:has(.admin-body)) .header__burger span {
+  background: var(--ps-text);
+}
+
+html[data-theme='dark'] body:not(:has(.admin-body)) .menu__mobile-meta p {
+  color: var(--ps-muted);
+}
+
+html[data-theme='dark'] body:not(:has(.admin-body)) .menu {
+  border-left: 1px solid var(--ps-border);
+}

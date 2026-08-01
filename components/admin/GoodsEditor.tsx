@@ -16,7 +16,7 @@ import {
   type ProductSort,
   type VisibilityFilter,
 } from '@/lib/shop-catalog';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast } from './AdminToast';
 import { ImageField } from './ImageField';
 
@@ -65,8 +65,32 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   const [renamingKey, setRenamingKey] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const orderToastAt = useRef(0);
+  const editFormRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const prevEditingId = useRef<string | null>(null);
 
   useUnsavedGuard(dirty || Boolean(editing));
+
+  /** Scroll admin main to the product form and focus title when opening edit/create. */
+  useEffect(() => {
+    const id = editing?.id ?? null;
+    if (!id || id === prevEditingId.current) {
+      if (!id) prevEditingId.current = null;
+      return;
+    }
+    prevEditingId.current = id;
+    const form = editFormRef.current;
+    if (!form) return;
+
+    const run = () => {
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Delay focus so smooth scroll isn't interrupted on some browsers
+      window.setTimeout(() => {
+        titleInputRef.current?.focus({ preventScroll: true });
+      }, 280);
+    };
+    requestAnimationFrame(run);
+  }, [editing?.id]);
 
   const save = useCallback(
     async (nextData?: SiteData) => {
@@ -506,11 +530,20 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
       )}
 
       {editing ? (
-        <div className='admin-card admin-form admin-mb-lg'>
+        <div
+          ref={editFormRef}
+          id='goods-edit-form'
+          className='admin-card admin-form admin-form--editing admin-mb-lg'
+          tabIndex={-1}
+        >
           <h3>{data.goods.some((g) => g.id === editing.id) ? 'Редагувати товар' : 'Новий товар'}</h3>
           <label>
             Назва
-            <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            <input
+              ref={titleInputRef}
+              value={editing.title}
+              onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+            />
           </label>
           <label>
             Ціна

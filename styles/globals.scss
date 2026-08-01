@@ -1,5 +1,7 @@
 @import '../src/sass/style.scss';
+@import './theme.scss';
 @import './shop.scss';
+@import './motion.scss';
 
 /* Shared form status (callback + order) */
 .status {

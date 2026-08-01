@@ -208,17 +208,19 @@
 }
 
 .shop-card {
-  background: #fff;
+  background: var(--ps-card-bg, #fff);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s;
+  box-shadow: var(--ps-shadow, 0 2px 8px rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--ps-border, transparent);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
   display: flex;
   flex-direction: column;
   height: 100%;
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: var(--ps-shadow-hover, 0 12px 28px rgba(2, 166, 83, 0.18));
   }
 
   &:focus-within {

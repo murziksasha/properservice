@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegister } from '@/components/PwaRegister';
+import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { getSiteData } from '@/lib/site-data';
 import '@/styles/globals.scss';
 
 export const viewport: Viewport = {
-  themeColor: '#02a653',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#02a653' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c1f18' },
+  ],
 };
+
+/** Runs before paint to avoid light flash when user prefers dark. */
+const THEME_BOOT =
+  "(function(){try{var k='ps-theme';var p=localStorage.getItem(k)||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='dark'||(p!=='light'&&d)?'dark':'light';var r=document.documentElement;r.dataset.theme=t;r.style.colorScheme=t;}catch(e){}})();";
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getSiteData();
@@ -57,10 +65,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='uk'>
+    <html lang='uk' suppressHydrationWarning>
       <body>
-        {children}
-        <PwaRegister />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+        <ThemeProvider>
+          {children}
+          <PwaRegister />
+        </ThemeProvider>
       </body>
     </html>
   );
