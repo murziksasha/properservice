@@ -38,6 +38,9 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: port,
+        // Durable uploads on the project tree (not under .next/)
+        PROJECT_ROOT: __dirname,
+        UPLOADS_DIR: path.join(__dirname, "public", "uploads"),
       },
     },
   ],

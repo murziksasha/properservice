@@ -7,7 +7,7 @@ flowchart LR
   Browser --> Nginx
   Nginx --> Next[Next.js App Router]
   Next --> Data["data/site.json"]
-  Next --> Uploads["public/uploads"]
+  Next --> Uploads["UPLOADS_DIR / public/uploads"]
   Next --> SMTP[SMTP / nodemailer]
   Nginx -.-> PHP["Legacy PHP mailer (optional)"]
 ```

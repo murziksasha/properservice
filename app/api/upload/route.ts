@@ -5,9 +5,12 @@ import { getSession } from '@/lib/auth';
 import { createId } from '@/lib/id';
 import { optimizeImageUpload } from '@/lib/image-optimize';
 import { isImagePresetId } from '@/lib/image-presets';
+import { upsertMediaMeta } from '@/lib/media-index';
+import { isMediaPurpose, purposeFromPreset } from '@/lib/media-purpose';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { atomicWriteFile } from '@/lib/atomic-write';
+import { uploadsDir } from '@/lib/uploads-path';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
@@ -71,6 +74,15 @@ export async function POST(request: NextRequest) {
 
     const presetRaw = String(formData.get('preset') || '').trim();
     const preset = isImagePresetId(presetRaw) ? presetRaw : undefined;
+    const purposeRaw = String(formData.get('purpose') || '').trim();
+    const purpose = isMediaPurpose(purposeRaw) ? purposeRaw : purposeFromPreset(preset);
+    const tagsRaw = String(formData.get('tags') || '').trim();
+    const tags = tagsRaw
+      ? tagsRaw
+          .split(/[,;]+/)
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
     const maxWidthRaw = formData.get('maxWidth');
     const maxHeightRaw = formData.get('maxHeight');
     const maxWidth =
@@ -98,18 +110,30 @@ export async function POST(request: NextRequest) {
       maxHeight: Number.isFinite(maxHeight) ? maxHeight : undefined,
     });
     const safeName = `${Date.now()}-${createId()}${optimized.ext}`;
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    const dir = uploadsDir();
 
-    await fs.mkdir(uploadsDir, { recursive: true });
-    await atomicWriteFile(path.join(uploadsDir, safeName), optimized.buffer);
+    await fs.mkdir(dir, { recursive: true });
+    await atomicWriteFile(path.join(dir, safeName), optimized.buffer);
+
+    const url = `/uploads/${safeName}`;
+    await upsertMediaMeta({
+      name: safeName,
+      url,
+      purpose,
+      tags,
+      width: optimized.width,
+      height: optimized.height,
+    });
 
     return NextResponse.json({
-      url: `/uploads/${safeName}`,
+      url,
       optimized: optimized.optimized,
       contentType: optimized.contentType,
       width: optimized.width,
       height: optimized.height,
       preset: preset || 'default',
+      purpose,
+      tags,
     });
   } catch {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
