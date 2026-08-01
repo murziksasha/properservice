@@ -18,18 +18,22 @@ export type MediaPickerItem = {
   mtime: string;
   purpose: MediaPurpose;
   tags: string[];
+  folderId: string;
+  sortOrder: number;
   alt?: string;
   width?: number;
   height?: number;
 };
 
+type FolderRow = { id: string; label: string; count: number };
+
 type MediaPickerProps = {
   open: boolean;
   onClose: () => void;
   onSelect: (item: MediaPickerItem) => void;
-  /** Pre-filter + default upload purpose */
   purpose?: MediaPurpose | 'all';
   preset?: ImagePresetId | string;
+  folderId?: string;
 };
 
 export function MediaPicker({
@@ -38,6 +42,7 @@ export function MediaPicker({
   onSelect,
   purpose: purposeProp = 'all',
   preset,
+  folderId: folderProp,
 }: MediaPickerProps) {
   const defaultPurpose: MediaPurpose | 'all' =
     purposeProp !== 'all'
@@ -47,8 +52,10 @@ export function MediaPicker({
         : 'all';
 
   const [items, setItems] = useState<MediaPickerItem[]>([]);
+  const [folders, setFolders] = useState<FolderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [purpose, setPurpose] = useState<MediaPurpose | 'all'>(defaultPurpose);
+  const [folder, setFolder] = useState<string>(folderProp || 'all');
   const [q, setQ] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -56,29 +63,36 @@ export function MediaPicker({
   useEffect(() => {
     if (open) {
       setPurpose(defaultPurpose);
+      setFolder(folderProp || 'all');
       setQ('');
     }
-  }, [open, defaultPurpose]);
+  }, [open, defaultPurpose, folderProp]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (purpose && purpose !== 'all') params.set('purpose', purpose);
+      if (folder && folder !== 'all') params.set('folder', folder);
       if (q.trim()) params.set('q', q.trim());
+      params.set('sort', 'manual');
       const res = await fetch(`/api/media?${params.toString()}`);
       if (!res.ok) {
         showToast('Не вдалося завантажити медіа', 'error');
         return;
       }
-      const json = (await res.json()) as { items?: MediaPickerItem[] };
+      const json = (await res.json()) as {
+        items?: MediaPickerItem[];
+        folders?: FolderRow[];
+      };
       setItems(json.items || []);
+      setFolders(json.folders || []);
     } catch {
       showToast('Мережева помилка', 'error');
     } finally {
       setLoading(false);
     }
-  }, [purpose, q]);
+  }, [purpose, folder, q]);
 
   useEffect(() => {
     if (!open) return;
@@ -100,9 +114,12 @@ export function MediaPicker({
     try {
       const uploadPurpose: MediaPurpose =
         purpose !== 'all' ? purpose : purposeFromPreset(preset ? String(preset) : undefined);
+      const uploadFolder =
+        folder !== 'all' && folder !== 'root' ? folder : undefined;
       const { url, error } = await uploadImage(file, {
         preset,
         purpose: uploadPurpose,
+        folderId: uploadFolder,
       });
       if (!url) {
         showToast(error || 'Помилка upload', 'error');
@@ -117,6 +134,8 @@ export function MediaPicker({
         mtime: new Date().toISOString(),
         purpose: uploadPurpose,
         tags: [],
+        folderId: uploadFolder || '',
+        sortOrder: 0,
       });
       onClose();
     } finally {
@@ -147,11 +166,27 @@ export function MediaPicker({
 
         <div className='admin-toolbar admin-mb'>
           <label className='admin-inline-label'>
-            Група
+            Папка
+            <select
+              value={folder}
+              onChange={(e) => setFolder(e.target.value)}
+              aria-label='Папка'
+            >
+              <option value='all'>Усі</option>
+              <option value='root'>Без папки</option>
+              {folders.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.label} ({f.count})
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className='admin-inline-label'>
+            Роль
             <select
               value={purpose}
               onChange={(e) => setPurpose(e.target.value as MediaPurpose | 'all')}
-              aria-label='Група зображень'
+              aria-label='Роль зображень'
             >
               <option value='all'>Усі</option>
               {MEDIA_PURPOSE_IDS.map((id) => (
@@ -186,7 +221,7 @@ export function MediaPicker({
         </div>
 
         {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-        {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів у цій групі.</p> : null}
+        {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
 
         <div className='admin-media-grid admin-media-grid--picker'>
           {items.map((item) => (

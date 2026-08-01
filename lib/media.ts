@@ -1,6 +1,12 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { readMediaIndex, removeMediaMeta, type MediaListItem } from './media-index';
+import {
+  listMediaFolders,
+  readMediaIndex,
+  removeMediaMeta,
+  type MediaListItem,
+  type MediaSortMode,
+} from './media-index';
 import type { MediaPurpose } from './media-purpose';
 import { uploadsDir as resolveUploadsDir } from './uploads-path';
 
@@ -24,6 +30,9 @@ export type ListUploadsOptions = {
   purpose?: MediaPurpose | 'all';
   q?: string;
   tag?: string;
+  /** 'all' | 'root' (uncategorized) | folder id */
+  folder?: string | 'all' | 'root';
+  sort?: MediaSortMode;
 };
 
 export async function listUploads(options?: ListUploadsOptions): Promise<MediaListItem[]> {
@@ -58,20 +67,27 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
       mtime: stat.mtime.toISOString(),
       purpose: meta?.purpose || 'other',
       tags: meta?.tags || [],
+      folderId: meta?.folderId || '',
+      sortOrder: meta?.sortOrder ?? 0,
       alt: meta?.alt,
       width: meta?.width,
       height: meta?.height,
     });
   }
 
-  items.sort((a, b) => (a.mtime < b.mtime ? 1 : -1));
-
   const purpose = options?.purpose && options.purpose !== 'all' ? options.purpose : null;
   const q = options?.q?.trim().toLowerCase() || '';
   const tag = options?.tag?.trim().toLowerCase() || '';
+  const folder = options?.folder ?? 'all';
+  const sort: MediaSortMode = options?.sort || 'mtime';
 
-  return items.filter((item) => {
+  const filtered = items.filter((item) => {
     if (purpose && item.purpose !== purpose) return false;
+    if (folder === 'root') {
+      if (item.folderId) return false;
+    } else if (folder && folder !== 'all') {
+      if (item.folderId !== folder) return false;
+    }
     if (tag && !item.tags.some((t) => t.toLowerCase() === tag || t.toLowerCase().includes(tag))) {
       return false;
     }
@@ -81,6 +97,63 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
     }
     return true;
   });
+
+  filtered.sort((a, b) => {
+    if (sort === 'name') {
+      return a.name.localeCompare(b.name, 'uk');
+    }
+    if (sort === 'manual') {
+      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+      return a.mtime < b.mtime ? 1 : -1;
+    }
+    // mtime newest first
+    return a.mtime < b.mtime ? 1 : -1;
+  });
+
+  return filtered;
+}
+
+export async function folderCounts(): Promise<Record<string, number>> {
+  const dir = uploadsDir();
+  const index = await readMediaIndex();
+  const byName = new Map(index.items.map((i) => [i.name, i]));
+  const counts: Record<string, number> = { root: 0, all: 0 };
+
+  let diskNames: string[] = [];
+  try {
+    diskNames = await fs.readdir(dir);
+  } catch {
+    return counts;
+  }
+
+  for (const name of diskNames) {
+    if (name.startsWith('.') || !isSafeUploadName(name)) continue;
+    try {
+      const st = await fs.stat(path.join(dir, name));
+      if (!st.isFile()) continue;
+    } catch {
+      continue;
+    }
+    counts.all = (counts.all || 0) + 1;
+    const fid = byName.get(name)?.folderId || '';
+    if (!fid) {
+      counts.root += 1;
+    } else {
+      counts[fid] = (counts[fid] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
+export async function listFoldersWithCounts(): Promise<
+  Array<{ id: string; label: string; sortOrder: number; count: number }>
+> {
+  const folders = await listMediaFolders();
+  const counts = await folderCounts();
+  return folders.map((f) => ({
+    ...f,
+    count: counts[f.id] || 0,
+  }));
 }
 
 export async function deleteUpload(name: string): Promise<boolean> {

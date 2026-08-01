@@ -76,6 +76,9 @@ export async function POST(request: NextRequest) {
     const preset = isImagePresetId(presetRaw) ? presetRaw : undefined;
     const purposeRaw = String(formData.get('purpose') || '').trim();
     const purpose = isMediaPurpose(purposeRaw) ? purposeRaw : purposeFromPreset(preset);
+    const folderIdRaw = String(formData.get('folderId') || '').trim();
+    const folderId =
+      folderIdRaw && folderIdRaw !== 'root' && folderIdRaw !== 'all' ? folderIdRaw : '';
     const tagsRaw = String(formData.get('tags') || '').trim();
     const tags = tagsRaw
       ? tagsRaw
@@ -121,6 +124,7 @@ export async function POST(request: NextRequest) {
       url,
       purpose,
       tags,
+      folderId,
       width: optimized.width,
       height: optimized.height,
     });
@@ -134,6 +138,7 @@ export async function POST(request: NextRequest) {
       preset: preset || 'default',
       purpose,
       tags,
+      folderId,
     });
   } catch {
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

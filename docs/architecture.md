@@ -8,6 +8,7 @@ flowchart LR
   Nginx --> Next[Next.js App Router]
   Next --> Data["data/site.json"]
   Next --> Uploads["UPLOADS_DIR / public/uploads"]
+  Next --> MediaIdx["data/media-index.json (folders, purpose, sort)"]
   Next --> SMTP[SMTP / nodemailer]
   Nginx -.-> PHP["Legacy PHP mailer (optional)"]
 ```

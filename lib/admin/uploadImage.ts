@@ -5,6 +5,7 @@ import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 export type UploadImageOptions = {
   preset?: ImagePresetId | string;
   purpose?: MediaPurpose | string;
+  folderId?: string;
   tags?: string[] | string;
   maxWidth?: number;
   maxHeight?: number;
@@ -30,6 +31,9 @@ export async function uploadImage(
   }
   if (options?.purpose) {
     formData.append('purpose', String(options.purpose));
+  }
+  if (options?.folderId) {
+    formData.append('folderId', String(options.folderId));
   }
   if (options?.tags != null) {
     const tags =
