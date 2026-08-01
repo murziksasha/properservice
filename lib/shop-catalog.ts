@@ -37,10 +37,81 @@ export function matchesVisibility(product: Product, visibility: VisibilityFilter
   return true;
 }
 
+/** Sentinel for products without a category (admin filter + group key). */
+export const UNCATEGORIZED_KEY = '__none__';
+
+export const UNCATEGORIZED_LABEL = 'Без категорії';
+
+export function productCategoryKey(product: Product): string {
+  const cat = (product.category || '').trim();
+  return cat || UNCATEGORIZED_KEY;
+}
+
 export function matchesCategory(product: Product, category?: string): boolean {
   const cat = category?.trim();
   if (!cat) return true;
+  if (cat === UNCATEGORIZED_KEY) return !(product.category || '').trim();
   return (product.category || '').trim() === cat;
+}
+
+export type ProductCategoryGroup<T extends Product = Product> = {
+  /** Category name, or `UNCATEGORIZED_KEY` for empty. */
+  key: string;
+  /** Display label (Ukrainian for uncategorized). */
+  label: string;
+  products: T[];
+  total: number;
+  visibleCount: number;
+};
+
+/**
+ * Group products by category in **first-seen** catalog order.
+ * Uncategorized bucket (if any) is always last.
+ */
+export function groupProductsByCategory<T extends Product>(
+  products: T[],
+  opts: { localeSortCategories?: boolean } = {},
+): ProductCategoryGroup<T>[] {
+  const map = new Map<string, T[]>();
+  const order: string[] = [];
+
+  for (const p of products) {
+    const key = productCategoryKey(p);
+    if (!map.has(key)) {
+      map.set(key, []);
+      order.push(key);
+    }
+    map.get(key)!.push(p);
+  }
+
+  let keys = order.filter((k) => k !== UNCATEGORIZED_KEY);
+  if (opts.localeSortCategories) {
+    keys = [...keys].sort((a, b) => a.localeCompare(b, 'uk'));
+  }
+  if (map.has(UNCATEGORIZED_KEY)) keys.push(UNCATEGORIZED_KEY);
+
+  return keys.map((key) => {
+    const list = map.get(key) || [];
+    return {
+      key,
+      label: key === UNCATEGORIZED_KEY ? UNCATEGORIZED_LABEL : key,
+      products: list,
+      total: list.length,
+      visibleCount: list.filter((x) => x.visible).length,
+    };
+  });
+}
+
+/** Rename a category string across goods (empty `to` → uncategorized). */
+export function renameCategoryInGoods<T extends Product>(goods: T[], from: string, to: string): T[] {
+  const fromTrim = from.trim();
+  const toTrim = to.trim();
+  if (!fromTrim || fromTrim === toTrim) return goods;
+  return goods.map((g) => {
+    const cat = (g.category || '').trim();
+    if (cat !== fromTrim) return g;
+    return { ...g, category: toTrim || undefined };
+  });
 }
 
 export function sortProducts<T extends Product>(items: T[], sort: ProductSort = 'manual'): T[] {

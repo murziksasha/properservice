@@ -7,14 +7,20 @@ import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import {
   PRODUCT_SORT_OPTIONS,
+  UNCATEGORIZED_KEY,
+  UNCATEGORIZED_LABEL,
   collectCategories,
   filterAndSortProducts,
+  groupProductsByCategory,
+  renameCategoryInGoods,
   type ProductSort,
   type VisibilityFilter,
 } from '@/lib/shop-catalog';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { showToast } from './AdminToast';
 import { ImageField } from './ImageField';
+
+type ListMode = 'grouped' | 'flat';
 
 function emptyProduct(): Product {
   return {
@@ -30,6 +36,19 @@ function emptyProduct(): Product {
   };
 }
 
+function reorderReason(opts: {
+  query: string;
+  visibility: VisibilityFilter;
+  categoryFilter: string;
+  viewSort: ProductSort;
+}): string | null {
+  if (opts.query.trim()) return 'Очистіть пошук, щоб змінювати порядок каталогу';
+  if (opts.visibility !== 'all') return 'Оберіть фільтр «Усі», щоб змінювати порядок';
+  if (opts.categoryFilter.trim()) return 'Скиньте фільтр категорії, щоб змінювати порядок';
+  if (opts.viewSort !== 'manual') return 'Оберіть сортування «За порядком каталогу»';
+  return null;
+}
+
 export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   const [data, setData] = useState(initialData);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -37,9 +56,15 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   const [dirty, setDirty] = useState(false);
   const [query, setQuery] = useState('');
   const [visibility, setVisibility] = useState<VisibilityFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [viewSort, setViewSort] = useState<ProductSort>('manual');
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [listMode, setListMode] = useState<ListMode>('grouped');
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [renamingKey, setRenamingKey] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const orderToastAt = useRef(0);
 
   useUnsavedGuard(dirty || Boolean(editing));
 
@@ -47,11 +72,9 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     async (nextData?: SiteData) => {
       const payload = nextData ?? data;
       setSaving(true);
-      // Partial PATCH for goods reduces races with other editors
       const result = await patchSiteSection('goods', payload.goods, payload.updatedAt);
       setSaving(false);
       if (!result.ok) {
-        // Fallback full save if partial validation fails on older servers
         if (!result.conflict) {
           const full = await saveSiteData(payload);
           if (full.ok) {
@@ -90,20 +113,51 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
 
   const categorySuggestions = useMemo(() => collectCategories(data.goods), [data.goods]);
 
-  /** List for display; each item keeps original index in goods[] for DnD. */
+  const categoryChipStats = useMemo(() => {
+    return categorySuggestions.map((cat) => {
+      const items = data.goods.filter((g) => (g.category || '').trim() === cat);
+      return {
+        cat,
+        total: items.length,
+        visible: items.filter((g) => g.visible).length,
+      };
+    });
+  }, [data.goods, categorySuggestions]);
+
+  const uncategorizedCount = useMemo(
+    () => data.goods.filter((g) => !(g.category || '').trim()).length,
+    [data.goods],
+  );
+
   const filtered = useMemo(() => {
     const list = filterAndSortProducts(data.goods, {
       query,
       sort: viewSort,
       visibility,
+      category: categoryFilter || undefined,
     });
     return list.map((g) => ({
-      g,
+      product: g,
       index: data.goods.findIndex((item) => item.id === g.id),
     }));
-  }, [data.goods, query, viewSort, visibility]);
+  }, [data.goods, query, viewSort, visibility, categoryFilter]);
 
-  const canReorder = !query.trim() && visibility === 'all' && viewSort === 'manual';
+  const groups = useMemo(() => {
+    const products = filtered.map((f) => f.product);
+    return groupProductsByCategory(products);
+  }, [filtered]);
+
+  const blockReason = reorderReason({ query, visibility, categoryFilter, viewSort });
+  const canReorder = !blockReason;
+
+  function markOrderDirty() {
+    setDirty(true);
+    const now = Date.now();
+    if (now - orderToastAt.current > 4000) {
+      orderToastAt.current = now;
+      showToast('Порядок змінено — натисніть «Зберегти всі»', 'success');
+    }
+  }
 
   async function saveProduct() {
     if (!editing) return;
@@ -136,66 +190,324 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     if (editing?.id === id) setEditing(null);
   }
 
-  function reorder(from: number, to: number) {
-    setData({ ...data, goods: reorderItems(data.goods, from, to) });
+  function toggleVisible(id: string) {
+    setData({
+      ...data,
+      goods: data.goods.map((g) => (g.id === id ? { ...g, visible: !g.visible } : g)),
+    });
     setDirty(true);
   }
 
-  return (
-    <div>
-      <div className='admin-toolbar'>
-        <button type='button' className='admin-btn' disabled={saving} onClick={() => void save()}>
-          {saving ? 'Збереження…' : 'Зберегти всі'}
-        </button>
-        <a href='/shop' target='_blank' rel='noreferrer' className='admin-btn admin-btn--secondary'>
-          Відкрити магазин ↗
-        </a>
-        <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setEditing(emptyProduct())}>
-          + Товар
-        </button>
-        <input
-          className='admin-field-sm'
-          style={{ minWidth: 180, maxWidth: 240 }}
-          type='search'
-          placeholder='Пошук…'
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label='Пошук товарів'
-        />
-        <select
-          className='admin-select admin-field-sm'
-          style={{ width: 'auto', marginBottom: 0, minWidth: 160 }}
-          value={visibility}
-          onChange={(e) => setVisibility(e.target.value as VisibilityFilter)}
-          aria-label='Фільтр видимості'
+  function duplicateProduct(product: Product) {
+    const copy: Product = {
+      ...product,
+      id: createId(),
+      title: `${product.title} (копія)`,
+      visible: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setData({ ...data, goods: [...data.goods, copy] });
+    setDirty(true);
+    setEditing(copy);
+  }
+
+  function reorderById(fromId: string, toId: string) {
+    if (fromId === toId) return;
+    const from = data.goods.findIndex((g) => g.id === fromId);
+    const to = data.goods.findIndex((g) => g.id === toId);
+    if (from < 0 || to < 0) return;
+    setData({ ...data, goods: reorderItems(data.goods, from, to) });
+    markOrderDirty();
+  }
+
+  function moveProduct(id: string, dir: -1 | 1) {
+    const index = data.goods.findIndex((g) => g.id === id);
+    if (index < 0) return;
+    const next = moveByDir(data.goods, index, dir);
+    if (next === data.goods) return;
+    setData({ ...data, goods: next });
+    markOrderDirty();
+  }
+
+  function commitRename(fromKey: string) {
+    if (fromKey === UNCATEGORIZED_KEY) {
+      setRenamingKey(null);
+      return;
+    }
+    const nextName = renameValue.trim();
+    if (!nextName || nextName === fromKey) {
+      setRenamingKey(null);
+      return;
+    }
+    setData({ ...data, goods: renameCategoryInGoods(data.goods, fromKey, nextName) });
+    setDirty(true);
+    setRenamingKey(null);
+    showToast(`Категорію перейменовано: ${nextName}`, 'success');
+  }
+
+  function renderProductRow(product: Product, index: number) {
+    const isHidden = !product.visible;
+    const isDragging = dragId === product.id;
+    const isDrop = dragOverId === product.id && dragId !== product.id;
+
+    return (
+      <div
+        key={product.id}
+        className={`admin-goods-row admin-section-item${isHidden ? ' is-hidden-section' : ''}${
+          isDragging ? ' is-dragging' : ''
+        }${isDrop ? ' is-drop-target' : ''}`}
+        onDragOver={(e) => {
+          if (!canReorder || !dragId) return;
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          setDragOverId(product.id);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          const fromId = e.dataTransfer.getData('text/plain') || dragId;
+          if (fromId) reorderById(fromId, product.id);
+          setDragId(null);
+          setDragOverId(null);
+        }}
+      >
+        <span
+          className={`admin-drag-handle${canReorder ? '' : ' is-disabled'}`}
+          title={canReorder ? 'Перетягнути' : blockReason || 'Порядок недоступний'}
+          role='button'
+          tabIndex={canReorder ? 0 : -1}
+          aria-label={canReorder ? 'Перемістити товар' : blockReason || 'Порядок недоступний'}
+          aria-disabled={!canReorder}
+          draggable={canReorder}
+          onDragStart={(e) => {
+            if (!canReorder) {
+              e.preventDefault();
+              return;
+            }
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', product.id);
+            setDragId(product.id);
+          }}
+          onDragEnd={() => {
+            setDragId(null);
+            setDragOverId(null);
+          }}
+          onKeyDown={(e) => {
+            if (!canReorder) return;
+            if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              moveProduct(product.id, -1);
+            }
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              moveProduct(product.id, 1);
+            }
+          }}
         >
-          <option value='all'>Усі ({counts.all})</option>
-          <option value='visible'>Опубліковані ({counts.visible})</option>
-          <option value='hidden'>Приховані ({counts.hidden})</option>
-        </select>
-        <select
-          className='admin-select admin-field-sm'
-          style={{ width: 'auto', marginBottom: 0, minWidth: 180 }}
-          value={viewSort}
-          onChange={(e) => setViewSort(e.target.value as ProductSort)}
-          aria-label='Сортування списку'
-        >
-          {PRODUCT_SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
+          ⠿
+        </span>
+
+        <div className='admin-goods-row__thumb' aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={product.image || '/img/services/technika_img.png'} alt='' />
+        </div>
+
+        <div className='admin-goods-row__meta'>
+          <div className='admin-goods-row__title'>{product.title}</div>
+          <div className='admin-goods-row__sub'>
+            <span className='admin-goods-row__price'>{product.price} ₴</span>
+            {product.code ? <span className='admin-goods-row__code'>{product.code}</span> : null}
+            {product.category?.trim() ? (
+              <span className='admin-goods-pill'>{product.category.trim()}</span>
+            ) : (
+              <span className='admin-goods-pill admin-goods-pill--muted'>{UNCATEGORIZED_LABEL}</span>
+            )}
+          </div>
+        </div>
+
+        <div className='admin-goods-row__status'>
+          <span className={`admin-status-badge ${isHidden ? 'admin-status-badge--off' : 'admin-status-badge--on'}`}>
+            {isHidden ? 'Приховано' : 'Опубліковано'}
+          </span>
+        </div>
+
+        <div className='admin-goods-row__actions'>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary admin-btn--sm'
+            title={isHidden ? 'Опублікувати' : 'Приховати'}
+            aria-label={isHidden ? 'Опублікувати товар' : 'Приховати товар'}
+            onClick={() => toggleVisible(product.id)}
+          >
+            {isHidden ? '👁' : '👁‍🗨'}
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary admin-btn--sm'
+            title='Редагувати'
+            aria-label='Редагувати'
+            onClick={() => setEditing(product)}
+          >
+            ✎
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary admin-btn--sm'
+            title='Дублікат'
+            aria-label='Дублікувати товар'
+            onClick={() => duplicateProduct(product)}
+          >
+            ⧉
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--danger admin-btn--sm'
+            title='Видалити'
+            aria-label='Видалити'
+            onClick={() => deleteProduct(product.id)}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* index kept for potential keyboard context; not shown */}
+        <span className='admin-sr-only'>{index + 1}</span>
       </div>
-      <p className='admin-hint admin-mb'>
-        Порядок у каталозі задається перетягуванням ⠿ (коли пошук порожній, фільтр «Усі», сортування «За
-        порядком каталогу»). Сортування списку вище — лише для перегляду, воно не змінює порядок на сайті.
-      </p>
+    );
+  }
+
+  return (
+    <div className='admin-goods'>
+      <div className='admin-goods-toolbar'>
+        <div className='admin-goods-toolbar__row'>
+          <button type='button' className='admin-btn' disabled={saving} onClick={() => void save()}>
+            {saving ? 'Збереження…' : 'Зберегти всі'}
+          </button>
+          <a href='/shop' target='_blank' rel='noreferrer' className='admin-btn admin-btn--secondary'>
+            Відкрити магазин ↗
+          </a>
+          <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setEditing(emptyProduct())}>
+            + Товар
+          </button>
+          {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
+        </div>
+
+        <div className='admin-goods-toolbar__row admin-goods-toolbar__filters'>
+          <input
+            className='admin-field-sm admin-goods-search'
+            type='search'
+            placeholder='Пошук: назва, код, категорія…'
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label='Пошук товарів'
+          />
+          <select
+            className='admin-select admin-field-sm'
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value as VisibilityFilter)}
+            aria-label='Фільтр видимості'
+          >
+            <option value='all'>Усі ({counts.all})</option>
+            <option value='visible'>Опубліковані ({counts.visible})</option>
+            <option value='hidden'>Приховані ({counts.hidden})</option>
+          </select>
+          <select
+            className='admin-select admin-field-sm'
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            aria-label='Фільтр категорії'
+          >
+            <option value=''>Усі категорії</option>
+            {categorySuggestions.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+            {uncategorizedCount > 0 ? (
+              <option value={UNCATEGORIZED_KEY}>
+                {UNCATEGORIZED_LABEL} ({uncategorizedCount})
+              </option>
+            ) : null}
+          </select>
+          <select
+            className='admin-select admin-field-sm'
+            value={viewSort}
+            onChange={(e) => setViewSort(e.target.value as ProductSort)}
+            aria-label='Сортування списку'
+          >
+            {PRODUCT_SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <div className='admin-goods-mode' role='group' aria-label='Режим списку'>
+            <button
+              type='button'
+              className={`admin-btn admin-btn--secondary admin-btn--sm${listMode === 'grouped' ? ' is-active' : ''}`}
+              onClick={() => setListMode('grouped')}
+            >
+              Групи
+            </button>
+            <button
+              type='button'
+              className={`admin-btn admin-btn--secondary admin-btn--sm${listMode === 'flat' ? ' is-active' : ''}`}
+              onClick={() => setListMode('flat')}
+            >
+              Плоский
+            </button>
+          </div>
+        </div>
+
+        {categoryChipStats.length ? (
+          <div className='admin-goods-chips' role='group' aria-label='Швидкий фільтр категорій'>
+            <button
+              type='button'
+              className={`admin-chip${categoryFilter === '' ? ' is-active' : ''}`}
+              onClick={() => setCategoryFilter('')}
+            >
+              Усі ({counts.all})
+            </button>
+            {categoryChipStats.map(({ cat, total, visible }) => (
+              <button
+                key={cat}
+                type='button'
+                className={`admin-chip${categoryFilter === cat ? ' is-active' : ''}`}
+                onClick={() => setCategoryFilter(categoryFilter === cat ? '' : cat)}
+              >
+                {cat} ({visible}/{total})
+              </button>
+            ))}
+            {uncategorizedCount > 0 ? (
+              <button
+                type='button'
+                className={`admin-chip${categoryFilter === UNCATEGORIZED_KEY ? ' is-active' : ''}`}
+                onClick={() =>
+                  setCategoryFilter(categoryFilter === UNCATEGORIZED_KEY ? '' : UNCATEGORIZED_KEY)
+                }
+              >
+                {UNCATEGORIZED_LABEL} ({uncategorizedCount})
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {blockReason ? (
+        <p className='admin-hint admin-goods-reorder-hint admin-mb' role='status'>
+          Порядок каталогу (⠿ / ↑↓): <strong>заблоковано</strong> — {blockReason}. Сортування списку вище —
+          лише для перегляду.
+        </p>
+      ) : (
+        <p className='admin-hint admin-mb'>
+          Перетягуйте ⠿ або стрілки ↑↓ на handle, щоб задати порядок на сайті. Після зміни натисніть «Зберегти
+          всі». Групи = категорії вітрини.
+        </p>
+      )}
 
       {editing ? (
-        <div className='admin-card admin-form'>
-          <h3>{data.goods.some((g) => g.id === editing.id) ? 'Редагувати' : 'Новий товар'}</h3>
+        <div className='admin-card admin-form admin-mb-lg'>
+          <h3>{data.goods.some((g) => g.id === editing.id) ? 'Редагувати товар' : 'Новий товар'}</h3>
           <label>
             Назва
             <input value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
@@ -255,7 +567,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             <span className='admin-hint'>Додаткові фото крім головного. По одному URL на рядок.</span>
           </label>
           <label>
-            Категорія
+            Категорія (група на сайті)
             <input
               list='goods-category-suggestions'
               value={editing.category || ''}
@@ -267,7 +579,9 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                 <option key={cat} value={cat} />
               ))}
             </datalist>
-            <span className='admin-hint'>Опційно. Використовується для фільтрів у магазині.</span>
+            <span className='admin-hint'>
+              Опційно. Товари з однаковою категорією утворюють групу в адмінці та на /shop.
+            </span>
           </label>
           <label>
             Опис
@@ -277,25 +591,29 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               onChange={(e) => setEditing({ ...editing, description: e.target.value })}
             />
           </label>
-          <label className='admin-check'>
+          <label className='admin-check admin-goods-publish'>
             <input
               type='checkbox'
               checked={editing.visible}
               onChange={(e) => setEditing({ ...editing, visible: e.target.checked })}
             />
-            Опубліковано
+            <span>
+              <strong>Опубліковано</strong>
+              <span className='admin-hint' style={{ marginTop: 0 }}>
+                {' '}
+                — показувати у магазині /shop
+              </span>
+            </span>
           </label>
           <div className='admin-row'>
             <button type='button' className='admin-btn' onClick={() => void saveProduct()} disabled={saving}>
-              OK
+              Зберегти товар
             </button>
             <button
               type='button'
               className='admin-btn admin-btn--secondary'
               onClick={() => {
-                if (dirty || editing) {
-                  if (!confirm('Скасувати зміни товару?')) return;
-                }
+                if (!confirm('Скасувати зміни товару?')) return;
                 setEditing(null);
               }}
             >
@@ -305,87 +623,85 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
         </div>
       ) : null}
 
-      <div className='admin-card'>
-        {filtered.map(({ g: product, index }) => {
-          return (
-            <div
-              key={product.id}
-              className={`admin-section-item admin-row admin-row--between admin-mb${
-                dragIndex === index ? ' is-dragging' : ''
-              }${dragOverIndex === index && dragIndex !== index ? ' is-drop-target' : ''}`}
-              draggable={canReorder}
-              onDragStart={(e) => {
-                if (!canReorder || !(e.target as HTMLElement).closest('.admin-drag-handle')) {
-                  e.preventDefault();
-                  return;
-                }
-                setDragIndex(index);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onDragEnd={() => {
-                setDragIndex(null);
-                setDragOverIndex(null);
-              }}
-              onDragOver={(e) => {
-                if (!canReorder) return;
-                e.preventDefault();
-                setDragOverIndex(index);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (dragIndex != null) reorder(dragIndex, index);
-                setDragIndex(null);
-                setDragOverIndex(null);
-              }}
-            >
-              <div className='admin-row'>
-                {canReorder ? (
-                  <span
-                    className='admin-drag-handle'
-                    title='Перетягнути'
-                    role='button'
-                    tabIndex={0}
-                    aria-label='Перемістити товар'
-                    onKeyDown={(e) => {
-                      if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        setData({ ...data, goods: moveByDir(data.goods, index, -1) });
-                        setDirty(true);
-                      }
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setData({ ...data, goods: moveByDir(data.goods, index, 1) });
-                        setDirty(true);
-                      }
-                    }}
-                  >
-                    ⠿
-                  </span>
-                ) : null}
-                <span>
-                  {product.title} — {product.price} ₴
-                  {product.code ? ` · ${product.code}` : ''}
-                  {product.category ? ` · ${product.category}` : ''}
-                  {!product.visible ? ' (приховано)' : ''}
-                </span>
-              </div>
-              <div className='admin-row'>
-                <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setEditing(product)}>
-                  ✎
-                </button>
-                <button
-                  type='button'
-                  className='admin-btn admin-btn--danger'
-                  onClick={() => deleteProduct(product.id)}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          );
-        })}
-        {!data.goods.length ? <p>Товарів ще немає</p> : null}
+      <div className='admin-card admin-goods-list'>
+        {!data.goods.length ? <p>Товарів ще немає. Натисніть «+ Товар».</p> : null}
         {data.goods.length && !filtered.length ? <p className='admin-hint'>Нічого не знайдено</p> : null}
+
+        {listMode === 'flat'
+          ? filtered.map(({ product, index }) => renderProductRow(product, index))
+          : groups.map((group) => {
+              const isCollapsed = Boolean(collapsed[group.key]);
+              return (
+                <section key={group.key} className='admin-goods-group'>
+                  <header className='admin-goods-group__head'>
+                    <button
+                      type='button'
+                      className='admin-goods-group__toggle'
+                      aria-expanded={!isCollapsed}
+                      onClick={() => setCollapsed((c) => ({ ...c, [group.key]: !c[group.key] }))}
+                    >
+                      <span aria-hidden>{isCollapsed ? '▸' : '▾'}</span>
+                      {renamingKey === group.key ? (
+                        <input
+                          className='admin-goods-group__rename'
+                          value={renameValue}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            e.stopPropagation();
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              commitRename(group.key);
+                            }
+                            if (e.key === 'Escape') {
+                              e.preventDefault();
+                              setRenamingKey(null);
+                            }
+                          }}
+                          onBlur={() => commitRename(group.key)}
+                          aria-label='Нова назва категорії'
+                        />
+                      ) : (
+                        <span className='admin-goods-group__title'>{group.label}</span>
+                      )}
+                      <span className='admin-goods-group__count'>
+                        {group.visibleCount}/{group.total} опубл.
+                      </span>
+                    </button>
+                    {group.key !== UNCATEGORIZED_KEY && renamingKey !== group.key ? (
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--secondary admin-btn--sm'
+                        onClick={() => {
+                          setRenamingKey(group.key);
+                          setRenameValue(group.label);
+                        }}
+                      >
+                        Перейменувати
+                      </button>
+                    ) : null}
+                    <button
+                      type='button'
+                      className='admin-btn admin-btn--secondary admin-btn--sm'
+                      onClick={() =>
+                        setCategoryFilter(categoryFilter === group.key ? '' : group.key)
+                      }
+                    >
+                      Фільтр
+                    </button>
+                  </header>
+                  {!isCollapsed ? (
+                    <div className='admin-goods-group__body'>
+                      {group.products.map((product) => {
+                        const index = data.goods.findIndex((g) => g.id === product.id);
+                        return renderProductRow(product, index);
+                      })}
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })}
       </div>
     </div>
   );

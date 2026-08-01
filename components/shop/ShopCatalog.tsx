@@ -7,6 +7,7 @@ import {
   PRODUCT_SORT_OPTIONS,
   collectCategories,
   filterAndSortProducts,
+  groupProductsByCategory,
   hasActiveCatalogParams,
   parseProductSort,
   type ProductSort,
@@ -106,6 +107,18 @@ export function ShopCatalog({
   );
 
   const active = hasActiveCatalogParams({ query: debouncedQuery, sort, category });
+
+  /** Grouped sections when browsing full catalog in manual order (mirrors admin groups). */
+  const showGrouped =
+    sort === 'manual' &&
+    !debouncedQuery.trim() &&
+    !category.trim() &&
+    categories.length >= 2;
+
+  const groups = useMemo(
+    () => (showGrouped ? groupProductsByCategory(filtered) : []),
+    [showGrouped, filtered],
+  );
 
   function reset() {
     setQuery('');
@@ -212,7 +225,21 @@ export function ShopCatalog({
       </p>
 
       {filtered.length ? (
-        <ProductGrid products={filtered} />
+        showGrouped ? (
+          <div className='shop-groups'>
+            {groups.map((group) => (
+              <section key={group.key} className='shop-group' aria-labelledby={`shop-group-${group.key}`}>
+                <h2 className='shop-group__title' id={`shop-group-${group.key}`}>
+                  {group.label}
+                  <span className='shop-group__count'>{group.total}</span>
+                </h2>
+                <ProductGrid products={group.products} />
+              </section>
+            ))}
+          </div>
+        ) : (
+          <ProductGrid products={filtered} />
+        )
       ) : (
         <div className='shop-empty'>
           <p className='_paragr'>Нічого не знайдено за вашим запитом.</p>

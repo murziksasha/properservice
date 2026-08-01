@@ -153,6 +153,38 @@
   color: #666;
 }
 
+.shop-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.shop-group {
+  &__title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 16px;
+    font-size: 1.5rem !important;
+    font-weight: 700;
+    color: #0f3d2e;
+    line-height: 1.25;
+  }
+
+  &__count {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  @media (max-width: 767px) {
+    &__title {
+      font-size: 1.25rem !important;
+      margin-bottom: 12px;
+    }
+  }
+}
+
 .shop-empty__btn {
   margin-top: 16px;
   display: inline-block;

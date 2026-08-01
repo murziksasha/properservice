@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { Product } from './types';
 import {
+  UNCATEGORIZED_KEY,
+  UNCATEGORIZED_LABEL,
   collectCategories,
   filterAndSortProducts,
+  groupProductsByCategory,
   hasActiveCatalogParams,
   matchesProductQuery,
   normalizeQuery,
   parseProductSort,
+  productCategoryKey,
+  renameCategoryInGoods,
   sortProducts,
 } from './shop-catalog';
 
@@ -119,5 +124,64 @@ describe('hasActiveCatalogParams', () => {
     expect(hasActiveCatalogParams({ query: 'x' })).toBe(true);
     expect(hasActiveCatalogParams({ sort: 'price-asc' })).toBe(true);
     expect(hasActiveCatalogParams({ category: 'ТВ' })).toBe(true);
+  });
+});
+
+describe('groupProductsByCategory', () => {
+  it('groups in first-seen order and puts uncategorized last', () => {
+    const withNone = [
+      ...sample,
+      p({ id: '5', title: 'Тест', price: 1, category: '' }),
+      p({ id: '6', title: 'Ще', price: 2 }),
+    ];
+    const groups = groupProductsByCategory(withNone);
+    expect(groups.map((g) => g.key)).toEqual(['Телефони', 'ТВ', 'Ноутбуки', UNCATEGORIZED_KEY]);
+    expect(groups[0].products.map((x) => x.id)).toEqual(['1', '3']);
+    expect(groups[groups.length - 1].label).toBe(UNCATEGORIZED_LABEL);
+    expect(groups[groups.length - 1].total).toBe(2);
+  });
+
+  it('counts visible per group', () => {
+    const groups = groupProductsByCategory(sample);
+    const tv = groups.find((g) => g.key === 'ТВ');
+    expect(tv?.total).toBe(1);
+    expect(tv?.visibleCount).toBe(0);
+  });
+
+  it('localeSortCategories sorts named groups alphabetically', () => {
+    const groups = groupProductsByCategory(sample, { localeSortCategories: true });
+    expect(groups.map((g) => g.key)).toEqual(['Ноутбуки', 'ТВ', 'Телефони']);
+  });
+});
+
+describe('renameCategoryInGoods', () => {
+  it('renames matching category; empty to clears field', () => {
+    const next = renameCategoryInGoods(sample, 'Телефони', 'Смартфони');
+    expect(next.filter((x) => x.category === 'Смартфони')).toHaveLength(2);
+    expect(next.find((x) => x.id === '2')?.category).toBe('ТВ');
+    const cleared = renameCategoryInGoods(sample, 'ТВ', '  ');
+    expect(cleared.find((x) => x.id === '2')?.category).toBeUndefined();
+  });
+
+  it('no-op on empty from or same name', () => {
+    expect(renameCategoryInGoods(sample, '', 'X')).toBe(sample);
+    expect(renameCategoryInGoods(sample, 'Телефони', 'Телефони')).toBe(sample);
+  });
+});
+
+describe('matchesCategory uncategorized', () => {
+  it('filters products without category via sentinel', () => {
+    const list = [...sample, p({ id: 'u', title: 'U', price: 1 })];
+    const onlyNone = filterAndSortProducts(list, { category: UNCATEGORIZED_KEY });
+    expect(onlyNone.map((x) => x.id)).toEqual(['u']);
+  });
+});
+
+describe('productCategoryKey', () => {
+  it('returns sentinel for empty category', () => {
+    expect(productCategoryKey(p({ id: 'a', title: 'A', price: 1 }))).toBe(UNCATEGORIZED_KEY);
+    expect(productCategoryKey(p({ id: 'a', title: 'A', price: 1, category: '  Телефони ' }))).toBe(
+      'Телефони',
+    );
   });
 });
