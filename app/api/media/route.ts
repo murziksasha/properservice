@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
-import { deleteUpload, listUploads } from '@/lib/media';
-import { patchMediaMeta } from '@/lib/media-index';
+import {
+  deleteUpload,
+  folderCounts,
+  listFoldersWithCounts,
+  listUploads,
+} from '@/lib/media';
+import { patchMediaMeta, reorderMediaItems } from '@/lib/media-index';
 import { isMediaPurpose } from '@/lib/media-purpose';
 
 export const dynamic = 'force-dynamic';
@@ -20,6 +25,11 @@ async function guard() {
   return { ok: true as const };
 }
 
+function parseSort(raw: string | null): 'manual' | 'mtime' | 'name' {
+  if (raw === 'manual' || raw === 'name' || raw === 'mtime') return raw;
+  return 'mtime';
+}
+
 export async function GET(request: NextRequest) {
   const g = await guard();
   if (!g.ok) return g.response;
@@ -29,12 +39,32 @@ export async function GET(request: NextRequest) {
     purposeRaw && purposeRaw !== 'all' && isMediaPurpose(purposeRaw) ? purposeRaw : undefined;
   const q = request.nextUrl.searchParams.get('q') || undefined;
   const tag = request.nextUrl.searchParams.get('tag') || undefined;
+  const folderRaw = request.nextUrl.searchParams.get('folder');
+  const folder =
+    folderRaw === null || folderRaw === '' || folderRaw === 'all'
+      ? 'all'
+      : folderRaw === 'root' || folderRaw === '__root'
+        ? 'root'
+        : folderRaw;
+  const sort = parseSort(request.nextUrl.searchParams.get('sort'));
 
-  const items = await listUploads({ purpose, q, tag });
+  const [items, folders, counts] = await Promise.all([
+    listUploads({ purpose, q, tag, folder, sort }),
+    listFoldersWithCounts(),
+    folderCounts(),
+  ]);
+
   return NextResponse.json({
     items,
+    folders,
+    counts: {
+      all: counts.all || 0,
+      root: counts.root || 0,
+    },
     count: items.length,
     bytes: items.reduce((s, i) => s + i.size, 0),
+    sort,
+    folder,
   });
 }
 
@@ -57,7 +87,21 @@ export async function PATCH(request: NextRequest) {
       purpose?: string;
       tags?: string[] | string;
       alt?: string;
+      folderId?: string;
+      sortOrder?: number;
+      /** Bulk reorder within a folder */
+      orderedNames?: string[];
+      reorderFolderId?: string;
     };
+
+    if (Array.isArray(body.orderedNames)) {
+      const names = body.orderedNames.filter((n): n is string => typeof n === 'string');
+      const folderId =
+        typeof body.reorderFolderId === 'string' ? body.reorderFolderId : body.folderId || '';
+      const updated = await reorderMediaItems(folderId === 'root' ? '' : folderId, names);
+      return NextResponse.json({ ok: true, items: updated });
+    }
+
     if (!body.name || typeof body.name !== 'string') {
       return NextResponse.json({ error: 'Missing name' }, { status: 400 });
     }
@@ -72,10 +116,19 @@ export async function PATCH(request: NextRequest) {
         .map((t) => t.trim())
         .filter(Boolean);
     }
+    let folderId: string | undefined;
+    if (body.folderId !== undefined) {
+      folderId = body.folderId === 'root' || body.folderId === '__root' ? '' : body.folderId;
+    }
     const meta = await patchMediaMeta(body.name, {
       purpose,
       tags,
       alt: typeof body.alt === 'string' ? body.alt : undefined,
+      folderId,
+      sortOrder:
+        typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder)
+          ? body.sortOrder
+          : undefined,
     });
     if (!meta) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
