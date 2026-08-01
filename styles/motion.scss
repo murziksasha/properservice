@@ -1,0 +1,106 @@
+/* Shared public-site motion — respect reduced motion */
+
+@media (prefers-reduced-motion: no-preference) {
+  .shop-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .shop-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--ps-shadow-hover, 0 12px 28px rgba(2, 166, 83, 0.18));
+  }
+
+  .shop-card__image img {
+    transition: transform 0.35s ease;
+  }
+
+  .shop-card:hover .shop-card__image img {
+    transform: scale(1.04);
+  }
+
+  .shop-chip {
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+
+  .shop-chip:active {
+    transform: scale(0.97);
+  }
+
+  .shop-group {
+    animation: ps-fade-up 0.4s ease both;
+  }
+
+  .shop-group:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+
+  .shop-group:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+
+  .about-link__item,
+  .about-link a {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .pageup {
+    transition: opacity 0.25s ease, transform 0.25s ease, bottom 0.2s ease;
+  }
+
+  .sticky-call {
+    animation: ps-slide-up 0.35s ease both;
+  }
+
+  ._btn {
+    transition:
+      background 0.25s ease,
+      color 0.25s ease,
+      opacity 0.2s ease,
+      box-shadow 0.25s ease,
+      transform 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    ._btn:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  ._btn:active {
+    transform: translateY(0);
+  }
+}
+
+@keyframes ps-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ps-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card,
+  .shop-chip,
+  ._btn,
+  .pageup,
+  .sticky-call,
+  .shop-group {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { MenuItem, SiteSettings } from '@/lib/types';
 import { formatTelHref } from '@/lib/phone';
+import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
   settings: SiteSettings;
@@ -131,9 +132,20 @@ export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
             </ul>
             <div className='menu__mobile-meta'>
               <p>{settings.hours}</p>
-              <a className='_btn' href={telHref}>
-                {settings.headerPhone.display}
+              <a className='_btn header__phone-btn' href={telHref}>
+                <Image
+                  src='/img/icons/phone_btn.png'
+                  alt=''
+                  width={20}
+                  height={20}
+                  aria-hidden
+                  className='header__phone-btn__icon'
+                />
+                <span className='header__phone-btn__num'>{settings.headerPhone.display}</span>
               </a>
+              <div className='menu__mobile-theme'>
+                <ThemeToggle />
+              </div>
               <div className='menu__mobile-social'>
                 {settings.social.map((link) => (
                   <a
@@ -156,39 +168,40 @@ export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
           </nav>
 
           <div className='header__contact'>
-            <p className='header__contact header__contact_time'>{settings.hours}</p>
-            <div className='header__contact header__contact_callback'>
-              <a className='header__contact header__contact_btn _btn' href={telHref}>
-                <div>
-                  <Image
-                    src='/img/icons/phone_btn.png'
-                    alt=''
-                    className='header__contact header__contact_phone'
-                    width={20}
-                    height={20}
-                    aria-hidden
-                  />
-                </div>
-                <div className='header__contact_number'>{settings.headerPhone.display}</div>
+            <p className='header__contact_time'>{settings.hours}</p>
+            <div className='header__contact_callback'>
+              <a className='header__phone-btn _btn' href={telHref}>
+                <Image
+                  src='/img/icons/phone_btn.png'
+                  alt=''
+                  className='header__phone-btn__icon'
+                  width={22}
+                  height={22}
+                  aria-hidden
+                />
+                <span className='header__phone-btn__num'>{settings.headerPhone.display}</span>
               </a>
             </div>
-            <div className='header__contact header__contact_social'>
-              {settings.social.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  aria-label={SOCIAL_LABELS[link.type] || link.type}
-                >
-                  <Image
-                    src={link.icon}
-                    alt={SOCIAL_LABELS[link.type] || link.type}
-                    width={24}
-                    height={24}
-                  />
-                </a>
-              ))}
+            <div className='header__contact_row'>
+              <div className='header__contact_social'>
+                {settings.social.map((link) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    aria-label={SOCIAL_LABELS[link.type] || link.type}
+                  >
+                    <Image
+                      src={link.icon}
+                      alt={SOCIAL_LABELS[link.type] || link.type}
+                      width={24}
+                      height={24}
+                    />
+                  </a>
+                ))}
+              </div>
+              <ThemeToggle />
             </div>
           </div>
         </div>

@@ -13,17 +13,25 @@ body.nav-open {
     margin-right: 0.8rem;
     padding: 0.6rem 1rem;
     border-radius: 999px;
-    background: #02a653;
+    background: var(--ps-brand, #02a653);
     color: #fff;
     text-decoration: none;
     font-size: 1.3rem;
     font-weight: 600;
     white-space: nowrap;
+    max-width: min(46vw, 16rem);
     z-index: 110;
+    overflow: hidden;
 
     img {
       width: 1.8rem;
       height: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     &:focus-visible {
@@ -78,6 +86,17 @@ body.nav-open {
     border: none;
     z-index: 100;
     cursor: pointer;
+    animation: ps-overlay-in 0.25s ease;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .menu {
+      transition: none;
+    }
   }
 
   &__menu {
@@ -88,34 +107,30 @@ body.nav-open {
   }
 
   &__contact {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+
     &_time {
       font-size: 1.4rem;
       font-weight: 700;
       text-align: center;
+      color: var(--ps-text, #1a1a1a);
     }
 
     &_callback {
-    }
-
-    &_btn {
+      width: 100%;
       display: flex;
       justify-content: center;
-      column-gap: 1rem;
-      margin: 0.9rem 0;
-      position: relative;
-      padding-left: 2rem;
-      font-size: 1.6rem;
-      & img {
-        width: 2.5rem;
-        height: 2.5rem;
-        position: absolute;
-        top: 1.3rem;
-        left: 2.1rem;
-      }
     }
 
-    &_number {
-      letter-spacing: 0.04em;
+    &_row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     &_social {
@@ -129,6 +144,40 @@ body.nav-open {
       }
     }
   }
+
+  /* Phone CTA: icon + number, no absolute positioning */
+  &__phone-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    margin: 0.6rem 0;
+    padding: 0 1.8rem 0 1.6rem !important;
+    min-width: 16rem;
+    height: 5rem;
+    font-size: 1.6rem;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    max-width: 100%;
+    box-sizing: border-box;
+
+    &__icon {
+      position: static !important;
+      width: 2.2rem !important;
+      height: 2.2rem !important;
+      flex-shrink: 0;
+      display: block;
+      object-fit: contain;
+    }
+
+    &__num {
+      letter-spacing: 0.04em;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+  }
+
   &__wrapper {
     padding: 1.7rem 0 .7rem;
   }
@@ -157,11 +206,12 @@ body.nav-open {
   }
 
   &__link {
-    transition: all 0.1s;
-    color: #000;
+    transition: color 0.2s ease, border-color 0.2s ease, font-weight 0.15s ease;
+    color: var(--ps-text, #000);
+    border-bottom: 4px solid transparent;
     &:hover {
       font-weight: 700;
-      border-bottom: 4px solid $main-color;
+      border-bottom-color: var(--ps-brand, #{$main-color});
     }
     &:active {
       color: inherit;
@@ -197,23 +247,28 @@ body.nav-open {
     }
 
     .menu {
-      display: none;
+      display: flex;
+      flex-direction: column;
       position: fixed;
       top: 0;
       right: 0;
       bottom: 0;
       width: min(80vw, 320px);
       z-index: 110;
-      background: #fff;
+      background: var(--ps-surface, #fff);
+      color: var(--ps-text, #1a1a1a);
       padding: 7rem 2.4rem 2.4rem;
       box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
       min-width: 0;
       margin: 0;
       overflow-y: auto;
+      transform: translateX(105%);
+      visibility: hidden;
+      transition: transform 0.28s ease, visibility 0.28s ease;
 
       &.is-open {
-        display: flex;
-        flex-direction: column;
+        transform: translateX(0);
+        visibility: visible;
       }
 
       &__list {
@@ -225,7 +280,7 @@ body.nav-open {
       &__mobile-meta {
         margin-top: auto;
         padding-top: 2.4rem;
-        border-top: 1px solid #e8e8e8;
+        border-top: 1px solid var(--ps-border, #e8e8e8);
         display: flex !important;
         flex-direction: column;
         gap: 1.2rem;
@@ -233,7 +288,7 @@ body.nav-open {
         p {
           margin: 0;
           font-size: 1.4rem;
-          color: #555;
+          color: var(--ps-muted, #555);
         }
 
         ._btn {
@@ -253,6 +308,15 @@ body.nav-open {
     &__contact {
       display: none;
     }
+  }
+}
+
+@keyframes ps-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
