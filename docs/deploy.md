@@ -19,8 +19,8 @@ docker compose up -d --build
 
 ### Volumes
 
-- site content → `DATA_DIR=/app/data` → `site.json`
-- uploads → `public/uploads`
+- site content → `DATA_DIR=/app/data` → `site.json`, `media-index.json`
+- uploads → `public/uploads` (or `UPLOADS_DIR`); Next also serves via `GET /uploads/[name]` if static snapshot is stale
 
 Зробіть backup `data/site.json` і `public/uploads` регулярно.
 

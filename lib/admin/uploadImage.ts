@@ -1,8 +1,11 @@
 import type { ImagePresetId } from '@/lib/image-presets';
+import type { MediaPurpose } from '@/lib/media-purpose';
 import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
 export type UploadImageOptions = {
   preset?: ImagePresetId | string;
+  purpose?: MediaPurpose | string;
+  tags?: string[] | string;
   maxWidth?: number;
   maxHeight?: number;
 };
@@ -13,6 +16,7 @@ export type UploadImageResult = {
   width?: number;
   height?: number;
   optimized?: boolean;
+  purpose?: string;
 };
 
 export async function uploadImage(
@@ -23,6 +27,14 @@ export async function uploadImage(
   formData.append('file', file);
   if (options?.preset) {
     formData.append('preset', String(options.preset));
+  }
+  if (options?.purpose) {
+    formData.append('purpose', String(options.purpose));
+  }
+  if (options?.tags != null) {
+    const tags =
+      Array.isArray(options.tags) ? options.tags.join(',') : String(options.tags);
+    if (tags.trim()) formData.append('tags', tags);
   }
   if (options?.maxWidth != null && Number.isFinite(options.maxWidth)) {
     formData.append('maxWidth', String(Math.round(options.maxWidth)));
@@ -45,6 +57,7 @@ export async function uploadImage(
       width?: number;
       height?: number;
       optimized?: boolean;
+      purpose?: string;
     };
 
     if (!res.ok) {
@@ -57,6 +70,7 @@ export async function uploadImage(
       width: json.width,
       height: json.height,
       optimized: json.optimized,
+      purpose: json.purpose,
     };
   } catch {
     return { url: '', error: 'Network error' };

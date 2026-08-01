@@ -8,6 +8,12 @@ import {
   IMAGE_PRESET_IDS,
   type ImagePresetId,
 } from '@/lib/image-presets';
+import {
+  MEDIA_PURPOSE_IDS,
+  MEDIA_PURPOSES,
+  purposeFromPreset,
+  type MediaPurpose,
+} from '@/lib/media-purpose';
 import { showToast } from './AdminToast';
 
 interface MediaItem {
@@ -15,6 +21,11 @@ interface MediaItem {
   url: string;
   size: number;
   mtime: string;
+  purpose: MediaPurpose;
+  tags: string[];
+  alt?: string;
+  width?: number;
+  height?: number;
 }
 
 function formatBytes(n: number): string {
@@ -27,13 +38,22 @@ export function MediaLibrary() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
+  const [purpose, setPurpose] = useState<MediaPurpose | 'all'>('all');
   const [uploading, setUploading] = useState(false);
   const [preset, setPreset] = useState<ImagePresetId>('default');
+  const [uploadPurpose, setUploadPurpose] = useState<MediaPurpose>('other');
+  const [tagsInput, setTagsInput] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editPurpose, setEditPurpose] = useState<MediaPurpose>('other');
+  const [editTags, setEditTags] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch('/api/media');
+      const params = new URLSearchParams();
+      if (purpose !== 'all') params.set('purpose', purpose);
+      if (q.trim()) params.set('q', q.trim());
+      const res = await fetch(`/api/media?${params.toString()}`);
       if (!res.ok) {
         showToast('Не вдалося завантажити медіа', 'error');
         return;
@@ -45,17 +65,26 @@ export function MediaLibrary() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [purpose, q]);
 
   useEffect(() => {
+    setLoading(true);
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setUploadPurpose(purposeFromPreset(preset));
+  }, [preset]);
 
   async function onUpload(file: File | null) {
     if (!file) return;
     setUploading(true);
     try {
-      const { url, error, width, height } = await uploadImage(file, { preset });
+      const { url, error, width, height } = await uploadImage(file, {
+        preset,
+        purpose: uploadPurpose,
+        tags: tagsInput,
+      });
       if (!url) {
         showToast(error || 'Помилка upload', 'error');
         return;
@@ -107,7 +136,35 @@ export function MediaLibrary() {
     }
   }
 
-  const filtered = items.filter((i) => !q || i.name.toLowerCase().includes(q.toLowerCase()));
+  function startEdit(item: MediaItem) {
+    setEditing(item.name);
+    setEditPurpose(item.purpose || 'other');
+    setEditTags((item.tags || []).join(', '));
+  }
+
+  async function saveEdit(name: string) {
+    try {
+      const res = await fetch('/api/media', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          purpose: editPurpose,
+          tags: editTags,
+        }),
+      });
+      if (!res.ok) {
+        showToast('Не вдалося зберегти метадані', 'error');
+        return;
+      }
+      showToast('Збережено', 'success');
+      setEditing(null);
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    }
+  }
+
   const totalBytes = items.reduce((s, i) => s + i.size, 0);
 
   return (
@@ -119,6 +176,31 @@ export function MediaLibrary() {
         <span className='admin-hint' style={{ margin: 0 }}>
           {items.length} файлів · {formatBytes(totalBytes)}
         </span>
+      </div>
+
+      <div className='admin-media-chips admin-mb' role='tablist' aria-label='Групи зображень'>
+        <button
+          type='button'
+          role='tab'
+          className={`admin-chip${purpose === 'all' ? ' admin-chip--active' : ''}`}
+          aria-selected={purpose === 'all'}
+          onClick={() => setPurpose('all')}
+        >
+          Усі
+        </button>
+        {MEDIA_PURPOSE_IDS.map((id) => (
+          <button
+            key={id}
+            type='button'
+            role='tab'
+            className={`admin-chip${purpose === id ? ' admin-chip--active' : ''}`}
+            aria-selected={purpose === id}
+            title={MEDIA_PURPOSES[id].description}
+            onClick={() => setPurpose(id)}
+          >
+            {MEDIA_PURPOSES[id].label}
+          </button>
+        ))}
       </div>
 
       <div className='admin-toolbar admin-mb'>
@@ -138,6 +220,30 @@ export function MediaLibrary() {
             ))}
           </select>
         </label>
+        <label className='admin-inline-label'>
+          Група
+          <select
+            value={uploadPurpose}
+            onChange={(e) => setUploadPurpose(e.target.value as MediaPurpose)}
+            disabled={uploading}
+            aria-label='Група для нового файлу'
+          >
+            {MEDIA_PURPOSE_IDS.map((id) => (
+              <option key={id} value={id}>
+                {MEDIA_PURPOSES[id].label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className='admin-inline-label admin-grow'>
+          Теги
+          <input
+            value={tagsInput}
+            onChange={(e) => setTagsInput(e.target.value)}
+            placeholder='tv, coffee…'
+            disabled={uploading}
+          />
+        </label>
         <label className='admin-btn' style={{ cursor: uploading ? 'wait' : 'pointer' }}>
           {uploading ? 'Завантаження…' : 'Завантажити зображення'}
           <input
@@ -149,10 +255,13 @@ export function MediaLibrary() {
             onChange={(e) => void onUpload(e.target.files?.[0] ?? null)}
           />
         </label>
+      </div>
+
+      <div className='admin-toolbar admin-mb'>
         <input
           type='search'
           className='admin-grow'
-          placeholder='Пошук за назвою…'
+          placeholder='Пошук за назвою / тегами…'
           value={q}
           onChange={(e) => setQ(e.target.value)}
           aria-label='Пошук медіа'
@@ -163,25 +272,78 @@ export function MediaLibrary() {
       </div>
 
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-      {!loading && filtered.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
+      {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
 
       <div className='admin-media-grid'>
-        {filtered.map((item) => (
+        {items.map((item) => (
           <div key={item.name} className='admin-media-card'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={item.url} alt={item.name} loading='lazy' />
+            <img src={item.url} alt={item.alt || item.name} loading='lazy' />
             <div className='admin-media-meta'>
               <span title={item.name}>{item.name}</span>
-              <span>{formatBytes(item.size)}</span>
+              <span>
+                {MEDIA_PURPOSES[item.purpose]?.label || item.purpose} · {formatBytes(item.size)}
+              </span>
+              {item.tags?.length ? <span className='admin-media-tags'>{item.tags.join(', ')}</span> : null}
             </div>
-            <div className='admin-row'>
-              <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void copyUrl(item.url)}>
-                Копіювати URL
-              </button>
-              <button type='button' className='admin-btn admin-btn--danger' onClick={() => void remove(item.name)}>
-                Видалити
-              </button>
-            </div>
+
+            {editing === item.name ? (
+              <div className='admin-media-edit'>
+                <label className='admin-inline-label'>
+                  Група
+                  <select
+                    value={editPurpose}
+                    onChange={(e) => setEditPurpose(e.target.value as MediaPurpose)}
+                  >
+                    {MEDIA_PURPOSE_IDS.map((id) => (
+                      <option key={id} value={id}>
+                        {MEDIA_PURPOSES[id].label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className='admin-inline-label'>
+                  Теги
+                  <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+                </label>
+                <div className='admin-row'>
+                  <button type='button' className='admin-btn' onClick={() => void saveEdit(item.name)}>
+                    OK
+                  </button>
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--secondary'
+                    onClick={() => setEditing(null)}
+                  >
+                    Скасувати
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className='admin-row'>
+                <button
+                  type='button'
+                  className='admin-btn admin-btn--secondary'
+                  onClick={() => void copyUrl(item.url)}
+                >
+                  URL
+                </button>
+                <button
+                  type='button'
+                  className='admin-btn admin-btn--secondary'
+                  onClick={() => startEdit(item)}
+                >
+                  Група
+                </button>
+                <button
+                  type='button'
+                  className='admin-btn admin-btn--danger'
+                  onClick={() => void remove(item.name)}
+                >
+                  Видалити
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>

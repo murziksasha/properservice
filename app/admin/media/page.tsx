@@ -8,7 +8,8 @@ export default function AdminMediaPage() {
     <AdminShell>
       <h1>Медіатека</h1>
       <p className='admin-hint admin-mb-lg'>
-        Файли з <code>public/uploads/</code>. Великі зображення зменшуються до 1920px. JPEG
+        Файли з <code>public/uploads/</code>. Групи (товар, hero, блоки…) і теги — для швидкого
+        вибору в редакторах. Великі зображення зменшуються до 1920px. JPEG
         конвертується в WebP; PNG (логотипи, іконки) залишаються PNG. GIF без змін.
       </p>
       <MediaLibrary />

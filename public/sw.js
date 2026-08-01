@@ -1,5 +1,5 @@
 /* Proper Service — lightweight offline shell (no build step). */
-const CACHE = 'ps-shell-v2';
+const CACHE = 'ps-shell-v3';
 const PRECACHE = ['/offline.html', '/manifest.webmanifest', '/img/icons/logo.png', '/img/icons/favicon.ico'];
 
 self.addEventListener('install', (event) => {
@@ -54,11 +54,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // User uploads: always network (new files must appear without SW/PM2 tricks)
+  if (url.pathname.startsWith('/uploads/')) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
   // Same-origin static assets: cache-first, then network
   if (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/img/') ||
-    url.pathname.startsWith('/uploads/') ||
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.woff') ||
