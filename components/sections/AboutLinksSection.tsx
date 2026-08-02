@@ -35,6 +35,7 @@ export function AboutLinksSection({
                   width={220}
                   height={220}
                   sizes='(max-width: 600px) 40vw, 220px'
+                  softPlaceholder={false}
                 />
                 <span className='about-link__descr'>{item.label}</span>
               </Link>

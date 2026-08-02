@@ -1,7 +1,7 @@
 'use client';
 
 import Image, { type ImageProps } from 'next/image';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 
 export type PublicImageProps = Omit<ImageProps, 'onLoad' | 'onLoadingComplete'> & {
   /** Soft background while decoding (defaults on). Avoids clash with next/image `placeholder`. */
@@ -12,9 +12,18 @@ export type PublicImageProps = Omit<ImageProps, 'onLoad' | 'onLoadingComplete'> 
   viewTransitionName?: string;
 };
 
+function srcKey(src: ImageProps['src']): string {
+  if (typeof src === 'string') return src;
+  if (src && typeof src === 'object' && 'src' in src) return String(src.src);
+  return '';
+}
+
 /**
  * Public-site image with reserved box, soft reveal after decode, and optional
  * view-transition name. Priority images stay visible immediately (LCP-safe).
+ *
+ * Loaded state is keyed by `src` so we never reset after onLoad (a useEffect
+ * reset was leaving opacity:0 forever on cached / fast loads).
  */
 export function PublicImage({
   className,
@@ -26,11 +35,9 @@ export function PublicImage({
   alt,
   ...rest
 }: PublicImageProps) {
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    setLoaded(false);
-  }, [src]);
+  const key = srcKey(src);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  const loaded = loadedKey === key;
 
   const wrapClass = [
     'ps-image',
@@ -57,7 +64,8 @@ export function PublicImage({
         alt={alt}
         priority={priority}
         className={imgClass}
-        onLoad={() => setLoaded(true)}
+        onLoad={() => setLoadedKey(key)}
+        onLoadingComplete={() => setLoadedKey(key)}
       />
     </span>
   );
