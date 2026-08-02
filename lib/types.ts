@@ -56,7 +56,10 @@ export interface Product {
   /** Extra gallery images (primary is image). */
   images?: string[];
   visible: boolean;
-  /** Optional display category for catalog filters (e.g. «Телефони»). */
+  /**
+   * Optional display category for catalog filters (e.g. «Телефони»).
+   * Empty / omitted → shown as default «Інше» in admin and /shop.
+   */
   category?: string;
   /**
    * Optional merchant/SKU-style code. Free text (any language/symbols),

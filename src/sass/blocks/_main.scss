@@ -45,8 +45,10 @@ main.main {
   appearance: none;
   line-height: 0;
 
-  &._hide {
+  /* Soft-hide only — never display:none (global ._hide would cancel smooth scroll-to-top). */
+  &.pageup--hidden {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
   }
 

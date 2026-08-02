@@ -6,18 +6,22 @@ import { patchSiteSection, saveSiteData } from '@/lib/admin/saveSite';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import {
+  DEFAULT_CATEGORY,
   PRODUCT_SORT_OPTIONS,
   UNCATEGORIZED_KEY,
-  UNCATEGORIZED_LABEL,
   collectCategories,
+  displayCategory,
   filterAndSortProducts,
   groupProductsByCategory,
+  isDefaultCategory,
+  normalizeCategoryInput,
   renameCategoryInGoods,
   type ProductSort,
   type VisibilityFilter,
 } from '@/lib/shop-catalog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast } from './AdminToast';
+import { GalleryField } from './GalleryField';
 import { ImageField } from './ImageField';
 
 type ListMode = 'grouped' | 'flat';
@@ -135,11 +139,15 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     return { all, visible, hidden: all - visible };
   }, [data.goods]);
 
+  /** Named + «Інше» when present — for select/chips/datalist. */
   const categorySuggestions = useMemo(() => collectCategories(data.goods), [data.goods]);
 
   const categoryChipStats = useMemo(() => {
     return categorySuggestions.map((cat) => {
-      const items = data.goods.filter((g) => (g.category || '').trim() === cat);
+      const items =
+        cat === DEFAULT_CATEGORY
+          ? data.goods.filter((g) => isDefaultCategory(g))
+          : data.goods.filter((g) => (g.category || '').trim() === cat);
       return {
         cat,
         total: items.length,
@@ -148,10 +156,21 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     });
   }, [data.goods, categorySuggestions]);
 
-  const uncategorizedCount = useMemo(
-    () => data.goods.filter((g) => !(g.category || '').trim()).length,
-    [data.goods],
-  );
+  const filtersActive = useMemo(() => {
+    return (
+      Boolean(query.trim()) ||
+      visibility !== 'all' ||
+      Boolean(categoryFilter.trim()) ||
+      viewSort !== 'manual'
+    );
+  }, [query, visibility, categoryFilter, viewSort]);
+
+  function resetFilters() {
+    setQuery('');
+    setVisibility('all');
+    setCategoryFilter('');
+    setViewSort('manual');
+  }
 
   const filtered = useMemo(() => {
     const list = filterAndSortProducts(data.goods, {
@@ -194,7 +213,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     const idx = goods.findIndex((g) => g.id === editing.id);
     const stamped: Product = {
       ...editing,
-      category: (editing.category || '').trim() || undefined,
+      category: normalizeCategoryInput(editing.category),
       code: codeTrimmed.length >= 2 ? codeTrimmed : undefined,
       updatedAt: new Date().toISOString(),
       createdAt: editing.createdAt || new Date().toISOString(),
@@ -255,6 +274,8 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   }
 
   function commitRename(fromKey: string) {
+    // Default «Інше» bucket is fixed — assign a real name by editing products or
+    // only rename named groups.
     if (fromKey === UNCATEGORIZED_KEY) {
       setRenamingKey(null);
       return;
@@ -267,7 +288,13 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     setData({ ...data, goods: renameCategoryInGoods(data.goods, fromKey, nextName) });
     setDirty(true);
     setRenamingKey(null);
-    showToast(`Категорію перейменовано: ${nextName}`, 'success');
+    if (categoryFilter === fromKey) {
+      setCategoryFilter(normalizeCategoryInput(nextName) ?? DEFAULT_CATEGORY);
+    }
+    showToast(
+      `Категорію перейменовано: ${normalizeCategoryInput(nextName) ?? DEFAULT_CATEGORY}`,
+      'success',
+    );
   }
 
   function renderProductRow(product: Product, index: number) {
@@ -341,11 +368,11 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
           <div className='admin-goods-row__sub'>
             <span className='admin-goods-row__price'>{product.price} ₴</span>
             {product.code ? <span className='admin-goods-row__code'>{product.code}</span> : null}
-            {product.category?.trim() ? (
-              <span className='admin-goods-pill'>{product.category.trim()}</span>
-            ) : (
-              <span className='admin-goods-pill admin-goods-pill--muted'>{UNCATEGORIZED_LABEL}</span>
-            )}
+            <span
+              className={`admin-goods-pill${isDefaultCategory(product) ? ' admin-goods-pill--muted' : ''}`}
+            >
+              {displayCategory(product)}
+            </span>
           </div>
         </div>
 
@@ -447,11 +474,6 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                 {cat}
               </option>
             ))}
-            {uncategorizedCount > 0 ? (
-              <option value={UNCATEGORIZED_KEY}>
-                {UNCATEGORIZED_LABEL} ({uncategorizedCount})
-              </option>
-            ) : null}
           </select>
           <select
             className='admin-select admin-field-sm'
@@ -465,6 +487,16 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               </option>
             ))}
           </select>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary admin-btn--sm'
+            onClick={resetFilters}
+            disabled={!filtersActive}
+            title={filtersActive ? 'Скинути пошук, фільтри та сортування' : 'Фільтри вже за замовчуванням'}
+            aria-label='Скинути фільтри'
+          >
+            Скинути фільтри
+          </button>
           <div className='admin-goods-mode' role='group' aria-label='Режим списку'>
             <button
               type='button'
@@ -492,27 +524,22 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             >
               Усі ({counts.all})
             </button>
-            {categoryChipStats.map(({ cat, total, visible }) => (
-              <button
-                key={cat}
-                type='button'
-                className={`admin-chip${categoryFilter === cat ? ' is-active' : ''}`}
-                onClick={() => setCategoryFilter(categoryFilter === cat ? '' : cat)}
-              >
-                {cat} ({visible}/{total})
-              </button>
-            ))}
-            {uncategorizedCount > 0 ? (
-              <button
-                type='button'
-                className={`admin-chip${categoryFilter === UNCATEGORIZED_KEY ? ' is-active' : ''}`}
-                onClick={() =>
-                  setCategoryFilter(categoryFilter === UNCATEGORIZED_KEY ? '' : UNCATEGORIZED_KEY)
-                }
-              >
-                {UNCATEGORIZED_LABEL} ({uncategorizedCount})
-              </button>
-            ) : null}
+            {categoryChipStats.map(({ cat, total, visible }) => {
+              const filterValue = cat === DEFAULT_CATEGORY ? DEFAULT_CATEGORY : cat;
+              const isActive =
+                categoryFilter === filterValue ||
+                (cat === DEFAULT_CATEGORY && categoryFilter === UNCATEGORIZED_KEY);
+              return (
+                <button
+                  key={cat}
+                  type='button'
+                  className={`admin-chip${isActive ? ' is-active' : ''}`}
+                  onClick={() => setCategoryFilter(isActive ? '' : filterValue)}
+                >
+                  {cat} ({visible}/{total})
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>
@@ -581,39 +608,32 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             onChange={(url) => setEditing({ ...editing, image: url })}
             preset='product'
           />
-          <label>
-            Галерея (URL через новий рядок)
-            <textarea
-              rows={3}
-              value={(editing.images || []).join('\n')}
-              onChange={(e) =>
-                setEditing({
-                  ...editing,
-                  images: e.target.value
-                    .split('\n')
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                })
-              }
-              placeholder='/uploads/…'
-            />
-            <span className='admin-hint'>Додаткові фото крім головного. По одному URL на рядок.</span>
-          </label>
+          <GalleryField
+            label='Галерея'
+            value={editing.images || []}
+            excludeUrl={editing.image}
+            onChange={(images) => setEditing({ ...editing, images })}
+            preset='product'
+          />
           <label>
             Категорія (група на сайті)
             <input
               list='goods-category-suggestions'
               value={editing.category || ''}
               onChange={(e) => setEditing({ ...editing, category: e.target.value })}
-              placeholder='Напр. Телефони, ТВ…'
+              placeholder={`Напр. Телефони, ТВ… (порожньо = ${DEFAULT_CATEGORY})`}
             />
             <datalist id='goods-category-suggestions'>
-              {categorySuggestions.map((cat) => (
-                <option key={cat} value={cat} />
-              ))}
+              {categorySuggestions
+                .filter((cat) => cat !== DEFAULT_CATEGORY)
+                .map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              <option value={DEFAULT_CATEGORY} />
             </datalist>
             <span className='admin-hint'>
-              Опційно. Товари з однаковою категорією утворюють групу в адмінці та на /shop.
+              Опційно. Порожнє поле = «{DEFAULT_CATEGORY}». Однакова назва об’єднує товари в групу в
+              адмінці та на /shop.
             </span>
           </label>
           <label>
@@ -717,9 +737,15 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
                     <button
                       type='button'
                       className='admin-btn admin-btn--secondary admin-btn--sm'
-                      onClick={() =>
-                        setCategoryFilter(categoryFilter === group.key ? '' : group.key)
-                      }
+                      onClick={() => {
+                        const filterValue =
+                          group.key === UNCATEGORIZED_KEY ? DEFAULT_CATEGORY : group.key;
+                        const active =
+                          categoryFilter === filterValue ||
+                          (group.key === UNCATEGORIZED_KEY &&
+                            categoryFilter === UNCATEGORIZED_KEY);
+                        setCategoryFilter(active ? '' : filterValue);
+                      }}
                     >
                       Фільтр
                     </button>

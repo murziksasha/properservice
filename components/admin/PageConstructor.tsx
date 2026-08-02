@@ -630,6 +630,10 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                       />
                     </label>
                     <div className='admin-subhead'>Зображення відгуків</div>
+                    <p className='admin-hint'>
+                      Слайдер фіксує розмір по найбільшому скріну. Краще однаковий кадр (орієнтир —
+                      найвищий, напр. з відповіддю власника).
+                    </p>
                     {(section.images || []).map((img, i) => (
                       <div key={i} className='admin-nested-card'>
                         <ImageField
