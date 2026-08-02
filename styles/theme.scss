@@ -53,6 +53,11 @@ body:has(.admin-body) {
   color-scheme: light;
   background: #f4f6f8;
   color: #1a1a1a;
+  /* Scroll lives in .admin-main only — avoid document scroll pushing the sidebar away */
+  overflow: hidden;
+  height: 100%;
+  max-height: 100%;
+  margin: 0;
 }
 
 /* Public site (no admin shell on page) */

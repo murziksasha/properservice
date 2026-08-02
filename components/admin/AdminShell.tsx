@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { AdminNav } from './AdminNav';
 import { AdminToastHost } from './AdminToast';
 
@@ -41,8 +42,36 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     setMobileOpen(false);
   }, []);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') closeMobile();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [mobileOpen, closeMobile]);
+
   return (
     <div className='admin-body'>
+      {/* Fixed chrome outside the grid — never becomes an extra track that stretches the page. */}
+      <button
+        type='button'
+        className='admin-nav-toggle admin-nav-toggle--mobile'
+        aria-label={mobileOpen ? 'Закрити навігацію' : 'Відкрити навігацію'}
+        aria-expanded={mobileOpen}
+        onClick={toggleMobile}
+      >
+        {mobileOpen ? <X size={22} strokeWidth={2} aria-hidden /> : <Menu size={22} strokeWidth={2} aria-hidden />}
+      </button>
+      {mobileOpen ? (
+        <button
+          type='button'
+          className='admin-nav-overlay'
+          aria-label='Закрити'
+          onClick={closeMobile}
+        />
+      ) : null}
+
       <div
         className={`admin-shell${collapsed && hydrated ? ' admin-shell--nav-collapsed' : ''}${
           mobileOpen ? ' admin-shell--nav-open' : ''
@@ -52,7 +81,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           collapsed={collapsed}
           mobileOpen={mobileOpen}
           onToggleCollapsed={toggleCollapsed}
-          onToggleMobile={toggleMobile}
           onCloseMobile={closeMobile}
         />
         <main className='admin-main'>{children}</main>
