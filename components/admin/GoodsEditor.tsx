@@ -18,6 +18,7 @@ import {
 } from '@/lib/shop-catalog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast } from './AdminToast';
+import { GalleryField } from './GalleryField';
 import { ImageField } from './ImageField';
 
 type ListMode = 'grouped' | 'flat';
@@ -581,24 +582,13 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             onChange={(url) => setEditing({ ...editing, image: url })}
             preset='product'
           />
-          <label>
-            Галерея (URL через новий рядок)
-            <textarea
-              rows={3}
-              value={(editing.images || []).join('\n')}
-              onChange={(e) =>
-                setEditing({
-                  ...editing,
-                  images: e.target.value
-                    .split('\n')
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                })
-              }
-              placeholder='/uploads/…'
-            />
-            <span className='admin-hint'>Додаткові фото крім головного. По одному URL на рядок.</span>
-          </label>
+          <GalleryField
+            label='Галерея'
+            value={editing.images || []}
+            excludeUrl={editing.image}
+            onChange={(images) => setEditing({ ...editing, images })}
+            preset='product'
+          />
           <label>
             Категорія (група на сайті)
             <input

@@ -30,7 +30,12 @@ type FolderRow = { id: string; label: string; count: number };
 type MediaPickerProps = {
   open: boolean;
   onClose: () => void;
-  onSelect: (item: MediaPickerItem) => void;
+  /** Single-select callback (used when multiple is false). */
+  onSelect?: (item: MediaPickerItem) => void;
+  /** Multi-select confirm callback (used when multiple is true). */
+  onSelectMany?: (items: MediaPickerItem[]) => void;
+  /** Allow selecting several images and confirming with a button. */
+  multiple?: boolean;
   purpose?: MediaPurpose | 'all';
   preset?: ImagePresetId | string;
   folderId?: string;
@@ -40,6 +45,8 @@ export function MediaPicker({
   open,
   onClose,
   onSelect,
+  onSelectMany,
+  multiple = false,
   purpose: purposeProp = 'all',
   preset,
   folderId: folderProp,
@@ -58,6 +65,8 @@ export function MediaPicker({
   const [folder, setFolder] = useState<string>(folderProp || 'all');
   const [q, setQ] = useState('');
   const [uploading, setUploading] = useState(false);
+  /** Selected items keyed by name so confirm survives filter changes. */
+  const [selectedMap, setSelectedMap] = useState<Record<string, MediaPickerItem>>({});
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -65,6 +74,7 @@ export function MediaPicker({
       setPurpose(defaultPurpose);
       setFolder(folderProp || 'all');
       setQ('');
+      setSelectedMap({});
     }
   }, [open, defaultPurpose, folderProp]);
 
@@ -108,36 +118,76 @@ export function MediaPicker({
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  async function onUpload(file: File | null) {
-    if (!file) return;
+  function toggleSelect(item: MediaPickerItem) {
+    setSelectedMap((prev) => {
+      if (prev[item.name]) {
+        const next = { ...prev };
+        delete next[item.name];
+        return next;
+      }
+      return { ...prev, [item.name]: item };
+    });
+  }
+
+  function confirmMany() {
+    onSelectMany?.(Object.values(selectedMap));
+    onClose();
+  }
+
+  async function onUploadFiles(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    const files = Array.from(fileList);
     setUploading(true);
     try {
       const uploadPurpose: MediaPurpose =
         purpose !== 'all' ? purpose : purposeFromPreset(preset ? String(preset) : undefined);
       const uploadFolder =
         folder !== 'all' && folder !== 'root' ? folder : undefined;
-      const { url, error } = await uploadImage(file, {
-        preset,
-        purpose: uploadPurpose,
-        folderId: uploadFolder,
-      });
-      if (!url) {
-        showToast(error || 'Помилка upload', 'error');
-        return;
+
+      const uploaded: MediaPickerItem[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const { url, error } = await uploadImage(file, {
+          preset,
+          purpose: uploadPurpose,
+          folderId: uploadFolder,
+        });
+        if (!url) {
+          showToast(error || `Помилка upload (${file.name})`, 'error');
+          continue;
+        }
+        uploaded.push({
+          name: url.split('/').pop() || '',
+          url,
+          size: 0,
+          mtime: new Date().toISOString(),
+          purpose: uploadPurpose,
+          tags: [],
+          folderId: uploadFolder || '',
+          sortOrder: 0,
+        });
       }
-      showToast('Завантажено', 'success');
+
+      if (uploaded.length === 0) return;
+
+      if (uploaded.length === 1 && files.length === 1) {
+        showToast('Завантажено', 'success');
+      } else {
+        showToast(`Завантажено: ${uploaded.length}`, 'success');
+      }
+
       await load();
-      onSelect({
-        name: url.split('/').pop() || '',
-        url,
-        size: 0,
-        mtime: new Date().toISOString(),
-        purpose: uploadPurpose,
-        tags: [],
-        folderId: uploadFolder || '',
-        sortOrder: 0,
-      });
-      onClose();
+
+      if (multiple) {
+        setSelectedMap((prev) => {
+          const next = { ...prev };
+          for (const item of uploaded) next[item.name] = item;
+          return next;
+        });
+      } else {
+        onSelect?.(uploaded[0]);
+        onClose();
+      }
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -146,18 +196,25 @@ export function MediaPicker({
 
   if (!open) return null;
 
+  const selectedCount = Object.keys(selectedMap).length;
+
   return (
     <div className='admin-modal-backdrop' role='presentation' onClick={onClose}>
       <div
         className='admin-modal admin-modal--wide'
         role='dialog'
         aria-modal='true'
-        aria-label='Вибір зображення'
+        aria-label={multiple ? 'Вибір зображень' : 'Вибір зображення'}
         onClick={(e) => e.stopPropagation()}
       >
         <div className='admin-modal__head'>
           <h2 className='admin-h2' style={{ margin: 0 }}>
             Медіатека
+            {multiple && selectedCount > 0 ? (
+              <span className='admin-hint' style={{ fontWeight: 400, marginLeft: 8 }}>
+                вибрано: {selectedCount}
+              </span>
+            ) : null}
           </h2>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={onClose}>
             Закрити
@@ -208,41 +265,75 @@ export function MediaPicker({
             Оновити
           </button>
           <label className='admin-btn' style={{ cursor: uploading ? 'wait' : 'pointer' }}>
-            {uploading ? 'Завантаження…' : 'Завантажити нове'}
+            {uploading ? 'Завантаження…' : multiple ? 'Завантажити' : 'Завантажити нове'}
             <input
               ref={fileRef}
               type='file'
               accept='image/jpeg,image/png,image/webp,image/gif'
+              multiple={multiple}
               hidden
               disabled={uploading}
-              onChange={(e) => void onUpload(e.target.files?.[0] ?? null)}
+              onChange={(e) => void onUploadFiles(e.target.files)}
             />
           </label>
         </div>
+
+        {multiple ? (
+          <p className='admin-hint admin-mb'>
+            Клікніть по фото, щоб вибрати кілька, потім натисніть «Додати».
+          </p>
+        ) : null}
 
         {loading ? <p className='admin-hint'>Завантаження…</p> : null}
         {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
 
         <div className='admin-media-grid admin-media-grid--picker'>
-          {items.map((item) => (
-            <button
-              key={item.name}
-              type='button'
-              className='admin-media-card admin-media-card--pick'
-              onClick={() => {
-                onSelect(item);
-                onClose();
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt={item.alt || item.name} loading='lazy' />
-              <div className='admin-media-meta'>
-                <span title={item.name}>{item.name}</span>
-                <span>{MEDIA_PURPOSES[item.purpose]?.label || item.purpose}</span>
-              </div>
-            </button>
-          ))}
+          {items.map((item) => {
+            const isSelected = Boolean(selectedMap[item.name]);
+            return (
+              <button
+                key={item.name}
+                type='button'
+                className={
+                  'admin-media-card admin-media-card--pick' +
+                  (isSelected ? ' admin-media-card--selected' : '')
+                }
+                aria-pressed={multiple ? isSelected : undefined}
+                onClick={() => {
+                  if (multiple) {
+                    toggleSelect(item);
+                    return;
+                  }
+                  onSelect?.(item);
+                  onClose();
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                <div className='admin-media-meta'>
+                  <span title={item.name}>{item.name}</span>
+                  <span>{MEDIA_PURPOSES[item.purpose]?.label || item.purpose}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
+
+        {multiple ? (
+          <div className='admin-modal__foot'>
+            <button type='button' className='admin-btn admin-btn--secondary' onClick={onClose}>
+              Скасувати
+            </button>
+            <button
+              type='button'
+              className='admin-btn'
+              disabled={selectedCount === 0}
+              onClick={confirmMany}
+            >
+              Додати{selectedCount > 0 ? ` (${selectedCount})` : ''}
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );
