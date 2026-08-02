@@ -1,28 +1,86 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+function getScrollEl(): Element {
+  return document.scrollingElement ?? document.documentElement;
+}
 
 export function PageUp() {
   const [visible, setVisible] = useState(false);
+  const scrollingProgrammatically = useRef(false);
+  const safetyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 400);
+    const onScroll = () => {
+      // Avoid re-hiding mid smooth-scroll (display/focus thrash can cancel it).
+      if (scrollingProgrammatically.current) return;
+      setVisible(window.scrollY > 400);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (safetyTimer.current) clearTimeout(safetyTimer.current);
+    };
   }, []);
+
+  function ensureAtTop() {
+    scrollingProgrammatically.current = false;
+    const el = getScrollEl();
+    if (window.scrollY > 0 || el.scrollTop > 0) {
+      el.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      window.scrollTo(0, 0);
+    }
+    setVisible(window.scrollY > 400);
+  }
 
   function scrollTop() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+    const el = getScrollEl();
+
+    // Blur so hiding/focus changes cannot cancel the in-flight smooth scroll.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
+    if (reduced) {
+      el.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      window.scrollTo(0, 0);
+      setVisible(false);
+      return;
+    }
+
+    scrollingProgrammatically.current = true;
+    if (safetyTimer.current) clearTimeout(safetyTimer.current);
+
+    el.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+
+    const onScrollEnd = () => {
+      el.removeEventListener('scrollend', onScrollEnd);
+      if (safetyTimer.current) {
+        clearTimeout(safetyTimer.current);
+        safetyTimer.current = null;
+      }
+      ensureAtTop();
+    };
+    el.addEventListener('scrollend', onScrollEnd, { once: true });
+
+    // Fallback when scrollend is unsupported or scroll was interrupted.
+    safetyTimer.current = setTimeout(() => {
+      el.removeEventListener('scrollend', onScrollEnd);
+      ensureAtTop();
+      safetyTimer.current = null;
+    }, 900);
   }
 
   return (
     <button
       type='button'
-      className={`pageup${visible ? '' : ' _hide'}`}
+      className={`pageup${visible ? '' : ' pageup--hidden'}`}
       onClick={scrollTop}
       aria-label='Вгору'
+      aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
     >
       <svg className='up' viewBox='0 0 26 26' fill='#fff' xmlns='http://www.w3.org/2000/svg' aria-hidden>
