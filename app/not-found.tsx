@@ -7,7 +7,7 @@ export default async function NotFound() {
   const menu = data.headerMenu.filter((item) => item.visible);
 
   return (
-    <SiteShell settings={data.settings} menu={menu} variant='inner'>
+    <SiteShell settings={data.settings} menu={menu}>
       <section className='not-found wrapper'>
         <p className='not-found__code'>404</p>
         <h1 className='not-found__title _title'>Сторінку не знайдено</h1>

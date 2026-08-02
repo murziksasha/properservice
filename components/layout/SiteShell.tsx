@@ -1,6 +1,5 @@
 import Script from 'next/script';
 import type { MenuItem, SiteSettings } from '@/lib/types';
-import { FaqJsonLd } from '@/components/seo/FaqJsonLd';
 import { LocalBusinessJsonLd } from '@/components/seo/LocalBusinessJsonLd';
 import { Footer } from './Footer';
 import { Header } from './Header';
@@ -10,27 +9,24 @@ import { StickyCallBar } from './StickyCallBar';
 interface SiteShellProps {
   settings: SiteSettings;
   menu: MenuItem[];
-  variant?: 'home' | 'inner';
   children: React.ReactNode;
-  titleSize?: number;
-  textScale?: number;
 }
 
-export function SiteShell({ settings, menu, variant = 'home', children, titleSize, textScale }: SiteShellProps) {
-  const style: React.CSSProperties & Record<string, string | number> = {};
-  if (titleSize) style['--title-size'] = `${titleSize}rem`;
-  if (textScale) style['--text-scale'] = String(textScale);
+/**
+ * Stable public chrome (header / footer / sticky). Prefer wrapping once in
+ * `app/(public)/layout.tsx` so it does not remount between navigations.
+ */
+export function SiteShell({ settings, menu, children }: SiteShellProps) {
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, '') || undefined;
   const gincore = process.env.GINCORE_WIDGETS !== 'false';
 
   return (
-    <div className='container' id='up' style={style}>
+    <div className='container' id='up'>
       <LocalBusinessJsonLd settings={settings} siteUrl={siteUrl} />
-      {variant === 'home' ? <FaqJsonLd /> : null}
       <a className='skip-link' href='#main-content'>
         Перейти до вмісту
       </a>
-      <Header settings={settings} menu={menu} variant={variant} />
+      <Header settings={settings} menu={menu} />
       <main className='main' id='main-content'>
         {children}
       </main>
@@ -51,4 +47,21 @@ export function SiteShell({ settings, menu, variant = 'home', children, titleSiz
       ) : null}
     </div>
   );
+}
+
+/** Per-page CSS scale vars (title size / body text) without remounting chrome. */
+export function PageFrame({
+  titleSize,
+  textScale,
+  children,
+}: {
+  titleSize?: number;
+  textScale?: number;
+  children: React.ReactNode;
+}) {
+  const style: React.CSSProperties & Record<string, string | number> = {};
+  if (titleSize) style['--title-size'] = `${titleSize}rem`;
+  if (textScale) style['--text-scale'] = String(textScale);
+  if (!titleSize && !textScale) return <>{children}</>;
+  return <div style={style}>{children}</div>;
 }

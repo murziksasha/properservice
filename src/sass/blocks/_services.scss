@@ -109,8 +109,20 @@
     left: 62rem;
     z-index: 1;
     pointer-events: none;
+    /* Reserved paint box — avoids layout hole while next hero decodes */
+    min-width: min(50rem, 42vw);
+    min-height: 28rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
 
-    img {
+    .ps-image {
+      width: 100%;
+      max-width: min(50rem, 42vw);
+    }
+
+    img,
+    .ps-image__img {
       z-index: -3;
       width: 50rem;
       max-width: min(50rem, 42vw);
@@ -163,8 +175,11 @@
       display: flex;
       justify-content: center;
       pointer-events: auto;
+      min-width: 0;
+      min-height: 18rem;
 
-      img {
+      img,
+      .ps-image__img {
         max-width: min(100%, 36rem);
         width: 100%;
       }
@@ -229,8 +244,10 @@
 
     &__main-img {
       margin-top: 1.6rem;
+      min-height: 14rem;
 
-      img {
+      img,
+      .ps-image__img {
         max-width: 100%;
       }
     }

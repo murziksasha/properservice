@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
-import { SiteShell } from '@/components/layout/SiteShell';
+import { PageFrame } from '@/components/layout/SiteShell';
 import { SectionRenderer } from '@/components/sections/SectionRenderer';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { collectHeroImages } from '@/lib/hero-images';
 import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -43,17 +44,11 @@ export default async function SlugPage({ params }: PageProps) {
     notFound();
   }
 
-  const menu = data.headerMenu.filter((item) => item.visible);
+  const heroImages = collectHeroImages(data);
 
   if (page.contentHtml?.trim()) {
     return (
-      <SiteShell
-        settings={data.settings}
-        menu={menu}
-        variant='inner'
-        titleSize={page.titleSize}
-        textScale={page.textScale}
-      >
+      <PageFrame titleSize={page.titleSize} textScale={page.textScale}>
         <article className='content-page wrapper'>
           <h1 className='content-page__title _title'>{page.title}</h1>
           <div
@@ -61,25 +56,20 @@ export default async function SlugPage({ params }: PageProps) {
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }}
           />
         </article>
-      </SiteShell>
+      </PageFrame>
     );
   }
 
   return (
-    <SiteShell
-      settings={data.settings}
-      menu={menu}
-      variant='inner'
-      titleSize={page.titleSize}
-      textScale={page.textScale}
-    >
+    <PageFrame titleSize={page.titleSize} textScale={page.textScale}>
       <SectionRenderer
         sections={page.sections}
         servicesNav={data.servicesNav}
         products={data.goods.filter((g) => g.visible)}
         reviewsUrl={data.settings.reviewsUrl}
         settings={data.settings}
+        heroImages={heroImages}
       />
-    </SiteShell>
+    </PageFrame>
   );
 }

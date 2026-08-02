@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { MenuItem, SiteSettings } from '@/lib/types';
 import { formatTelHref } from '@/lib/phone';
@@ -10,7 +11,6 @@ import { ThemeToggle } from './ThemeToggle';
 interface HeaderProps {
   settings: SiteSettings;
   menu: MenuItem[];
-  variant?: 'home' | 'inner';
 }
 
 const SOCIAL_LABELS: Record<string, string> = {
@@ -20,7 +20,9 @@ const SOCIAL_LABELS: Record<string, string> = {
   youtube: 'YouTube',
 };
 
-export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
+export function Header({ settings, menu }: HeaderProps) {
+  const pathname = usePathname();
+  const isHome = pathname === '/';
   const [open, setOpen] = useState(false);
   const visibleMenu = menu.filter((item) => item.visible);
   const burgerRef = useRef<HTMLButtonElement>(null);
@@ -115,7 +117,7 @@ export function Header({ settings, menu, variant = 'home' }: HeaderProps) {
             aria-label='Головне меню'
           >
             <ul className='menu__list'>
-              {variant === 'inner' ? (
+              {!isHome ? (
                 <li>
                   <Link href='/' className='_list-reset' onClick={() => setOpen(false)}>
                     На головну

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
-import { SiteShell } from '@/components/layout/SiteShell';
+import { PageFrame } from '@/components/layout/SiteShell';
 import { SectionRenderer } from '@/components/sections/SectionRenderer';
+import { FaqJsonLd } from '@/components/seo/FaqJsonLd';
+import { collectHeroImages } from '@/lib/hero-images';
 import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -27,37 +29,29 @@ export default async function HomePage() {
   const data = await getSiteData();
   const page =
     data.pages.find((p) => p.slug === '' && p.visible) ?? data.pages.find((p) => p.id === 'home');
+  const heroImages = collectHeroImages(data);
 
   if (!page) {
-    const menu = data.headerMenu.filter((item) => item.visible);
     return (
-      <SiteShell settings={data.settings} menu={menu} variant='home'>
-        <section className='not-found wrapper'>
-          <p className='not-found__code'>404</p>
-          <h1 className='not-found__title _title'>Сторінку не знайдено</h1>
-          <p className='not-found__text _paragr'>Головну сторінку не налаштовано в CMS.</p>
-        </section>
-      </SiteShell>
+      <section className='not-found wrapper'>
+        <p className='not-found__code'>404</p>
+        <h1 className='not-found__title _title'>Сторінку не знайдено</h1>
+        <p className='not-found__text _paragr'>Головну сторінку не налаштовано в CMS.</p>
+      </section>
     );
   }
 
-  const menu = data.headerMenu.filter((item) => item.visible);
-
   return (
-    <SiteShell
-      settings={data.settings}
-      menu={menu}
-      variant='home'
-      titleSize={page.titleSize}
-      textScale={page.textScale}
-    >
+    <PageFrame titleSize={page.titleSize} textScale={page.textScale}>
+      <FaqJsonLd />
       <SectionRenderer
         sections={page.sections}
         servicesNav={data.servicesNav}
         products={data.goods.filter((g) => g.visible)}
         reviewsUrl={data.settings.reviewsUrl}
         settings={data.settings}
+        heroImages={heroImages}
       />
-    </SiteShell>
+    </PageFrame>
   );
 }

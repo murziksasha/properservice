@@ -15,6 +15,8 @@ interface SectionRendererProps {
   products: Product[];
   reviewsUrl?: string;
   settings?: SiteSettings;
+  /** href/slug → hero image for service nav prefetch */
+  heroImages?: Record<string, string>;
 }
 
 export function SectionRenderer({
@@ -23,6 +25,7 @@ export function SectionRenderer({
   products,
   reviewsUrl,
   settings,
+  heroImages,
 }: SectionRendererProps) {
   const visible = sections.filter((s) => s.visible);
   const advantages = visible.find((s) => s.type === 'advantages');
@@ -37,12 +40,23 @@ export function SectionRenderer({
       {visible.map((section) => {
         switch (section.type) {
           case 'hero':
-            return <HeroSection key={section.id} section={section} servicesNav={servicesNav} />;
+            return (
+              <HeroSection
+                key={section.id}
+                section={section}
+                servicesNav={servicesNav}
+                heroImages={heroImages}
+              />
+            );
           case 'services-nav':
             if (hasHero) return null;
             return (
               <div key={section.id} className='wrapper' style={{ paddingTop: '1.5rem' }}>
-                <ServicesNav items={servicesNav} activeSlug={section.activeSlug} />
+                <ServicesNav
+                  items={servicesNav}
+                  activeSlug={section.activeSlug}
+                  heroImages={heroImages}
+                />
               </div>
             );
           case 'advantages':
