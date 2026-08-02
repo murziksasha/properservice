@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import type { MalfunctionsSection as MalfunctionsSectionType } from '@/lib/types';
+import { PublicImage } from '@/components/ui/PublicImage';
 
 export function MalfunctionsSection({ section }: { section: MalfunctionsSectionType }) {
   return (
@@ -20,12 +20,13 @@ export function MalfunctionsSection({ section }: { section: MalfunctionsSectionT
           </ul>
         </div>
         <div className="malfunctions__right-side">
-          <Image
+          <PublicImage
             src={section.image}
             alt={section.imageAlt}
             width={400}
             height={300}
             className={section.imageClass ?? 'malfunctions__img'}
+            sizes="(max-width: 768px) 90vw, 400px"
           />
         </div>
       </div>

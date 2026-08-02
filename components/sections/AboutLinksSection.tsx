@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { AboutLinksSection as AboutLinksSectionType } from '@/lib/types';
+import { PublicImage } from '@/components/ui/PublicImage';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { AdvantagesSection } from './AdvantagesSection';
 import type { AdvantagesSection as AdvantagesSectionType } from '@/lib/types';
@@ -28,12 +28,13 @@ export function AboutLinksSection({
           {section.items.map((item) => (
             <div key={`${item.href}-${item.label}`} className='about-link__item'>
               <Link href={item.href} className='about-link__link'>
-                <Image
+                <PublicImage
                   src={item.image}
                   alt={item.imageAlt || item.label}
                   className='about-link__img'
                   width={220}
                   height={220}
+                  sizes='(max-width: 600px) 40vw, 220px'
                 />
                 <span className='about-link__descr'>{item.label}</span>
               </Link>

@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import type { HeroSection as HeroSectionType } from '@/lib/types';
 import { CallbackForm } from '@/components/forms/CallbackForm';
+import { PublicImage } from '@/components/ui/PublicImage';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { ServicesNav } from './ServicesNav';
 import type { ServiceNavItem } from '@/lib/types';
@@ -8,14 +8,21 @@ import type { ServiceNavItem } from '@/lib/types';
 export function HeroSection({
   section,
   servicesNav,
+  heroImages,
 }: {
   section: HeroSectionType;
   servicesNav: ServiceNavItem[];
+  /** slug/href → hero image for idle prefetch of sibling service pages */
+  heroImages?: Record<string, string>;
 }) {
   return (
     <div className="services">
       <div className="wrapper services__wrapper">
-        <ServicesNav items={servicesNav} activeSlug={section.activeServiceSlug} />
+        <ServicesNav
+          items={servicesNav}
+          activeSlug={section.activeServiceSlug}
+          heroImages={heroImages}
+        />
         <aside className="services__aside">
           <div className="services__top">
             <h1 className="services__title _title" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }} />
@@ -37,12 +44,15 @@ export function HeroSection({
             />
           </div>
           <div className={`services__main-img${section.imageClass ? ` ${section.imageClass}` : ''}`}>
-            <Image
+            <PublicImage
               src={section.image}
               alt={section.imageAlt}
               width={500}
               height={400}
               className={section.imageClass}
+              sizes="(max-width: 900px) 90vw, 500px"
+              priority
+              viewTransitionName="service-hero"
             />
           </div>
         </aside>

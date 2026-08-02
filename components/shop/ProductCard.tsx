@@ -1,13 +1,13 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { Product } from '@/lib/types';
+import { PublicImage } from '@/components/ui/PublicImage';
 
 export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="shop-card">
       <Link href={`/shop/${product.id}`} className="shop-card__link">
         <div className="shop-card__image">
-          <Image
+          <PublicImage
             src={product.image}
             alt={product.title}
             width={240}
