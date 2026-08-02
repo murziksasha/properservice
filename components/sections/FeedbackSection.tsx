@@ -101,8 +101,9 @@ export function FeedbackSection({
                 src={src}
                 alt={`Відгук ${i + 1} з ${count}`}
                 width={800}
-                height={500}
-                priority={i === 0}
+                height={600}
+                sizes='(max-width: 80rem) 100vw, 80rem'
+                priority={i === 0 || i === 2}
               />
             </div>
           ))}

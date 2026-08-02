@@ -65,6 +65,7 @@ Secret: `SESSION_SECRET` (або fallback `ADMIN_PASSWORD` / dev default).
 - `app/[slug]/page.tsx` — CMS pages
 - `app/shop/*` — catalog (`ShopCatalog`: search / sort / category)
 - `force-dynamic` — актуальний контент без ISR (file CMS)
+- **Feedback carousel** (`FeedbackSection`): CSS grid stack — усі слайди в одній комірці, розмір viewport = max по контенту (найвищий/найширший скрін); перемикання без layout shift. Зображення з `section.images`, CTA «більше відгуків» з `settings.reviewsUrl`.
 
 HTML з CMS проходить `sanitizeHtml()` перед `dangerouslySetInnerHTML`.
 
