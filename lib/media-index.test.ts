@@ -6,6 +6,7 @@ import {
   createMediaFolder,
   deleteMediaFolder,
   isSafeFolderId,
+  moveMediaToFolder,
   patchMediaMeta,
   readMediaIndex,
   reorderMediaItems,
@@ -86,5 +87,31 @@ describe('media-index folders', () => {
     index = await readMediaIndex();
     expect(index.folders).toHaveLength(0);
     expect(index.items.every((i) => i.folderId === '')).toBe(true);
+  });
+
+  it('bulk-moves items into a folder and back to root', async () => {
+    const folder = await createMediaFolder('logo');
+    await upsertMediaMeta({ name: 'a.webp', purpose: 'other', tags: [] });
+    await upsertMediaMeta({ name: 'b.webp', purpose: 'other', tags: [] });
+    await upsertMediaMeta({ name: 'c.webp', purpose: 'other', tags: [] });
+
+    const r1 = await moveMediaToFolder(['a.webp', 'b.webp', 'missing.webp'], folder.id);
+    expect(r1.moved).toBe(2);
+    expect(r1.missing).toEqual(['missing.webp']);
+
+    let index = await readMediaIndex();
+    expect(index.items.find((i) => i.name === 'a.webp')?.folderId).toBe(folder.id);
+    expect(index.items.find((i) => i.name === 'b.webp')?.folderId).toBe(folder.id);
+    expect(index.items.find((i) => i.name === 'c.webp')?.folderId).toBe('');
+
+    const r2 = await moveMediaToFolder(['a.webp'], '');
+    expect(r2.moved).toBe(1);
+    index = await readMediaIndex();
+    expect(index.items.find((i) => i.name === 'a.webp')?.folderId).toBe('');
+
+    const r3 = await moveMediaToFolder(['b.webp'], 'not-a-real-folder');
+    expect(r3.moved).toBe(1);
+    index = await readMediaIndex();
+    expect(index.items.find((i) => i.name === 'b.webp')?.folderId).toBe('');
   });
 });

@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "folders": [
+    {
+      "id": "logo",
+      "label": "logo",
+      "sortOrder": 0
+    },
+    {
+      "id": "others",
+      "label": "others",
+      "sortOrder": 1
+    }
+  ],
+  "items": [
+    {
+      "name": "1782059169408-621vs3.png",
+      "url": "/uploads/1782059169408-621vs3.png",
+      "purpose": "other",
+      "tags": [],
+      "folderId": "others",
+      "sortOrder": 0,
+      "createdAt": "2026-08-03T03:27:43.922Z",
+      "updatedAt": "2026-08-03T04:14:23.687Z"
+    },
+    {
+      "name": "1782074591013-cituuf.jpg",
+      "url": "/uploads/1782074591013-cituuf.jpg",
+      "purpose": "other",
+      "tags": [],
+      "folderId": "logo",
+      "sortOrder": 0,
+      "createdAt": "2026-08-03T03:27:16.620Z",
+      "updatedAt": "2026-08-03T03:27:16.620Z"
+    }
+  ]
+}
