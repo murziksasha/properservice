@@ -1,5 +1,5 @@
 /* Proper Service — lightweight offline shell (no build step). */
-const CACHE = 'ps-shell-v3';
+const CACHE = 'ps-shell-v4';
 const PRECACHE = ['/offline.html', '/manifest.webmanifest', '/img/icons/logo.png', '/img/icons/favicon.ico'];
 
 self.addEventListener('install', (event) => {
@@ -33,6 +33,13 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (isAdminOrApi(url)) return;
 
+  // Next.js build assets: always network, never cache in SW.
+  // Hashed files change every deploy; cache-first here causes stale/broken shells
+  // (HTML references new chunks, SW may surface opaque/error HTML as "stylesheet").
+  if (url.pathname.startsWith('/_next/')) {
+    return;
+  }
+
   // Navigations: network first, offline fallback
   if (req.mode === 'navigate') {
     event.respondWith(
@@ -60,12 +67,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Same-origin static assets: cache-first, then network
+  // Public img / fonts only (not Next hashed bundles)
   if (
-    url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/img/') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.woff') ||
     url.pathname.endsWith('.woff2') ||
     url.pathname.endsWith('.png') ||
@@ -73,7 +77,10 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.jpeg') ||
     url.pathname.endsWith('.webp') ||
     url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.ico')
+    url.pathname.endsWith('.ico') ||
+    url.pathname.endsWith('.otf') ||
+    url.pathname.endsWith('.ttf') ||
+    url.pathname.endsWith('.eot')
   ) {
     event.respondWith(
       caches.match(req).then((cached) => {
