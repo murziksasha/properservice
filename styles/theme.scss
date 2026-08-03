@@ -204,9 +204,115 @@ body:not(:has(.admin-body)) .content-page__body {
   color: var(--ps-text);
 }
 
+/* Brand page-up: white chevron on green — always readable */
 body:not(:has(.admin-body)) .pageup {
-  background-color: var(--ps-surface);
+  background-color: var(--ps-brand);
+  border-color: transparent;
+  color: #fff;
+}
+
+body:not(:has(.admin-body)) .pageup:hover {
+  background-color: var(--ps-brand-hover);
+  color: #fff;
+}
+
+/* About / services grid band */
+body:not(:has(.admin-body)) .about-link__wrapper {
+  background: var(--ps-bg);
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .about-link__title {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .about-link__paragr {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .about-link__callback {
+  background: var(--ps-surface);
+  color: var(--ps-text);
+}
+
+/* Contacts card */
+body:not(:has(.admin-body)) .contacts__wrapper {
+  background: var(--ps-card-bg);
+  color: var(--ps-text);
+  box-shadow: var(--ps-shadow);
+}
+
+body:not(:has(.admin-body)) .contacts__title,
+body:not(:has(.admin-body)) .contacts__par-bold,
+body:not(:has(.admin-body)) .contacts__par,
+body:not(:has(.admin-body)) .contacts__phone,
+body:not(:has(.admin-body)) .contacts__mail {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .contacts__mail a {
+  color: var(--ps-brand);
+}
+
+body:not(:has(.admin-body)) .contacts__callback {
+  background: var(--ps-brand);
+  color: #fff;
+}
+
+/* Feedback */
+body:not(:has(.admin-body)) .feedback__status {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .feedback-btn,
+body:not(:has(.admin-body)) .feedback-btn a {
+  color: var(--ps-brand);
+}
+
+body:not(:has(.admin-body)) .feedback .left-arrow,
+body:not(:has(.admin-body)) .feedback .right-arrow {
+  background: var(--ps-surface);
+  color: var(--ps-text);
+  border: 1px solid var(--ps-border);
+}
+
+/* Shop empty / titles (in case source hardcodes win) */
+body:not(:has(.admin-body)) .shop-empty {
+  background: var(--ps-surface-2);
+  color: var(--ps-text);
   border-color: var(--ps-border);
+}
+
+body:not(:has(.admin-body)) .shop-empty__hint {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .shop-section__title,
+body:not(:has(.admin-body)) .shop-page__title {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .shop-section__subtitle,
+body:not(:has(.admin-body)) .shop-page__subtitle {
+  color: var(--ps-muted);
+}
+
+/* Malfunctions / misc public text */
+body:not(:has(.admin-body)) .malfunctions,
+body:not(:has(.admin-body)) .malfunctions__item {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .not-found__text {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .line__circle,
+body:not(:has(.admin-body)) .line-circle {
+  border-color: var(--ps-border);
+}
+
+body:not(:has(.admin-body)) ._list-reset {
   color: var(--ps-text);
 }
 

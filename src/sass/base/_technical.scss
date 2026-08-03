@@ -1,7 +1,7 @@
 ._list-reset {
   text-decoration: none;
 	transition: all .4s;
-	color: #000;
+	color: var(--ps-text, #000);
 	&:hover{
 			font-weight: 500;
 			border-bottom: 4px solid $main-color;

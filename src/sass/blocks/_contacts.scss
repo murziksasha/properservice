@@ -3,8 +3,9 @@
 
   &__wrapper {
     padding: 5.7rem 7.2rem 4.9rem;
-    background: #FFFFFF;
-    box-shadow: 2px 10px 30px 10px rgba(0, 0, 0, 0.15);
+    background: var(--ps-card-bg, #fff);
+    color: var(--ps-text, #1a1a1a);
+    box-shadow: var(--ps-shadow, 2px 10px 30px 10px rgba(0, 0, 0, 0.15));
     border-radius: 95px;
   }
 
@@ -35,6 +36,7 @@
     font-size: 4.7rem;
     line-height: 128%;
     margin-bottom: 3.2rem;
+    color: var(--ps-text, #1a1a1a);
   }
 
   &__par-bold {
@@ -43,6 +45,7 @@
     font-size: 2.5rem;
     line-height: 125%;
     margin-bottom: 3rem;
+    color: var(--ps-text, #1a1a1a);
   }
 
   &__par {
@@ -50,6 +53,7 @@
     font-size: 20px;
     line-height: 135%;
     margin-bottom: 3rem;
+    color: var(--ps-text, #1a1a1a);
   }
 
   &__phone {
@@ -58,6 +62,7 @@
     font-size: 20px;
     line-height: 125%;
     margin-bottom: 3rem;
+    color: var(--ps-text, #1a1a1a);
     & a {
       color: inherit;
     }
@@ -68,6 +73,11 @@
     font-size: 20px;
     line-height: 125%;
     margin-bottom: 3rem;
+    color: var(--ps-text, #1a1a1a);
+
+    a {
+      color: var(--ps-brand, #{$main-color});
+    }
   }
 
   &__social {
@@ -99,24 +109,25 @@
     min-width: 0;
     width: 100%;
     max-width: 75rem;
-    background: $main-color;
+    background: var(--ps-brand, #{$main-color});
     box-shadow: 0px 4px 25px rgba(0, 0, 0, 0.35);
     & input._callback__phone{
-      background: rgba(255, 255, 255, 0.85);
-      color: #1a1a1a;
+      background: var(--ps-input-bg, rgba(255, 255, 255, 0.92));
+      color: var(--ps-text, #1a1a1a);
+      border-color: transparent;
     }
     & button._callback__btn{
-      background: #FFFFFF;
+      background: #fff;
       box-shadow: 0px 8px 8px rgba(17, 107, 62, 0.5);
-      color: $main-color;
+      color: var(--ps-brand, #{$main-color});
       font-weight: 600;
       font-size: 1.8rem;
       line-height: 130%;
       text-transform: uppercase;
       @media (hover: hover) {
         &:hover{
-          background: #e8f7ef;
-          color: $main-color;
+          background: var(--ps-brand-soft, #e8f7ef);
+          color: var(--ps-brand, #{$main-color});
         }
       }
       &:focus-visible {
