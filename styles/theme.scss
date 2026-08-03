@@ -67,6 +67,12 @@ body:not(:has(.admin-body)) {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* Main chrome + content: never leave light surfaces with dark-theme text tokens */
+body:not(:has(.admin-body)) .container {
+  background-color: var(--ps-surface);
+  color: var(--ps-text);
+}
+
 body:not(:has(.admin-body)) .header {
   background: var(--ps-header-bg);
   transition: background-color 0.25s ease;
@@ -77,6 +83,26 @@ body:not(:has(.admin-body)) .header__overlay {
 }
 
 body:not(:has(.admin-body)) .menu__link {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .header__contact_time {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .services-nav {
+  background-color: var(--ps-surface-2);
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .services-nav__item {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .services__title,
+body:not(:has(.admin-body)) .services__about-info,
+body:not(:has(.admin-body)) ._title,
+body:not(:has(.admin-body)) ._paragr {
   color: var(--ps-text);
 }
 
@@ -152,6 +178,36 @@ body:not(:has(.admin-body)) .status {
   background: var(--ps-brand-soft);
   color: var(--ps-text);
   border-color: var(--ps-brand);
+}
+
+body:not(:has(.admin-body)) .advantages__wrapper {
+  background-color: var(--ps-card-bg);
+  color: var(--ps-text);
+  box-shadow: var(--ps-shadow);
+}
+
+body:not(:has(.admin-body)) ._callback {
+  background: var(--ps-surface-2);
+  color: var(--ps-text);
+  border-color: var(--ps-border);
+}
+
+body:not(:has(.admin-body)) ._callback__phone {
+  background: var(--ps-input-bg);
+  color: var(--ps-text);
+  border-color: var(--ps-input-border);
+}
+
+body:not(:has(.admin-body)) .content-page,
+body:not(:has(.admin-body)) .content-page__title,
+body:not(:has(.admin-body)) .content-page__body {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .pageup {
+  background-color: var(--ps-surface);
+  border-color: var(--ps-border);
+  color: var(--ps-text);
 }
 
 /* Theme toggle */

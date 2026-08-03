@@ -15,7 +15,9 @@ body {
   display: flex;
   flex-direction: column;
   margin: 0 auto;
-  background-color: #fff;
+  /* Theme-aware: hardcoded #fff broke dark mode (light --ps-text on white). */
+  background-color: var(--ps-surface, #fff);
+  color: var(--ps-text, #1a1a1a);
 }
 
 .wrapper {
