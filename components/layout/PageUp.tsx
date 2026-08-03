@@ -83,12 +83,12 @@ export function PageUp() {
       aria-hidden={!visible}
       tabIndex={visible ? 0 : -1}
     >
-      <svg className='up' viewBox='0 0 26 26' fill='#fff' xmlns='http://www.w3.org/2000/svg' aria-hidden>
+      <svg className='up' viewBox='0 0 26 26' fill='currentColor' xmlns='http://www.w3.org/2000/svg' aria-hidden>
         <path
           fillRule='evenodd'
           clipRule='evenodd'
           d='M26 0H0V26H26V0ZM4.6593 17.7519L13.1233 10.33L21.5873 17.7519L22.9059 16.2481L13.7826 8.24813L13.1233 7.67L12.464 8.24813L3.3407 16.2481L4.6593 17.7519Z'
-          fill='black'
+          fill='currentColor'
         />
       </svg>
     </button>

@@ -33,16 +33,20 @@ main.main {
 }
 
 .pageup {
-  width: 26px;
-  height: 26px;
-  padding: 0;
+  width: 4rem;
+  height: 4rem;
+  padding: 0.7rem;
   position: fixed;
   bottom: 100px;
   right: 5%;
   z-index: 40;
-  background-color: #fff;
+  /* Brand fill + white arrow: readable in light and dark */
+  background-color: var(--ps-brand, #02a653);
+  color: #fff;
   cursor: pointer;
-  border: 1px solid white;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  box-shadow: var(--ps-shadow, 0 4px 14px rgba(0, 0, 0, 0.18));
   transition: 0.2s transform ease, 0.2s background-color ease, 0.2s opacity ease;
   appearance: none;
   line-height: 0;
@@ -62,13 +66,14 @@ main.main {
 }
 
 .pageup:hover {
-  transform: scale(1.1);
-  background-color: #d6cccb;
-  border: 1px solid #d6cccb;
+  transform: scale(1.08);
+  background-color: var(--ps-brand-hover, #02964b);
+  border-color: transparent;
+  color: #fff;
 }
 
 .pageup:focus-visible {
-  outline: 2px solid #02a653;
+  outline: 2px solid var(--ps-brand, #02a653);
   outline-offset: 3px;
 }
 
@@ -92,7 +97,7 @@ main.main {
 
   &__text {
     margin-bottom: 2.4rem;
-    color: #444;
+    color: var(--ps-muted, #444);
   }
 
   &__actions {
