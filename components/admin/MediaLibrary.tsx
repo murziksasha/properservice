@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent as ReactDragEvent,
+} from 'react';
 import { uploadImage } from '@/lib/admin/uploadImage';
 import { parseRetryAfterSeconds, rateLimitMessage } from '@/lib/admin/rateLimitUi';
 import { reorderItems } from '@/lib/admin/reorder';
@@ -16,6 +22,8 @@ import {
   type MediaPurpose,
 } from '@/lib/media-purpose';
 import { showToast } from './AdminToast';
+
+const MEDIA_NAMES_MIME = 'application/x-media-names';
 
 interface MediaItem {
   name: string;
@@ -47,6 +55,18 @@ function formatBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function parseMediaNames(dt: DataTransfer): string[] {
+  try {
+    const raw = dt.getData(MEDIA_NAMES_MIME) || dt.getData('text/plain');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((n): n is string => typeof n === 'string' && n.trim() !== '');
+  } catch {
+    return [];
+  }
+}
+
 export function MediaLibrary() {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [folders, setFolders] = useState<FolderRow[]>([]);
@@ -67,6 +87,11 @@ export function MediaLibrary() {
   const [editFolderId, setEditFolderId] = useState('');
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [bulkFolderId, setBulkFolderId] = useState('');
+  const [folderDropTarget, setFolderDropTarget] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
+  const [dragMoveActive, setDragMoveActive] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
@@ -166,6 +191,12 @@ export function MediaLibrary() {
         return;
       }
       showToast('Видалено', 'success');
+      setSelected((prev) => {
+        if (!prev.has(name)) return prev;
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
       await load();
     } catch {
       showToast('Мережева помилка', 'error');
@@ -272,6 +303,57 @@ export function MediaLibrary() {
     }
   }
 
+  async function moveNamesToFolder(names: string[], targetFolderId: string) {
+    const unique = [...new Set(names.filter(Boolean))];
+    if (unique.length === 0) return;
+
+    const normalizedTarget =
+      targetFolderId === 'root' || targetFolderId === '__root' ? '' : targetFolderId;
+
+    const alreadyThere = unique.every((name) => {
+      const item = items.find((i) => i.name === name);
+      const current = item?.folderId || '';
+      return current === normalizedTarget;
+    });
+    if (alreadyThere && unique.every((n) => items.some((i) => i.name === n))) {
+      showToast('Уже в цій папці', 'info');
+      return;
+    }
+
+    setMoving(true);
+    try {
+      const res = await fetch('/api/media', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          names: unique,
+          folderId: normalizedTarget || 'root',
+        }),
+      });
+      if (!res.ok) {
+        if (res.status === 429) {
+          const sec = parseRetryAfterSeconds(res, 60);
+          showToast(rateLimitMessage(sec, 'upload'), 'error');
+          return;
+        }
+        showToast('Не вдалося перемістити', 'error');
+        return;
+      }
+      const json = (await res.json()) as { moved?: number };
+      const n = json.moved ?? unique.length;
+      showToast(
+        n === 1 ? 'Переміщено 1 файл' : `Переміщено ${n} файлів`,
+        'success',
+      );
+      setSelected(new Set());
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    } finally {
+      setMoving(false);
+    }
+  }
+
   async function persistOrder(nextItems: MediaItem[]) {
     const orderedNames = nextItems.map((i) => i.name);
     const reorderFolderId =
@@ -300,8 +382,93 @@ export function MediaLibrary() {
     void persistOrder(next);
   }
 
+  function toggleSelect(name: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
+
+  function selectAllVisible() {
+    setSelected(new Set(items.map((i) => i.name)));
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function onCardDragStart(e: ReactDragEvent, item: MediaItem, index: number) {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, textarea, label, a')) {
+      e.preventDefault();
+      return;
+    }
+    if (editing === item.name) {
+      e.preventDefault();
+      return;
+    }
+
+    const isReorderHandle = Boolean(target.closest('.admin-drag-handle'));
+    if (isReorderHandle && canDnD) {
+      setDragIndex(index);
+      setDragMoveActive(false);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.name);
+      return;
+    }
+
+    // Folder move: selected set if this card is selected, else single file
+    const names =
+      selected.has(item.name) && selected.size > 0
+        ? [...selected]
+        : [item.name];
+    setDragMoveActive(true);
+    setDragIndex(null);
+    e.dataTransfer.effectAllowed = 'move';
+    const payload = JSON.stringify(names);
+    e.dataTransfer.setData(MEDIA_NAMES_MIME, payload);
+    e.dataTransfer.setData('text/plain', payload);
+  }
+
+  function onCardDragEnd() {
+    setDragIndex(null);
+    setDragOverIndex(null);
+    setFolderDropTarget(null);
+    setDragMoveActive(false);
+  }
+
+  function onFolderDragOver(e: ReactDragEvent, targetId: string) {
+    if (!dragMoveActive && !e.dataTransfer.types.includes(MEDIA_NAMES_MIME)) {
+      // Still allow when types list has text/plain from our drag
+      const types = [...e.dataTransfer.types];
+      if (!types.includes(MEDIA_NAMES_MIME) && !types.includes('text/plain')) return;
+    }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setFolderDropTarget(targetId);
+  }
+
+  function onFolderDragLeave(e: ReactDragEvent, targetId: string) {
+    const related = e.relatedTarget as Node | null;
+    if (related && (e.currentTarget as HTMLElement).contains(related)) return;
+    setFolderDropTarget((cur) => (cur === targetId ? null : cur));
+  }
+
+  function onFolderDrop(e: ReactDragEvent, targetId: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    setFolderDropTarget(null);
+    setDragMoveActive(false);
+    const names = parseMediaNames(e.dataTransfer);
+    if (names.length === 0) return;
+    void moveNamesToFolder(names, targetId === 'root' ? '' : targetId);
+  }
+
   const canDnD = sort === 'manual' && folder !== 'all';
   const totalBytes = items.reduce((s, i) => s + i.size, 0);
+  const selectedCount = selected.size;
 
   return (
     <div className='admin-media-layout'>
@@ -319,18 +486,34 @@ export function MediaLibrary() {
         </button>
         <button
           type='button'
-          className={`admin-folder-item${folder === 'root' ? ' is-active' : ''}`}
+          className={`admin-folder-item${folder === 'root' ? ' is-active' : ''}${
+            folderDropTarget === 'root' ? ' is-drop-target' : ''
+          }`}
           onClick={() => setFolder('root')}
+          onDragOver={(e) => onFolderDragOver(e, 'root')}
+          onDragLeave={(e) => onFolderDragLeave(e, 'root')}
+          onDrop={(e) => onFolderDrop(e, 'root')}
         >
           <span>Без папки</span>
           <span className='admin-folder-count'>{counts.root}</span>
         </button>
         {folders.map((f) => (
-          <div key={f.id} className='admin-folder-row'>
+          <div
+            key={f.id}
+            className={`admin-folder-row${folderDropTarget === f.id ? ' is-drop-target' : ''}`}
+            onDragOver={(e) => onFolderDragOver(e, f.id)}
+            onDragLeave={(e) => onFolderDragLeave(e, f.id)}
+            onDrop={(e) => onFolderDrop(e, f.id)}
+          >
             <button
               type='button'
-              className={`admin-folder-item${folder === f.id ? ' is-active' : ''}`}
+              className={`admin-folder-item${folder === f.id ? ' is-active' : ''}${
+                folderDropTarget === f.id ? ' is-drop-target' : ''
+              }`}
               onClick={() => setFolder(f.id)}
+              onDragOver={(e) => onFolderDragOver(e, f.id)}
+              onDragLeave={(e) => onFolderDragLeave(e, f.id)}
+              onDrop={(e) => onFolderDrop(e, f.id)}
             >
               <span title={f.label}>{f.label}</span>
               <span className='admin-folder-count'>{f.count}</span>
@@ -373,7 +556,8 @@ export function MediaLibrary() {
           </button>
         </div>
         <p className='admin-hint' style={{ marginBottom: 0 }}>
-          Віртуальні папки: URL файлів не змінюються.
+          Віртуальні папки: URL файлів не змінюються. Перетягніть файл на папку,
+          використайте виділення або кнопку «Мета».
         </p>
       </aside>
 
@@ -498,131 +682,198 @@ export function MediaLibrary() {
           </button>
         </div>
 
+        {selectedCount > 0 ? (
+          <div
+            className='admin-media-bulk-bar admin-mb'
+            role='region'
+            aria-label='Дії з виділеними файлами'
+          >
+            <span className='admin-media-bulk-count' aria-live='polite'>
+              Обрано {selectedCount}
+            </span>
+            <label className='admin-inline-label'>
+              Папка
+              <select
+                value={bulkFolderId}
+                onChange={(e) => setBulkFolderId(e.target.value)}
+                disabled={moving}
+                aria-label='Цільова папка для переміщення'
+              >
+                <option value=''>Без папки</option>
+                {folders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type='button'
+              className='admin-btn'
+              disabled={moving}
+              onClick={() => void moveNamesToFolder([...selected], bulkFolderId)}
+            >
+              {moving ? 'Переміщення…' : 'Перемістити'}
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary'
+              disabled={moving || items.length === 0}
+              onClick={selectAllVisible}
+            >
+              Обрати всі видимі
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary'
+              disabled={moving}
+              onClick={clearSelection}
+            >
+              Зняти виділення
+            </button>
+          </div>
+        ) : null}
+
         {loading ? <p className='admin-hint'>Завантаження…</p> : null}
         {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
 
         <div className='admin-media-grid'>
-          {items.map((item, index) => (
-            <div
-              key={item.name}
-              className={`admin-media-card${
-                dragIndex === index ? ' is-dragging' : ''
-              }${dragOverIndex === index && dragIndex !== index ? ' is-drop-target' : ''}`}
-              draggable={canDnD}
-              onDragStart={(e) => {
-                if (!canDnD || !(e.target as HTMLElement).closest('.admin-drag-handle')) {
+          {items.map((item, index) => {
+            const isSelected = selected.has(item.name);
+            return (
+              <div
+                key={item.name}
+                className={`admin-media-card${
+                  dragIndex === index ? ' is-dragging' : ''
+                }${dragOverIndex === index && dragIndex !== index ? ' is-drop-target' : ''}${
+                  isSelected ? ' is-checked' : ''
+                }`}
+                draggable={editing !== item.name}
+                onDragStart={(e) => onCardDragStart(e, item, index)}
+                onDragEnd={onCardDragEnd}
+                onDragOver={(e) => {
+                  if (!canDnD || dragIndex == null) return;
                   e.preventDefault();
-                  return;
-                }
-                setDragIndex(index);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onDragEnd={() => {
-                setDragIndex(null);
-                setDragOverIndex(null);
-              }}
-              onDragOver={(e) => {
-                if (!canDnD) return;
-                e.preventDefault();
-                setDragOverIndex(index);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (dragIndex != null) onReorder(dragIndex, index);
-                setDragIndex(null);
-                setDragOverIndex(null);
-              }}
-            >
-              {canDnD ? (
-                <div className='admin-drag-handle' title='Перетягніть для порядку' aria-hidden>
-                  ⠿
-                </div>
-              ) : null}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt={item.alt || item.name} loading='lazy' />
-              <div className='admin-media-meta'>
-                <span title={item.name}>{item.name}</span>
-                <span>
-                  {MEDIA_PURPOSES[item.purpose]?.label || item.purpose} · {formatBytes(item.size)}
-                </span>
-                {item.tags?.length ? (
-                  <span className='admin-media-tags'>{item.tags.join(', ')}</span>
-                ) : null}
-              </div>
-
-              {editing === item.name ? (
-                <div className='admin-media-edit'>
-                  <label className='admin-inline-label'>
-                    Роль
-                    <select
-                      value={editPurpose}
-                      onChange={(e) => setEditPurpose(e.target.value as MediaPurpose)}
-                    >
-                      {MEDIA_PURPOSE_IDS.map((id) => (
-                        <option key={id} value={id}>
-                          {MEDIA_PURPOSES[id].label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className='admin-inline-label'>
-                    Папка
-                    <select
-                      value={editFolderId}
-                      onChange={(e) => setEditFolderId(e.target.value)}
-                    >
-                      <option value=''>Без папки</option>
-                      {folders.map((f) => (
-                        <option key={f.id} value={f.id}>
-                          {f.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className='admin-inline-label'>
-                    Теги
-                    <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
-                  </label>
-                  <div className='admin-row'>
-                    <button type='button' className='admin-btn' onClick={() => void saveEdit(item.name)}>
-                      OK
-                    </button>
-                    <button
-                      type='button'
-                      className='admin-btn admin-btn--secondary'
-                      onClick={() => setEditing(null)}
-                    >
-                      Скасувати
-                    </button>
+                  setDragOverIndex(index);
+                }}
+                onDrop={(e) => {
+                  if (dragIndex == null) return;
+                  e.preventDefault();
+                  onReorder(dragIndex, index);
+                  setDragIndex(null);
+                  setDragOverIndex(null);
+                }}
+              >
+                <label className='admin-media-check' onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type='checkbox'
+                    checked={isSelected}
+                    onChange={() => toggleSelect(item.name)}
+                    aria-label={`Виділити ${item.name}`}
+                  />
+                </label>
+                {canDnD ? (
+                  <div className='admin-drag-handle' title='Перетягніть для порядку' aria-hidden>
+                    ⠿
                   </div>
+                ) : null}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                <div className='admin-media-meta'>
+                  <span title={item.name}>{item.name}</span>
+                  <span>
+                    {MEDIA_PURPOSES[item.purpose]?.label || item.purpose} ·{' '}
+                    {formatBytes(item.size)}
+                  </span>
+                  {item.tags?.length ? (
+                    <span className='admin-media-tags'>{item.tags.join(', ')}</span>
+                  ) : null}
                 </div>
-              ) : (
-                <div className='admin-row'>
-                  <button
-                    type='button'
-                    className='admin-btn admin-btn--secondary'
-                    onClick={() => void copyUrl(item.url)}
-                  >
-                    URL
-                  </button>
-                  <button
-                    type='button'
-                    className='admin-btn admin-btn--secondary'
-                    onClick={() => startEdit(item)}
-                  >
-                    Мета
-                  </button>
-                  <button
-                    type='button'
-                    className='admin-btn admin-btn--danger'
-                    onClick={() => void remove(item.name)}
-                  >
-                    Видалити
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+
+                {editing === item.name ? (
+                  <div className='admin-media-edit'>
+                    <label className='admin-inline-label'>
+                      Роль
+                      <select
+                        value={editPurpose}
+                        onChange={(e) => setEditPurpose(e.target.value as MediaPurpose)}
+                      >
+                        {MEDIA_PURPOSE_IDS.map((id) => (
+                          <option key={id} value={id}>
+                            {MEDIA_PURPOSES[id].label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className='admin-inline-label'>
+                      Папка
+                      <select
+                        value={editFolderId}
+                        onChange={(e) => setEditFolderId(e.target.value)}
+                      >
+                        <option value=''>Без папки</option>
+                        {folders.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className='admin-inline-label'>
+                      Теги
+                      <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
+                    </label>
+                    <div className='admin-row'>
+                      <button
+                        type='button'
+                        className='admin-btn'
+                        onClick={() => void saveEdit(item.name)}
+                      >
+                        OK
+                      </button>
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--secondary'
+                        onClick={() => setEditing(null)}
+                      >
+                        Скасувати
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className='admin-media-card-actions'>
+                    <div className='admin-row'>
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--secondary'
+                        onClick={() => void copyUrl(item.url)}
+                      >
+                        URL
+                      </button>
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--secondary'
+                        title='Роль, папка, теги'
+                        onClick={() => startEdit(item)}
+                      >
+                        Мета
+                      </button>
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--danger'
+                        onClick={() => void remove(item.name)}
+                      >
+                        Видалити
+                      </button>
+                    </div>
+                    <span className='admin-hint admin-media-folder-hint'>
+                      Папка змінюється тут
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

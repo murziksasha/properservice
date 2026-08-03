@@ -8,7 +8,7 @@ import {
   listFoldersWithCounts,
   listUploads,
 } from '@/lib/media';
-import { patchMediaMeta, reorderMediaItems } from '@/lib/media-index';
+import { moveMediaToFolder, patchMediaMeta, reorderMediaItems } from '@/lib/media-index';
 import { isMediaPurpose } from '@/lib/media-purpose';
 
 export const dynamic = 'force-dynamic';
@@ -84,6 +84,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       name?: string;
+      names?: string[];
       purpose?: string;
       tags?: string[] | string;
       alt?: string;
@@ -100,6 +101,18 @@ export async function PATCH(request: NextRequest) {
         typeof body.reorderFolderId === 'string' ? body.reorderFolderId : body.folderId || '';
       const updated = await reorderMediaItems(folderId === 'root' ? '' : folderId, names);
       return NextResponse.json({ ok: true, items: updated });
+    }
+
+    // Bulk move into a virtual folder (or root)
+    if (Array.isArray(body.names) && body.folderId !== undefined) {
+      const names = body.names.filter((n): n is string => typeof n === 'string' && n.trim() !== '');
+      if (names.length === 0) {
+        return NextResponse.json({ error: 'Missing names' }, { status: 400 });
+      }
+      const folderId =
+        body.folderId === 'root' || body.folderId === '__root' ? '' : body.folderId;
+      const result = await moveMediaToFolder(names, folderId);
+      return NextResponse.json({ ok: true, ...result });
     }
 
     if (!body.name || typeof body.name !== 'string') {

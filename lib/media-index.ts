@@ -366,6 +366,54 @@ export async function patchMediaMeta(
   return next;
 }
 
+/**
+ * Move one or more media items into a virtual folder (or root when folderId is '').
+ * Unknown folder ids are treated as root. Missing names are reported; known items
+ * that already sit in the target folder are left as-is but still counted as moved.
+ */
+export async function moveMediaToFolder(
+  names: string[],
+  folderId: string,
+): Promise<{ moved: number; missing: string[] }> {
+  const index = await readMediaIndex();
+  const folderIds = new Set(index.folders.map((f) => f.id));
+  const targetId =
+    folderId && folderIds.has(folderId) && isSafeFolderId(folderId) ? folderId : '';
+
+  const uniqueNames = [...new Set(names.filter((n) => typeof n === 'string' && n.trim()))];
+  const missing: string[] = [];
+  const toMove: string[] = [];
+  for (const name of uniqueNames) {
+    if (index.items.some((i) => i.name === name)) toMove.push(name);
+    else missing.push(name);
+  }
+
+  if (toMove.length === 0) {
+    return { moved: 0, missing };
+  }
+
+  const now = new Date().toISOString();
+  let nextOrder =
+    index.items
+      .filter((i) => i.folderId === targetId)
+      .reduce((m, i) => Math.max(m, i.sortOrder), -1) + 1;
+
+  const moveSet = new Set(toMove);
+  index.items = index.items.map((item) => {
+    if (!moveSet.has(item.name)) return item;
+    if (item.folderId === targetId) return item;
+    return {
+      ...item,
+      folderId: targetId,
+      sortOrder: nextOrder++,
+      updatedAt: now,
+    };
+  });
+
+  await writeMediaIndex(index);
+  return { moved: toMove.length, missing };
+}
+
 /** Set sortOrder 0..n for names within a folder (or root when folderId ''). */
 export async function reorderMediaItems(
   folderId: string,
