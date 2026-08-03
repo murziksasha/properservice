@@ -25,6 +25,7 @@
 /data/leads.json
 /data/orders.json
 /data/admin-totp.json
+/data/media-index.json
 
 # misc
 .DS_Store
