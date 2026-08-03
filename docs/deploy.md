@@ -72,13 +72,21 @@ npm run pm2:setup
 | `npm run pm2:stop` | стоп |
 | `npm run start:prod` | foreground без pm2 (build-if-needed) |
 
-Після `git pull` / змін у коді (`.next` уже є — auto-build не спрацює):
+Після `git pull` / змін у коді (`.next` уже є — auto-build **не** спрацює):
 
 ```bash
 npm install
 npm run build
 npm run pm2:restart
 ```
+
+Якщо сайт «голий» (HTML є, стилів/JS немає) і в Network у CSS/JS статус **400** або type **html**:
+
+1. Зробіть повний rebuild + restart (команди вище, або `docker compose up -d --build`).
+2. У браузері: DevTools → Application → Service Workers → **Unregister**, потім hard reload (Ctrl+Shift+R).
+3. Перевірте, що `/_next/static/css/*.css` віддає `200` і `Content-Type: text/css`, а не HTML-сторінку помилки.
+
+Service worker (`public/sw.js`) **не** кешує `/_next/*` (з `ps-shell-v4`), щоб після деплою не змішувались старі/нові чанки.
 
 Перевірка: `http://localhost:3000/api/health` (або ваш `PORT`).  
 LAN/KeenDNS: firewall inbound TCP на цей порт; `COOKIE_SECURE=false` для HTTP — див. розділ нижче.
