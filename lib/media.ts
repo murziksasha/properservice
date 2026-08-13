@@ -10,22 +10,17 @@ import {
   type MediaSortMode,
 } from './media-index';
 import type { MediaPurpose } from './media-purpose';
+import { isSafeUploadName } from './media-name';
 import { uploadsDir as resolveUploadsDir } from './uploads-path';
 
 export type { MediaListItem };
+export { isSafeUploadName };
 
 /** @deprecated use MediaListItem — kept alias for callers */
 export type MediaItem = MediaListItem;
 
-const SAFE_NAME = /^[\w.-]+$/;
-
 export function uploadsDir(): string {
   return resolveUploadsDir();
-}
-
-export function isSafeUploadName(name: string): boolean {
-  if (!name || name.includes('..') || name.includes('/') || name.includes('\\')) return false;
-  return SAFE_NAME.test(name);
 }
 
 export type ListUploadsOptions = {
