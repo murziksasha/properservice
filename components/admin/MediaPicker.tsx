@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { uploadImage } from '@/lib/admin/uploadImage';
+import { uploadImage, uploadVideo } from '@/lib/admin/uploadImage';
 import {
   MEDIA_PURPOSE_IDS,
   MEDIA_PURPOSES,
   purposeFromPreset,
   type MediaPurpose,
 } from '@/lib/media-purpose';
+import type { MediaKind } from '@/lib/media-index';
 import type { ImagePresetId } from '@/lib/image-presets';
 import { showToast } from './AdminToast';
 
@@ -17,6 +18,7 @@ export type MediaPickerItem = {
   size: number;
   mtime: string;
   purpose: MediaPurpose;
+  kind?: MediaKind;
   tags: string[];
   folderId: string;
   sortOrder: number;
@@ -37,6 +39,8 @@ type MediaPickerProps = {
   /** Allow selecting several images and confirming with a button. */
   multiple?: boolean;
   purpose?: MediaPurpose | 'all';
+  /** Filter library by media kind (default image for product photos). */
+  kind?: MediaKind | 'all';
   preset?: ImagePresetId | string;
   folderId?: string;
 };
@@ -48,6 +52,7 @@ export function MediaPicker({
   onSelectMany,
   multiple = false,
   purpose: purposeProp = 'all',
+  kind: kindProp = 'image',
   preset,
   folderId: folderProp,
 }: MediaPickerProps) {
@@ -62,6 +67,7 @@ export function MediaPicker({
   const [folders, setFolders] = useState<FolderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [purpose, setPurpose] = useState<MediaPurpose | 'all'>(defaultPurpose);
+  const [kind, setKind] = useState<MediaKind | 'all'>(kindProp);
   const [folder, setFolder] = useState<string>(folderProp || 'all');
   const [q, setQ] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -72,17 +78,19 @@ export function MediaPicker({
   useEffect(() => {
     if (open) {
       setPurpose(defaultPurpose);
+      setKind(kindProp);
       setFolder(folderProp || 'all');
       setQ('');
       setSelectedMap({});
     }
-  }, [open, defaultPurpose, folderProp]);
+  }, [open, defaultPurpose, folderProp, kindProp]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (purpose && purpose !== 'all') params.set('purpose', purpose);
+      if (kind && kind !== 'all') params.set('kind', kind);
       if (folder && folder !== 'all') params.set('folder', folder);
       if (q.trim()) params.set('q', q.trim());
       params.set('sort', 'manual');
@@ -102,7 +110,7 @@ export function MediaPicker({
     } finally {
       setLoading(false);
     }
-  }, [purpose, folder, q]);
+  }, [purpose, folder, q, kind]);
 
   useEffect(() => {
     if (!open) return;
@@ -143,25 +151,29 @@ export function MediaPicker({
         purpose !== 'all' ? purpose : purposeFromPreset(preset ? String(preset) : undefined);
       const uploadFolder =
         folder !== 'all' && folder !== 'root' ? folder : undefined;
+      const wantVideo = kind === 'video';
 
       const uploaded: MediaPickerItem[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const { url, error } = await uploadImage(file, {
-          preset,
-          purpose: uploadPurpose,
-          folderId: uploadFolder,
-        });
-        if (!url) {
-          showToast(error || `Помилка upload (${file.name})`, 'error');
+        const result = wantVideo
+          ? await uploadVideo(file, { purpose: uploadPurpose, folderId: uploadFolder })
+          : await uploadImage(file, {
+              preset,
+              purpose: uploadPurpose,
+              folderId: uploadFolder,
+            });
+        if (!result.url) {
+          showToast(result.error || `Помилка upload (${file.name})`, 'error');
           continue;
         }
         uploaded.push({
-          name: url.split('/').pop() || '',
-          url,
+          name: result.url.split('/').pop() || '',
+          url: result.url,
           size: 0,
           mtime: new Date().toISOString(),
           purpose: uploadPurpose,
+          kind: wantVideo ? 'video' : 'image',
           tags: [],
           folderId: uploadFolder || '',
           sortOrder: 0,
@@ -204,7 +216,15 @@ export function MediaPicker({
         className='admin-modal admin-modal--wide'
         role='dialog'
         aria-modal='true'
-        aria-label={multiple ? 'Вибір зображень' : 'Вибір зображення'}
+        aria-label={
+          kind === 'video'
+            ? multiple
+              ? 'Вибір відео'
+              : 'Вибір відео'
+            : multiple
+              ? 'Вибір зображень'
+              : 'Вибір зображення'
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className='admin-modal__head'>
@@ -243,7 +263,7 @@ export function MediaPicker({
             <select
               value={purpose}
               onChange={(e) => setPurpose(e.target.value as MediaPurpose | 'all')}
-              aria-label='Роль зображень'
+              aria-label='Роль медіа'
             >
               <option value='all'>Усі</option>
               {MEDIA_PURPOSE_IDS.map((id) => (
@@ -253,6 +273,20 @@ export function MediaPicker({
               ))}
             </select>
           </label>
+          {kindProp === 'all' ? (
+            <label className='admin-inline-label'>
+              Тип
+              <select
+                value={kind}
+                onChange={(e) => setKind(e.target.value as MediaKind | 'all')}
+                aria-label='Тип медіа'
+              >
+                <option value='all'>Усі</option>
+                <option value='image'>Фото</option>
+                <option value='video'>Відео</option>
+              </select>
+            </label>
+          ) : null}
           <input
             type='search'
             className='admin-grow'
@@ -269,8 +303,12 @@ export function MediaPicker({
             <input
               ref={fileRef}
               type='file'
-              accept='image/jpeg,image/png,image/webp,image/gif'
-              multiple={multiple}
+              accept={
+                kind === 'video'
+                  ? 'video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov'
+                  : 'image/jpeg,image/png,image/webp,image/gif'
+              }
+              multiple={multiple && kind !== 'video'}
               hidden
               disabled={uploading}
               onChange={(e) => void onUploadFiles(e.target.files)}
@@ -280,7 +318,8 @@ export function MediaPicker({
 
         {multiple ? (
           <p className='admin-hint admin-mb'>
-            Клікніть по фото, щоб вибрати кілька, потім натисніть «Додати».
+            Клікніть по {kind === 'video' ? 'відео' : 'фото'}, щоб вибрати кілька, потім натисніть
+            «Додати».
           </p>
         ) : null}
 
@@ -308,8 +347,15 @@ export function MediaPicker({
                   onClose();
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                {item.kind === 'video' || kind === 'video' ? (
+                  <div className='admin-media-video-thumb' aria-hidden>
+                    <span>▶</span>
+                    <video src={item.url} muted preload='metadata' />
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                )}
                 <div className='admin-media-meta'>
                   <span title={item.name}>{item.name}</span>
                   <span>{MEDIA_PURPOSES[item.purpose]?.label || item.purpose}</span>

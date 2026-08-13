@@ -17,10 +17,14 @@ export type MediaFolder = {
   sortOrder: number;
 };
 
+export type MediaKind = 'image' | 'video';
+
 export type MediaMeta = {
   name: string;
   url: string;
   purpose: MediaPurpose;
+  /** Defaults to image for legacy index rows. */
+  kind: MediaKind;
   tags: string[];
   /** Virtual folder id; '' = root / uncategorized */
   folderId: string;
@@ -45,6 +49,7 @@ export type MediaListItem = {
   size: number;
   mtime: string;
   purpose: MediaPurpose;
+  kind: MediaKind;
   tags: string[];
   folderId: string;
   sortOrder: number;
@@ -52,6 +57,16 @@ export type MediaListItem = {
   width?: number;
   height?: number;
 };
+
+export function isMediaKind(value: string): value is MediaKind {
+  return value === 'image' || value === 'video';
+}
+
+export function mediaKindFromName(name: string): MediaKind {
+  const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')).toLowerCase() : '';
+  if (ext === '.mp4' || ext === '.webm' || ext === '.mov') return 'video';
+  return 'image';
+}
 
 export type MediaSortMode = 'manual' | 'mtime' | 'name';
 
@@ -108,10 +123,13 @@ function normalizeItem(raw: Partial<MediaMeta> & { name?: string }): MediaMeta |
   }
   const sortOrder =
     typeof raw.sortOrder === 'number' && Number.isFinite(raw.sortOrder) ? raw.sortOrder : 0;
+  const kind: MediaKind =
+    raw.kind && isMediaKind(raw.kind) ? raw.kind : mediaKindFromName(raw.name);
   return {
     name: raw.name,
     url: raw.url && typeof raw.url === 'string' ? raw.url : `/uploads/${raw.name}`,
     purpose,
+    kind,
     tags,
     folderId,
     sortOrder,
@@ -255,7 +273,7 @@ export async function deleteMediaFolder(id: string): Promise<boolean> {
 }
 
 export async function upsertMediaMeta(
-  entry: Omit<MediaMeta, 'createdAt' | 'updatedAt' | 'url' | 'folderId' | 'sortOrder'> & {
+  entry: Omit<MediaMeta, 'createdAt' | 'updatedAt' | 'url' | 'folderId' | 'sortOrder' | 'kind'> & {
     url?: string;
     createdAt?: string;
     width?: number;
@@ -263,6 +281,7 @@ export async function upsertMediaMeta(
     alt?: string;
     folderId?: string;
     sortOrder?: number;
+    kind?: MediaKind;
   },
 ): Promise<MediaMeta> {
   const index = await readMediaIndex();
@@ -283,10 +302,16 @@ export async function upsertMediaMeta(
     sortOrder = peers.reduce((m, i) => Math.max(m, i.sortOrder), -1) + 1;
   }
 
+  const kind: MediaKind =
+    entry.kind && isMediaKind(entry.kind)
+      ? entry.kind
+      : existing?.kind || mediaKindFromName(entry.name);
+
   const next: MediaMeta = {
     name: entry.name,
     url: entry.url || `/uploads/${entry.name}`,
     purpose: entry.purpose,
+    kind,
     tags: entry.tags || [],
     folderId,
     sortOrder,
