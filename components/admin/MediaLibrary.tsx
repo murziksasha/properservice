@@ -21,6 +21,8 @@ import {
   purposeFromPreset,
   type MediaPurpose,
 } from '@/lib/media-purpose';
+import type { MediaKind } from '@/lib/media-index';
+import type { MediaRef } from '@/lib/media-usage';
 import { showToast } from './AdminToast';
 
 const MEDIA_NAMES_MIME = 'application/x-media-names';
@@ -31,12 +33,15 @@ interface MediaItem {
   size: number;
   mtime: string;
   purpose: MediaPurpose;
+  kind?: MediaKind;
   tags: string[];
   folderId: string;
   sortOrder: number;
   alt?: string;
   width?: number;
   height?: number;
+  usedBy?: MediaRef[];
+  usageTooltip?: string;
 }
 
 interface FolderRow {
@@ -74,6 +79,7 @@ export function MediaLibrary() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [purpose, setPurpose] = useState<MediaPurpose | 'all'>('all');
+  const [kindFilter, setKindFilter] = useState<MediaKind | 'all'>('all');
   const [folder, setFolder] = useState<FolderFilter>('all');
   const [sort, setSort] = useState<SortMode>('mtime');
   const [uploading, setUploading] = useState(false);
@@ -98,9 +104,11 @@ export function MediaLibrary() {
     try {
       const params = new URLSearchParams();
       if (purpose !== 'all') params.set('purpose', purpose);
+      if (kindFilter !== 'all') params.set('kind', kindFilter);
       if (q.trim()) params.set('q', q.trim());
       if (folder !== 'all') params.set('folder', folder);
       params.set('sort', sort);
+      params.set('usage', '1');
       const res = await fetch(`/api/media?${params.toString()}`);
       if (!res.ok) {
         showToast('Не вдалося завантажити медіа', 'error');
@@ -122,7 +130,7 @@ export function MediaLibrary() {
     } finally {
       setLoading(false);
     }
-  }, [purpose, q, folder, sort]);
+  }, [purpose, kindFilter, q, folder, sort]);
 
   useEffect(() => {
     setLoading(true);
@@ -173,8 +181,12 @@ export function MediaLibrary() {
     }
   }
 
-  async function remove(name: string) {
-    if (!confirm(`Видалити ${name}? Посилання на сторінках можуть зламатися.`)) return;
+  async function remove(name: string, usageTooltip?: string) {
+    if (usageTooltip) {
+      showToast(usageTooltip, 'error');
+      return;
+    }
+    if (!confirm(`Видалити ${name}?`)) return;
     try {
       const res = await fetch('/api/media', {
         method: 'DELETE',
@@ -185,6 +197,11 @@ export function MediaLibrary() {
         if (res.status === 429) {
           const sec = parseRetryAfterSeconds(res, 60);
           showToast(rateLimitMessage(sec, 'upload'), 'error');
+          return;
+        }
+        if (res.status === 409) {
+          const json = (await res.json().catch(() => ({}))) as { message?: string };
+          showToast(json.message || 'Файл використовується на сайті', 'error');
           return;
         }
         showToast('Не вдалося видалити', 'error');
@@ -571,6 +588,36 @@ export function MediaLibrary() {
           </span>
         </div>
 
+        <div className='admin-media-chips admin-mb' role='tablist' aria-label='Тип медіа'>
+          <button
+            type='button'
+            role='tab'
+            className={`admin-chip${kindFilter === 'all' ? ' admin-chip--active' : ''}`}
+            aria-selected={kindFilter === 'all'}
+            onClick={() => setKindFilter('all')}
+          >
+            Усі типи
+          </button>
+          <button
+            type='button'
+            role='tab'
+            className={`admin-chip${kindFilter === 'image' ? ' admin-chip--active' : ''}`}
+            aria-selected={kindFilter === 'image'}
+            onClick={() => setKindFilter('image')}
+          >
+            Фото
+          </button>
+          <button
+            type='button'
+            role='tab'
+            className={`admin-chip${kindFilter === 'video' ? ' admin-chip--active' : ''}`}
+            aria-selected={kindFilter === 'video'}
+            onClick={() => setKindFilter('video')}
+          >
+            Відео
+          </button>
+        </div>
+
         <div className='admin-media-chips admin-mb' role='tablist' aria-label='Роль зображення'>
           <button
             type='button'
@@ -777,14 +824,31 @@ export function MediaLibrary() {
                     ⠿
                   </div>
                 ) : null}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                {item.kind === 'video' ? (
+                  <div className='admin-media-video-thumb' aria-hidden>
+                    <span>▶</span>
+                    <video src={item.url} muted preload='metadata' />
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                )}
                 <div className='admin-media-meta'>
                   <span title={item.name}>{item.name}</span>
                   <span>
+                    {item.kind === 'video' ? 'Відео · ' : ''}
                     {MEDIA_PURPOSES[item.purpose]?.label || item.purpose} ·{' '}
                     {formatBytes(item.size)}
                   </span>
+                  {item.usedBy && item.usedBy.length > 0 ? (
+                    <span
+                      className='admin-media-usage'
+                      title={item.usageTooltip || ''}
+                    >
+                      🔗 {item.usedBy.length}{' '}
+                      {item.usedBy.length === 1 ? 'посилання' : 'посилань'}
+                    </span>
+                  ) : null}
                   {item.tags?.length ? (
                     <span className='admin-media-tags'>{item.tags.join(', ')}</span>
                   ) : null}
@@ -861,7 +925,14 @@ export function MediaLibrary() {
                       <button
                         type='button'
                         className='admin-btn admin-btn--danger'
-                        onClick={() => void remove(item.name)}
+                        disabled={Boolean(item.usedBy?.length)}
+                        title={
+                          item.usageTooltip ||
+                          (item.usedBy?.length
+                            ? 'Файл використовується на сайті'
+                            : 'Видалити файл')
+                        }
+                        onClick={() => void remove(item.name, item.usageTooltip)}
                       >
                         Видалити
                       </button>

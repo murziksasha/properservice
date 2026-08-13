@@ -20,9 +20,13 @@ import {
   type VisibilityFilter,
 } from '@/lib/shop-catalog';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  formatUsageTooltip,
+  planProductMediaPurge,
+  PRODUCT_PLACEHOLDER_IMAGE,
+} from '@/lib/media-usage';
 import { showToast } from './AdminToast';
-import { GalleryField } from './GalleryField';
-import { ImageField } from './ImageField';
+import { ProductMediaEditor } from './ProductMediaEditor';
 
 type ListMode = 'grouped' | 'flat';
 
@@ -32,8 +36,9 @@ function emptyProduct(): Product {
     title: 'Новий товар',
     description: '',
     price: 0,
-    image: '/img/services/technika_img.png',
+    image: PRODUCT_PLACEHOLDER_IMAGE,
     images: [],
+    video: undefined,
     visible: true,
     category: '',
     code: '',
@@ -226,11 +231,78 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     setEditing(null);
   }
 
-  function deleteProduct(id: string) {
-    if (!confirm('Видалити товар?')) return;
-    setData({ ...data, goods: data.goods.filter((g) => g.id !== id) });
-    setDirty(true);
+  async function deleteProduct(id: string) {
+    const product = data.goods.find((g) => g.id === id);
+    if (!product) return;
+
+    const nextGoods = data.goods.filter((g) => g.id !== id);
+    const nextData: SiteData = { ...data, goods: nextGoods };
+    const plan = planProductMediaPurge(product, nextData);
+
+    const lines = [
+      `Видалити товар «${product.title}»?`,
+      '',
+      plan.deletable.length
+        ? `Файли з бібліотеки, які буде видалено: ${plan.deletable.length}`
+        : 'Окремих файлів у /uploads для видалення немає.',
+      plan.retained.length
+        ? `Залишаться (використовуються деінде): ${plan.retained.length}\n${plan.retained
+            .slice(0, 4)
+            .map((r) => `· ${r.name}: ${formatUsageTooltip(r.refs)}`)
+            .join('\n')}`
+        : '',
+      '',
+      'Приховування (зняти «Опубліковано») файли НЕ видаляє.',
+    ].filter(Boolean);
+
+    if (!confirm(lines.join('\n'))) return;
+
+    const ok = await save(nextData);
+    if (!ok) return;
     if (editing?.id === id) setEditing(null);
+
+    if (plan.deletable.length === 0) {
+      showToast('Товар видалено', 'success');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/media/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: plan.deletable }),
+      });
+      const json = (await res.json().catch(() => ({}))) as {
+        deleted?: string[];
+        skipped?: Array<{ name: string; reason?: string }>;
+        failed?: string[];
+        error?: string;
+      };
+      if (!res.ok) {
+        showToast(
+          json.error ||
+            'Товар видалено, але файли медіа не вдалося прибрати — перевірте Медіатеку',
+          'error',
+        );
+        return;
+      }
+      const deleted = json.deleted?.length || 0;
+      const skipped = json.skipped?.length || 0;
+      const failed = json.failed?.length || 0;
+      if (skipped || failed) {
+        showToast(
+          `Товар видалено. Медіа: видалено ${deleted}, залишено ${skipped}${failed ? `, помилок ${failed}` : ''}`,
+          skipped || failed ? 'info' : 'success',
+        );
+      } else {
+        showToast(
+          deleted ? `Товар і ${deleted} файл(ів) медіа видалено` : 'Товар видалено',
+          'success',
+        );
+      }
+    } catch {
+      showToast('Товар видалено, мережева помилка при очищенні медіа', 'error');
+    }
   }
 
   function toggleVisible(id: string) {
@@ -415,7 +487,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             className='admin-btn admin-btn--danger admin-btn--sm'
             title='Видалити'
             aria-label='Видалити'
-            onClick={() => deleteProduct(product.id)}
+            onClick={() => void deleteProduct(product.id)}
           >
             ×
           </button>
@@ -602,18 +674,10 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               Необов&apos;язково. Мін. 2 символи. Будь-які мови та знаки. Участь у пошуку в адмінці та магазині.
             </span>
           </label>
-          <ImageField
-            label='Головне фото'
-            value={editing.image}
-            onChange={(url) => setEditing({ ...editing, image: url })}
-            preset='product'
-          />
-          <GalleryField
-            label='Галерея'
-            value={editing.images || []}
-            excludeUrl={editing.image}
-            onChange={(images) => setEditing({ ...editing, images })}
-            preset='product'
+          <ProductMediaEditor
+            product={editing}
+            onChange={(patch) => setEditing({ ...editing, ...patch })}
+            disabled={saving}
           />
           <label>
             Категорія (група на сайті)
@@ -654,7 +718,7 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               <strong>Опубліковано</strong>
               <span className='admin-hint' style={{ marginTop: 0 }}>
                 {' '}
-                — показувати у магазині /shop
+                — показувати у магазині /shop. Зняття прапорця не видаляє фото/відео.
               </span>
             </span>
           </label>

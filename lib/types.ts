@@ -55,6 +55,8 @@ export interface Product {
   image: string;
   /** Extra gallery images (primary is image). */
   images?: string[];
+  /** Optional product review / unboxing video URL (/uploads/… or external). */
+  video?: string;
   visible: boolean;
   /**
    * Optional display category for catalog filters (e.g. «Телефони»).

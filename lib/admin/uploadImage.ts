@@ -18,6 +18,7 @@ export type UploadImageResult = {
   height?: number;
   optimized?: boolean;
   purpose?: string;
+  kind?: 'image' | 'video';
 };
 
 export async function uploadImage(
@@ -62,6 +63,7 @@ export async function uploadImage(
       height?: number;
       optimized?: boolean;
       purpose?: string;
+      kind?: 'image' | 'video';
     };
 
     if (!res.ok) {
@@ -75,8 +77,21 @@ export async function uploadImage(
       height: json.height,
       optimized: json.optimized,
       purpose: json.purpose,
+      kind: json.kind,
     };
   } catch {
     return { url: '', error: 'Network error' };
   }
+}
+
+/** Upload a product review video (mp4/webm). Same endpoint, video MIME path. */
+export async function uploadVideo(
+  file: File,
+  options?: Pick<UploadImageOptions, 'purpose' | 'folderId' | 'tags'>,
+): Promise<UploadImageResult> {
+  return uploadImage(file, {
+    purpose: options?.purpose || 'product',
+    folderId: options?.folderId,
+    tags: options?.tags,
+  });
 }

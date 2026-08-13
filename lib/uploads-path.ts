@@ -38,6 +38,12 @@ export function contentTypeForUploadName(name: string): string {
       return 'image/webp';
     case '.gif':
       return 'image/gif';
+    case '.mp4':
+      return 'video/mp4';
+    case '.webm':
+      return 'video/webm';
+    case '.mov':
+      return 'video/quicktime';
     case '.svg':
       return 'image/svg+xml';
     default:

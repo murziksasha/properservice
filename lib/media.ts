@@ -2,8 +2,10 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import {
   listMediaFolders,
+  mediaKindFromName,
   readMediaIndex,
   removeMediaMeta,
+  type MediaKind,
   type MediaListItem,
   type MediaSortMode,
 } from './media-index';
@@ -28,6 +30,7 @@ export function isSafeUploadName(name: string): boolean {
 
 export type ListUploadsOptions = {
   purpose?: MediaPurpose | 'all';
+  kind?: MediaKind | 'all';
   q?: string;
   tag?: string;
   /** 'all' | 'root' (uncategorized) | folder id */
@@ -66,6 +69,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
       size: stat.size,
       mtime: stat.mtime.toISOString(),
       purpose: meta?.purpose || 'other',
+      kind: meta?.kind || mediaKindFromName(name),
       tags: meta?.tags || [],
       folderId: meta?.folderId || '',
       sortOrder: meta?.sortOrder ?? 0,
@@ -76,6 +80,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
   }
 
   const purpose = options?.purpose && options.purpose !== 'all' ? options.purpose : null;
+  const kind = options?.kind && options.kind !== 'all' ? options.kind : null;
   const q = options?.q?.trim().toLowerCase() || '';
   const tag = options?.tag?.trim().toLowerCase() || '';
   const folder = options?.folder ?? 'all';
@@ -83,6 +88,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
 
   const filtered = items.filter((item) => {
     if (purpose && item.purpose !== purpose) return false;
+    if (kind && item.kind !== kind) return false;
     if (folder === 'root') {
       if (item.folderId) return false;
     } else if (folder && folder !== 'all') {

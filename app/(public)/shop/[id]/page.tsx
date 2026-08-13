@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { PublicImage } from '@/components/ui/PublicImage';
 import { OrderForm } from '@/components/forms/OrderForm';
 import { ProductCard } from '@/components/shop/ProductCard';
+import { ProductGallery } from '@/components/shop/ProductGallery';
 import { formatTelHref } from '@/lib/phone';
 import { getRelatedProducts } from '@/lib/related-products';
 import { getProduct, getProducts, getSiteData } from '@/lib/site-data';
@@ -62,30 +62,24 @@ export default async function ProductPage({ params }: PageProps) {
         ← Усі товари
       </Link>
       <div className='shop-detail__grid'>
-        <div className='shop-detail__image'>
-          <PublicImage
-            src={gallery[0]}
-            alt={product.title}
-            width={480}
-            height={360}
-            sizes='(max-width: 768px) 100vw, 480px'
-            priority
-            style={{ width: '100%', height: 'auto' }}
-          />
-          {gallery.length > 1 ? (
-            <div className='shop-detail__thumbs'>
-              {gallery.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={src} src={src} alt='' className='shop-detail__thumb' loading='lazy' />
-              ))}
-            </div>
-          ) : null}
-        </div>
+        <ProductGallery images={gallery} alt={product.title} />
         <div className='shop-detail__info'>
           <h1 className='shop-detail__title _title'>{product.title}</h1>
           {product.code ? <p className='shop-detail__code'>Код: {product.code}</p> : null}
           <p className='shop-detail__price'>{product.price.toLocaleString('uk-UA')} ₴</p>
           <p className='shop-detail__desc _paragr'>{product.description}</p>
+          {product.video ? (
+            <div className='shop-detail__video'>
+              <h2 className='shop-detail__video-title'>Огляд</h2>
+              <video
+                className='shop-detail__video-el'
+                src={product.video}
+                controls
+                playsInline
+                preload='metadata'
+              />
+            </div>
+          ) : null}
           <div className='shop-detail__actions'>
             <a href={formatTelHref(data.settings.headerPhone.tel)} className='_btn'>
               Зателефонувати

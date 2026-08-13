@@ -8,8 +8,19 @@ import {
   listFoldersWithCounts,
   listUploads,
 } from '@/lib/media';
-import { moveMediaToFolder, patchMediaMeta, reorderMediaItems } from '@/lib/media-index';
+import {
+  isMediaKind,
+  moveMediaToFolder,
+  patchMediaMeta,
+  reorderMediaItems,
+} from '@/lib/media-index';
 import { isMediaPurpose } from '@/lib/media-purpose';
+import {
+  collectSiteMediaUsages,
+  formatUsageTooltip,
+  getUsageForUploadName,
+} from '@/lib/media-usage';
+import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +48,9 @@ export async function GET(request: NextRequest) {
   const purposeRaw = request.nextUrl.searchParams.get('purpose') || '';
   const purpose =
     purposeRaw && purposeRaw !== 'all' && isMediaPurpose(purposeRaw) ? purposeRaw : undefined;
+  const kindRaw = request.nextUrl.searchParams.get('kind') || '';
+  const kind =
+    kindRaw && kindRaw !== 'all' && isMediaKind(kindRaw) ? kindRaw : undefined;
   const q = request.nextUrl.searchParams.get('q') || undefined;
   const tag = request.nextUrl.searchParams.get('tag') || undefined;
   const folderRaw = request.nextUrl.searchParams.get('folder');
@@ -47,15 +61,27 @@ export async function GET(request: NextRequest) {
         ? 'root'
         : folderRaw;
   const sort = parseSort(request.nextUrl.searchParams.get('sort'));
+  const withUsage = request.nextUrl.searchParams.get('usage') === '1';
 
-  const [items, folders, counts] = await Promise.all([
-    listUploads({ purpose, q, tag, folder, sort }),
+  const [items, folders, counts, site] = await Promise.all([
+    listUploads({ purpose, kind, q, tag, folder, sort }),
     listFoldersWithCounts(),
     folderCounts(),
+    withUsage ? getSiteData() : Promise.resolve(null),
   ]);
 
+  const usageMap = site ? collectSiteMediaUsages(site) : null;
+
   return NextResponse.json({
-    items,
+    items: items.map((item) => {
+      if (!usageMap) return item;
+      const refs = usageMap.get(item.url)?.refs || usageMap.get(`/uploads/${item.name}`)?.refs || [];
+      return {
+        ...item,
+        usedBy: refs,
+        usageTooltip: refs.length ? formatUsageTooltip(refs) : '',
+      };
+    }),
     folders,
     counts: {
       all: counts.all || 0,
@@ -166,10 +192,27 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as { name?: string };
+    const body = (await request.json()) as { name?: string; force?: boolean };
     if (!body.name || typeof body.name !== 'string') {
       return NextResponse.json({ error: 'Missing name' }, { status: 400 });
     }
+
+    // Block delete when site still references this upload (no force by default).
+    if (!body.force) {
+      const site = await getSiteData();
+      const refs = getUsageForUploadName(site, body.name);
+      if (refs.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'in_use',
+            message: formatUsageTooltip(refs),
+            refs,
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const ok = await deleteUpload(body.name);
     if (!ok) {
       return NextResponse.json({ error: 'Not found or invalid name' }, { status: 404 });
