@@ -1,5 +1,5 @@
 import type { Product, Section, SiteData } from './types';
-import { isSafeUploadName } from './media';
+import { isSafeUploadName } from './media-name';
 
 export type MediaRefType =
   | 'product'
