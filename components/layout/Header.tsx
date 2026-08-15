@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import type { MenuItem, SiteSettings } from '@/lib/types';
 import { formatTelHref } from '@/lib/phone';
+import { TextSizeToggle } from './TextSizeToggle';
 import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
@@ -145,7 +146,8 @@ export function Header({ settings, menu }: HeaderProps) {
                 />
                 <span className='header__phone-btn__num'>{settings.headerPhone.display}</span>
               </a>
-              <div className='menu__mobile-theme'>
+              <div className='menu__mobile-prefs'>
+                <TextSizeToggle />
                 <ThemeToggle />
               </div>
               <div className='menu__mobile-social'>
@@ -203,7 +205,10 @@ export function Header({ settings, menu }: HeaderProps) {
                   </a>
                 ))}
               </div>
-              <ThemeToggle />
+              <div className='header__prefs'>
+                <TextSizeToggle />
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </div>

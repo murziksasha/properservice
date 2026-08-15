@@ -25,7 +25,7 @@
 
 @media (max-width: 991px){
   html {
-    font-size: 9px;
+    font-size: calc(9px * var(--ps-text-scale, 1));
   }
   .wrapper {
     max-width: 720px;

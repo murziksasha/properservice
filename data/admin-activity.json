@@ -1,0 +1,11 @@
+{
+  "entries": [
+    {
+      "id": "b7da4f36f2e1",
+      "at": "2026-08-15T19:25:04.203Z",
+      "kind": "login",
+      "message": "Вхід: admin",
+      "actor": "admin"
+    }
+  ]
+}

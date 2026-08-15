@@ -88,11 +88,8 @@
     text-align: center;
     margin-bottom: 2rem;
     margin-top: 1rem;
-    color: var(--ps-text, #1a1a1a);
-
-    & a {
-      color: var(--ps-brand, #02a653);
-    }
+    /* Solid green CTA: keep label white (see theme.scss) */
+    color: #fff;
   }
 
   .left-arrow,

@@ -49,11 +49,12 @@
     overflow: hidden;
     border-radius: 1.2rem;
     aspect-ratio: 1;
-    background: #1a1a1a;
+    background: var(--ps-surface-2, #f0f2f4);
     text-decoration: none;
     transition: box-shadow 0.3s ease;
+    box-shadow: var(--ps-shadow, 0 4px 16px rgba(0, 0, 0, 0.08));
 
-    /* Gradient overlay sits above the photo (PublicImage can no longer use z-index:-1) */
+    /* Light bottom scrim for label; keep most of the photo bright */
     &::after {
       content: '';
       position: absolute;
@@ -61,13 +62,25 @@
       z-index: 1;
       border-radius: inherit;
       pointer-events: none;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.71) 59.37%, #000000 100%);
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0) 48%,
+        rgba(0, 0, 0, 0.28) 72%,
+        rgba(0, 0, 0, 0.62) 100%
+      );
       transition: background 0.3s ease;
     }
 
     &:hover::after,
     &:focus-visible::after {
-      background: linear-gradient(180deg, rgba(2, 166, 83, 0) 0%, rgba(2, 166, 83, 0.76) 59.37%, #02a653 100%);
+      background: linear-gradient(
+        180deg,
+        rgba(2, 166, 83, 0) 0%,
+        rgba(2, 166, 83, 0.12) 48%,
+        rgba(2, 166, 83, 0.55) 78%,
+        #02a653 100%
+      );
     }
 
     &:focus-visible {

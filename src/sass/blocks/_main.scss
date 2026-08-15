@@ -1,6 +1,22 @@
 html {
-  font-size: 10px;
+  /* Base rem unit; --ps-text-scale set by site-wide A−/A/A+ control */
+  --ps-text-scale: 1;
+  font-size: calc(10px * var(--ps-text-scale));
   height: 100%;
+}
+
+html[data-text-size='sm'] {
+  --ps-text-scale: 0.9;
+}
+
+html[data-text-size='lg'] {
+  --ps-text-scale: 1.15;
+}
+
+/* Admin uses its own px scale — don't let public text-size prefs reflow the panel */
+html:has(.admin-body) {
+  --ps-text-scale: 1;
+  font-size: 10px;
 }
 
 body {
