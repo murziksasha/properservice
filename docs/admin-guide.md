@@ -100,6 +100,20 @@
 - Бічна панель **завжди видима** під час прокрутки контенту (скролиться лише основна колонка).
 - На великих екранах кнопка **згорнути** (іконки ←→ біля логотипу) ховає підписи пунктів — лишаються **піктограми**; стан зберігається в браузері.
 - На вузьких екранах — кнопка-меню (гамбургер) і виїжджаюча панель.
+- **Inbox** (`/admin/inbox`) — єдина черга заявок + замовлень зі статусами workflow, SLA, шаблонами відповідей, історією по телефону. Клавіші: `j`/`k`, `c` дзвінок, `d` готово, `/` пошук.
+- Бейджі лічильників у меню (polling ~20 с); опційно browser notifications.
+- **Ctrl+K** — command palette: навігація, нещодавні, ★ обране, сторінки/товари/медіа, телефон.
+- Breadcrumbs під шапкою контенту; нещодавні сторінки пишуться в localStorage.
+- **?** — довідка гарячих клавіш; у меню «Клавіші» / «Компакт: ON|OFF» (щільність UI).
+- Dashboard: черга дня, графік 30 днів, UTM/топ сторінок/товарів, activity feed, онбординг-чеклист.
+- Inbox: multi-select bulk, CSV, **SSE live**, фільтри **Передзвінки** / **Дублікати** (повторні номери), бейдж «дубль».
+- Dashboard: блок **Передзвінки** (заплановані callbackAt).
+- Health: **Копіювати health** / **Export health** JSON.
+- Сторінки: пошук, фільтр видимості, бейджі чернетки / SEO / HTML.
+- Конструктор: **Зберегти чернетку** (live не чіпає) / **Опублікувати live** / відкрити / відхилити draft.
+- Конструктор outline: **Diff vs live** (назва, meta, секції added/removed/changed, порядок).
+- Inbox: **Telegram ↗** (одиничний + нотатка) і **Telegram bulk** для вибраних (до 25; `TELEGRAM_*` env).
+- Конструктор Preview: кнопка **Live|Draft** — два iframe (публічний live + ephemeral draft).
 
 ## Медіатека
 
@@ -211,6 +225,52 @@
 - **Соцмережі** (Viber / Telegram / Instagram / YouTube + іконка)
 - Політика конфіденційності
 - **Backup**: експорт / імпорт / server snapshots
+
+## План поліпшень
+
+Покроковий roadmap: [admin-improvement-plan.md](./admin-improvement-plan.md).
+
+### Нові розділи
+- **Клієнти** `/admin/clients?phone=` — картка за номером
+- **Активність** `/admin/activity` — audit log
+- **Ops** `/admin/ops` — аварійний runbook + SOP лідів
+- Inbox: **Взяв у роботу**, фільтри **Мої** / **Без assignee**, outcome + нотатка, snooze, шаблони
+- Публічні форми: телефон у `+380…`; повторна заявка з тим самим open-номером → note в існуючий lead (dedup)
+- Конструктор: **live publish лише owner**; editor — чернетка / «На ревʼю»; фільтр сторінок «На ревʼю»
+- Dashboard: ранковий/вечірній digest → TG, метрики first-touch, каталог-проблеми, publishAt-календар
+- Конструктор: publish gate (SEO/diff confirm), «На ревʼю», scheduled publish, hide 📱/🖥
+- Товари: confirm зміни ціни ≥20%, checklist перед visible, related picker, історія цін
+- Налаштування: notify prefs; ops alerts + SLA (cron `/api/ops-alerts`, digest `/api/digest`)
+
+## Користувачі / ролі (опційно)
+
+**Налаштування → Користувачі та ролі**
+
+- За замовчуванням лишається один вхід через `ADMIN_PASSWORD` (legacy owner).
+- Можна створити multi-user у `data/admins.json`: ролі `operator` (inbox), `editor` (контент), `owner`.
+- На логіні поле «Логін» — опційне; step-up паролем власника для створення/видалення користувачів і revoke sessions.
+- Список сесій + «Вийти скрізь».
+- **operator** бачить лише Огляд / Inbox / Заявки / Замовлення; API контенту/медіа повертає 403.
+- **editor** — контент + ops, без multi-user і restore backup.
+- Idle-попередження після ~6 год без активності.
+
+## Товари (merchant)
+
+- Bulk multi-select: опублікувати / приховати / категорія / % ціни / видалити
+- CSV import/export (колонки: id, code, title, price, category, visible, inStock, badge, promoText…)
+- Поля: **inStock**, **badge** (hit/sale/new), **promoText**, **sortPin** (закріпити зверху каталогу)
+- На публічному `/shop` — бейджі, «немає в наявності», промо-рядок
+
+## Конструктор / preview
+
+- **Live draft** — preview незбереженої сторінки (`/admin/preview/{token}`) без публікації
+- Outline секцій, SEO hints, шаблони блоків, ревізії, rich text для hero
+- Ctrl+Z undo · conflict force overwrite
+
+## Медіатека (додатково)
+
+- Orphans filter + bulk purge, Alt з назви, replace-in-place (↻)
+- Focus X/Y % (object-position) у метаданих файлу
 
 ## Backup (laptop / Keen DNS)
 

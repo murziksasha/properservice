@@ -174,8 +174,26 @@ test.describe.serial('admin happy-path', () => {
     await page.goto('/admin/orders');
     await expect(page.locator('h1')).toHaveText(/замовлення/i);
 
+    await page.goto('/admin/inbox');
+    await expect(page.locator('h1')).toHaveText(/inbox/i);
+    await expect(page.getByText(/live|poll/i)).toBeVisible({ timeout: 10_000 });
+
+    await page.goto('/admin/clients');
+    await expect(page.locator('h1')).toHaveText(/клієнт/i);
+
+    await page.goto('/admin/activity');
+    await expect(page.locator('h1')).toHaveText(/активність/i);
+
     await page.goto('/admin/media');
     await expect(page.locator('h1')).toHaveText(/медіатека/i);
+
+    // notify status endpoint (Telegram may be off)
+    const notifyRes = await page.request.get('/api/notify');
+    expect([200, 401, 403]).toContain(notifyRes.status());
+    if (notifyRes.status() === 200) {
+      const body = (await notifyRes.json()) as { configured?: boolean };
+      expect(typeof body.configured).toBe('boolean');
+    }
 
     await page.getByRole('button', { name: /вийти/i }).click();
     await expect(page).toHaveURL(/\/admin\/login/, { timeout: 10_000 });

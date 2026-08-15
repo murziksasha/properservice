@@ -4,22 +4,44 @@ import { useCallback, useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { AdminNav } from './AdminNav';
 import { AdminToastHost } from './AdminToast';
+import { AdminCountsProvider } from './AdminCountsContext';
+import { AdminRoleProvider } from './AdminRoleContext';
+import { CommandPalette } from './CommandPalette';
+import { OperatorRouteGuard } from './OperatorRouteGuard';
+import { IdleSessionGuard } from './IdleSessionGuard';
+import { ShortcutsHelp } from './ShortcutsHelp';
+import { AdminBreadcrumb } from './AdminBreadcrumb';
 
 const STORAGE_KEY = 'admin-nav-collapsed';
+const DENSITY_KEY = 'admin-density-compact';
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored === '1') setCollapsed(true);
+      if (localStorage.getItem(DENSITY_KEY) === '1') setCompact(true);
     } catch {
       /* ignore */
     }
     setHydrated(true);
+  }, []);
+
+  const toggleDensity = useCallback(() => {
+    setCompact((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(DENSITY_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
   }, []);
 
   const toggleCollapsed = useCallback(() => {
@@ -52,40 +74,52 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, [mobileOpen, closeMobile]);
 
   return (
-    <div className='admin-body'>
-      {/* Fixed chrome outside the grid — never becomes an extra track that stretches the page. */}
-      <button
-        type='button'
-        className='admin-nav-toggle admin-nav-toggle--mobile'
-        aria-label={mobileOpen ? 'Закрити навігацію' : 'Відкрити навігацію'}
-        aria-expanded={mobileOpen}
-        onClick={toggleMobile}
-      >
-        {mobileOpen ? <X size={22} strokeWidth={2} aria-hidden /> : <Menu size={22} strokeWidth={2} aria-hidden />}
-      </button>
-      {mobileOpen ? (
-        <button
-          type='button'
-          className='admin-nav-overlay'
-          aria-label='Закрити'
-          onClick={closeMobile}
-        />
-      ) : null}
+    <AdminRoleProvider>
+      <AdminCountsProvider>
+        <div className={`admin-body${compact && hydrated ? ' admin-body--compact' : ''}`}>
+          <button
+            type='button'
+            className='admin-nav-toggle admin-nav-toggle--mobile'
+            aria-label={mobileOpen ? 'Закрити навігацію' : 'Відкрити навігацію'}
+            aria-expanded={mobileOpen}
+            onClick={toggleMobile}
+          >
+            {mobileOpen ? <X size={22} strokeWidth={2} aria-hidden /> : <Menu size={22} strokeWidth={2} aria-hidden />}
+          </button>
+          {mobileOpen ? (
+            <button
+              type='button'
+              className='admin-nav-overlay'
+              aria-label='Закрити'
+              onClick={closeMobile}
+            />
+          ) : null}
 
-      <div
-        className={`admin-shell${collapsed && hydrated ? ' admin-shell--nav-collapsed' : ''}${
-          mobileOpen ? ' admin-shell--nav-open' : ''
-        }`}
-      >
-        <AdminNav
-          collapsed={collapsed}
-          mobileOpen={mobileOpen}
-          onToggleCollapsed={toggleCollapsed}
-          onCloseMobile={closeMobile}
-        />
-        <main className='admin-main'>{children}</main>
-      </div>
-      <AdminToastHost />
-    </div>
+          <div
+            className={`admin-shell${collapsed && hydrated ? ' admin-shell--nav-collapsed' : ''}${
+              mobileOpen ? ' admin-shell--nav-open' : ''
+            }`}
+          >
+            <AdminNav
+              collapsed={collapsed}
+              mobileOpen={mobileOpen}
+              onToggleCollapsed={toggleCollapsed}
+              onCloseMobile={closeMobile}
+              compact={compact}
+              onToggleDensity={toggleDensity}
+            />
+            <main className='admin-main'>
+              <OperatorRouteGuard />
+              <IdleSessionGuard />
+              <AdminBreadcrumb />
+              {children}
+            </main>
+          </div>
+          <AdminToastHost />
+          <CommandPalette />
+          <ShortcutsHelp />
+        </div>
+      </AdminCountsProvider>
+    </AdminRoleProvider>
   );
 }

@@ -3,14 +3,24 @@ import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
 export type SaveResult =
   | { ok: true; updatedAt?: string }
-  | { ok: false; error: string; conflict?: boolean };
+  | { ok: false; error: string; conflict?: boolean; serverUpdatedAt?: string };
 
-export async function saveSiteData(data: SiteData): Promise<SaveResult> {
+export async function saveSiteData(
+  data: SiteData,
+  opts?: { force?: boolean },
+): Promise<SaveResult> {
   try {
+    const payload = opts?.force
+      ? { ...data, updatedAt: undefined } // omit client rev → server accepts (no conflict check when missing)
+      : data;
+    // Force: stamp with a magic field via header instead — API checks forceOverwrite
     const res = await fetch('/api/site', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        ...(opts?.force ? { 'x-force-overwrite': '1' } : {}),
+      },
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -19,10 +29,14 @@ export async function saveSiteData(data: SiteData): Promise<SaveResult> {
         return { ok: false, error: rateLimitMessage(seconds, 'save') };
       }
       if (res.status === 409) {
-        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        const json = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          updatedAt?: string;
+        };
         return {
           ok: false,
           conflict: true,
+          serverUpdatedAt: json.updatedAt,
           error: json.error || 'Дані змінені іншим сеансом. Оновіть сторінку.',
         };
       }

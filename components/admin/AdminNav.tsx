@@ -9,24 +9,40 @@ import {
   ClipboardList,
   ExternalLink,
   FileText,
+  History,
   Image as ImageIcon,
+  Inbox,
   LayoutDashboard,
+  LifeBuoy,
   List,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
   ShoppingCart,
+  Users,
 } from 'lucide-react';
+import { useAdminCounts } from './AdminCountsContext';
+import { useAdminRole } from './AdminRoleContext';
 
-const LINKS: Array<{ href: string; label: string; icon: LucideIcon; exact?: boolean }> = [
+const LINKS: Array<{
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+  badge?: 'leads' | 'orders' | 'inbox';
+}> = [
   { href: '/admin', label: 'Огляд', icon: LayoutDashboard, exact: true },
-  { href: '/admin/leads', label: 'Заявки', icon: ClipboardList },
-  { href: '/admin/orders', label: 'Замовлення', icon: ShoppingCart },
+  { href: '/admin/inbox', label: 'Inbox', icon: Inbox, badge: 'inbox' },
+  { href: '/admin/leads', label: 'Заявки', icon: ClipboardList, badge: 'leads' },
+  { href: '/admin/orders', label: 'Замовлення', icon: ShoppingCart, badge: 'orders' },
+  { href: '/admin/clients', label: 'Клієнти', icon: Users },
   { href: '/admin/menu', label: 'Меню', icon: List },
   { href: '/admin/pages', label: 'Сторінки', icon: FileText },
   { href: '/admin/goods', label: 'Товари', icon: Box },
   { href: '/admin/media', label: 'Медіатека', icon: ImageIcon },
+  { href: '/admin/activity', label: 'Активність', icon: History },
+  { href: '/admin/ops', label: 'Ops', icon: LifeBuoy },
   { href: '/admin/settings', label: 'Налаштування', icon: Settings },
 ];
 
@@ -35,6 +51,8 @@ type AdminNavProps = {
   mobileOpen: boolean;
   onToggleCollapsed: () => void;
   onCloseMobile: () => void;
+  compact?: boolean;
+  onToggleDensity?: () => void;
 };
 
 export function AdminNav({
@@ -42,8 +60,13 @@ export function AdminNav({
   mobileOpen,
   onToggleCollapsed,
   onCloseMobile,
+  compact,
+  onToggleDensity,
 }: AdminNavProps) {
   const pathname = usePathname();
+  const counts = useAdminCounts();
+  const { canNav, username, role } = useAdminRole();
+  const live = counts.live;
 
   useEffect(() => {
     onCloseMobile();
@@ -54,8 +77,13 @@ export function AdminNav({
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  // Single root <nav> so it is the only left-column grid child of .admin-shell.
-  // Mobile toggle/overlay are rendered by AdminShell outside the grid.
+  function badgeFor(kind?: 'leads' | 'orders' | 'inbox'): number {
+    if (kind === 'leads') return counts.openLeads;
+    if (kind === 'orders') return counts.openOrders;
+    if (kind === 'inbox') return counts.openTotal;
+    return 0;
+  }
+
   return (
     <nav
       className={`admin-nav${mobileOpen ? ' is-open' : ''}${collapsed ? ' is-collapsed' : ''}`}
@@ -82,9 +110,10 @@ export function AdminNav({
       </div>
 
       <div className='admin-nav-links'>
-        {LINKS.map((link) => {
+        {LINKS.filter((link) => canNav(link.href)).map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href, link.exact);
+          const n = badgeFor(link.badge);
           return (
             <Link
               key={link.href}
@@ -96,12 +125,70 @@ export function AdminNav({
             >
               <Icon className='admin-nav-icon' size={20} strokeWidth={2} aria-hidden />
               <span className='admin-nav-label'>{link.label}</span>
+              {n > 0 ? (
+                <span
+                  className={`admin-nav-badge${live && link.badge === 'inbox' ? ' is-live' : ''}`}
+                  aria-label={`${n} відкритих`}
+                >
+                  {n > 99 ? '99+' : n}
+                </span>
+              ) : null}
             </Link>
           );
         })}
       </div>
 
       <div className='admin-nav-footer'>
+        <div className='admin-nav-user' title={`${username} (${role})`}>
+          <span className='admin-nav-icon' aria-hidden style={{ fontSize: 11, width: 20, textAlign: 'center' }}>
+            ●
+          </span>
+          <span className='admin-nav-label'>
+            {username}
+            <span className='admin-nav-role'> · {role}</span>
+          </span>
+        </div>
+        {onToggleDensity ? (
+          <button
+            type='button'
+            className='admin-nav-site'
+            title={compact ? 'Звичайна щільність' : 'Компактний режим'}
+            onClick={onToggleDensity}
+          >
+            <span className='admin-nav-icon' aria-hidden style={{ fontSize: 12, width: 20, textAlign: 'center' }}>
+              ≡
+            </span>
+            <span className='admin-nav-label'>{compact ? 'Компакт: ON' : 'Компакт: OFF'}</span>
+          </button>
+        ) : null}
+        <button
+          type='button'
+          className='admin-nav-site'
+          title='Ctrl+K'
+          onClick={() => {
+            window.dispatchEvent(
+              new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }),
+            );
+          }}
+        >
+          <span className='admin-nav-icon' aria-hidden style={{ fontSize: 14, width: 20, textAlign: 'center' }}>
+            ⌘
+          </span>
+          <span className='admin-nav-label'>Пошук · Ctrl+K</span>
+        </button>
+        <button
+          type='button'
+          className='admin-nav-site'
+          title='Гарячі клавіші'
+          onClick={() => {
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }));
+          }}
+        >
+          <span className='admin-nav-icon' aria-hidden style={{ fontSize: 14, width: 20, textAlign: 'center' }}>
+            ?
+          </span>
+          <span className='admin-nav-label'>Клавіші</span>
+        </button>
         <a
           href='/'
           target='_blank'

@@ -1,14 +1,31 @@
 'use client';
 
-import type { PhoneEntry, Section, SiteData, SocialLink } from '@/lib/types';
+import type { PhoneEntry, Page, Section, SiteData, SocialLink } from '@/lib/types';
 import { saveSiteData } from '@/lib/admin/saveSite';
 import { moveByDir, reorderItems } from '@/lib/admin/reorder';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import { createId } from '@/lib/id';
 import { SECTION_LABELS, SECTION_TYPES, newSection } from '@/lib/section-factory';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { SECTION_TEMPLATES } from '@/lib/section-templates';
+import { pageSeoHints } from '@/lib/page-seo';
+import {
+  applyBody,
+  draftSummary,
+  diffLiveVsEditor,
+  hasServerDraft,
+  pageBodyFrom,
+  pageFromDraft,
+  pagePublished,
+  pageWithDraft,
+  publishedPage,
+  type PageDiffLine,
+} from '@/lib/page-draft';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast } from './AdminToast';
 import { ImageField } from './ImageField';
+import { StickySaveBar } from './StickySaveBar';
+import { RichTextField } from './RichTextField';
+import { useAdminRole } from './AdminRoleContext';
 
 const SOCIAL_TYPES = [
   { type: 'viber', icon: '/img/icons/viber.svg' },
@@ -24,12 +41,35 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  /** Single iframe vs live+draft pair */
+  const [previewSplit, setPreviewSplit] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [undoStack, setUndoStack] = useState<SiteData[]>([]);
+  const [redoStack, setRedoStack] = useState<SiteData[]>([]);
+  const [revisions, setRevisions] = useState<Array<{ id: string; at: string; label?: string }>>([]);
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [livePreviewPath, setLivePreviewPath] = useState<string | null>(null);
+  const [livePreviewBusy, setLivePreviewBusy] = useState(false);
+  /** Last known published snapshot (without draft body) for draft saves. */
+  const liveRef = useRef<Page | null>(null);
+  const [editingDraft, setEditingDraft] = useState(false);
+  const { role, username } = useAdminRole();
+  const canPublishLive = role === 'owner' || role === 'legacy';
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const pageIndex = useMemo(() => data.pages.findIndex((p) => p.slug === pageSlug), [data, pageSlug]);
   const page = data.pages[pageIndex];
   const publicPath = pageSlug ? `/${pageSlug}` : '/';
+  const draftKey = `admin-page-draft:${pageSlug || 'home'}`;
+
+  // Capture published baseline once page is known
+  useEffect(() => {
+    if (!page) return;
+    if (!liveRef.current || liveRef.current.id !== page.id) {
+      liveRef.current = publishedPage(page);
+    }
+  }, [page?.id]);
 
   useUnsavedGuard(dirty);
 
@@ -37,29 +77,267 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
     setPreviewKey((k) => k + 1);
   }, []);
 
-  const save = useCallback(async () => {
-    setSaving(true);
-    const result = await saveSiteData(data);
-    setSaving(false);
-    if (result.ok) {
-      if (result.updatedAt) {
-        setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
+  /** Push current editor page to ephemeral preview (unsaved). */
+  const pushLivePreview = useCallback(async () => {
+    if (!page) return;
+    setLivePreviewBusy(true);
+    try {
+      const res = await fetch('/api/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page }),
+      });
+      if (!res.ok) {
+        showToast('Не вдалося створити live preview', 'error');
+        return;
       }
-      setDirty(false);
-      showToast('Збережено', 'success');
-      reloadPreview();
-    } else {
-      showToast(result.error, 'error');
+      const json = (await res.json()) as { path?: string };
+      if (json.path) {
+        setLivePreviewPath(json.path);
+        setPreviewOpen(true);
+        setPreviewKey((k) => k + 1);
+        showToast('Live preview оновлено (не опубліковано)', 'info');
+      }
+    } catch {
+      showToast('Мережева помилка preview', 'error');
+    } finally {
+      setLivePreviewBusy(false);
     }
-  }, [data, reloadPreview]);
+  }, [page]);
 
-  useSaveShortcut(save, { dirty, enabled: !saving });
+  // Local draft recovery
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { data: SiteData; at: string };
+      if (!parsed?.data?.pages) return;
+      if (confirm(`Знайдено локальну чернетку (${new Date(parsed.at).toLocaleString('uk-UA')}). Відновити?`)) {
+        setData(parsed.data);
+        setDirty(true);
+        showToast('Чернетку відновлено з localStorage', 'info');
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch {
+      /* ignore */
+    }
+    // only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!dirty) return;
+    try {
+      localStorage.setItem(draftKey, JSON.stringify({ data, at: new Date().toISOString() }));
+    } catch {
+      /* ignore */
+    }
+  }, [data, dirty, draftKey]);
+
+  const loadRevisions = useCallback(async () => {
+    if (!page?.id) return;
+    try {
+      const res = await fetch(`/api/revisions?pageId=${encodeURIComponent(page.id)}`);
+      if (!res.ok) return;
+      const json = (await res.json()) as { revisions?: Array<{ id: string; at: string; label?: string }> };
+      setRevisions(json.revisions || []);
+    } catch {
+      /* ignore */
+    }
+  }, [page?.id]);
+
+  useEffect(() => {
+    void loadRevisions();
+  }, [loadRevisions]);
+
+  const save = useCallback(
+    async (opts?: {
+      force?: boolean;
+      asDraft?: boolean;
+      discardDraft?: boolean;
+      requestReview?: boolean;
+    }) => {
+      if (!page || pageIndex < 0) return;
+
+      // Publish gate: role + SEO warnings + non-empty diff
+      if (!opts?.asDraft && !opts?.discardDraft && !opts?.requestReview) {
+        if (!canPublishLive) {
+          showToast('Live publish лише для owner — надішліть «На ревʼю»', 'error');
+          return;
+        }
+        const hints = pageSeoHints(page).filter((h) => h.level === 'warn');
+        const live = liveRef.current || publishedPage(page);
+        const diffs = diffLiveVsEditor(live, page);
+        if (hints.length || diffs.length) {
+          const msg = [
+            'Перевірка перед публікацією:',
+            hints.length ? `SEO: ${hints.map((h) => h.message).join('; ')}` : '',
+            diffs.length ? `Diff vs live: ${diffs.length} змін` : '',
+            '',
+            'OK — все одно опублікувати, Скасувати — лишитись у редакторі.',
+          ]
+            .filter(Boolean)
+            .join('\n');
+          if (!window.confirm(msg)) return;
+        }
+      }
+
+      setSaving(true);
+
+      let nextPage: Page;
+      if (opts?.discardDraft) {
+        nextPage = publishedPage(liveRef.current || page);
+        nextPage = { ...nextPage, reviewRequested: false, reviewRequestedAt: undefined };
+        setEditingDraft(false);
+      } else if (opts?.requestReview) {
+        const live = liveRef.current || publishedPage(page);
+        nextPage = pageWithDraft(live, page);
+        nextPage = {
+          ...nextPage,
+          reviewRequested: true,
+          reviewRequestedAt: new Date().toISOString(),
+          reviewRequestedBy: username || 'editor',
+        };
+        setEditingDraft(true);
+      } else if (opts?.asDraft) {
+        const live = liveRef.current || publishedPage(page);
+        nextPage = pageWithDraft(live, page);
+        setEditingDraft(true);
+      } else {
+        // Publish current editor → live
+        nextPage = pagePublished(page);
+        nextPage = {
+          ...nextPage,
+          reviewRequested: false,
+          reviewRequestedAt: undefined,
+          reviewRequestedBy: undefined,
+        };
+        liveRef.current = publishedPage(nextPage);
+        setEditingDraft(false);
+      }
+
+      const pages = data.pages.map((p, i) => (i === pageIndex ? nextPage : p));
+      const payload = { ...data, pages };
+
+      const result = await saveSiteData(payload, { force: opts?.force });
+      setSaving(false);
+      if (result.ok) {
+        // After draft save, keep editor on draft content (reload from draft field)
+        let editorPage = nextPage;
+        if (opts?.asDraft) {
+          const loaded = pageFromDraft(nextPage);
+          if (loaded) editorPage = loaded;
+        }
+        const pagesForUi = payload.pages.map((p, i) => (i === pageIndex ? editorPage : p));
+        setData({ ...payload, pages: pagesForUi, updatedAt: result.updatedAt || payload.updatedAt });
+        setDirty(false);
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {
+          /* ignore */
+        }
+        if (opts?.discardDraft) showToast('Чернетку відхилено — live без змін', 'info');
+        else if (opts?.requestReview) showToast('Чернетку збережено · запит на ревʼю owner', 'success');
+        else if (opts?.asDraft) showToast('Чернетку збережено (live не змінено)', 'success');
+        else showToast('Опубліковано на сайт', 'success');
+        reloadPreview();
+        setLivePreviewPath(null);
+        if (!opts?.asDraft && !opts?.discardDraft && page.id) {
+          try {
+            await fetch('/api/revisions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'snapshot', pageId: page.id, label: 'publish' }),
+            });
+            await loadRevisions();
+          } catch {
+            /* ignore */
+          }
+        }
+      } else if (result.conflict) {
+        const force = confirm(
+          `${result.error}\n\nOK — перезаписати сервер. Скасувати — оновити сторінку.`,
+        );
+        if (force) {
+          void save({ force: true, asDraft: opts?.asDraft, discardDraft: opts?.discardDraft });
+        } else {
+          window.location.reload();
+        }
+      } else {
+        showToast(result.error, 'error');
+      }
+    },
+    [canPublishLive, data, draftKey, loadRevisions, page, pageIndex, reloadPreview, username],
+  );
+
+  useSaveShortcut(() => void save(), { dirty, enabled: !saving });
+
+  // Undo / redo
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        setUndoStack((stack) => {
+          if (!stack.length) return stack;
+          const prev = stack[stack.length - 1];
+          setRedoStack((r) => [...r, data]);
+          setData(prev);
+          setDirty(true);
+          return stack.slice(0, -1);
+        });
+      } else if (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey)) {
+        e.preventDefault();
+        setRedoStack((stack) => {
+          if (!stack.length) return stack;
+          const next = stack[stack.length - 1];
+          setUndoStack((u) => [...u, data]);
+          setData(next);
+          setDirty(true);
+          return stack.slice(0, -1);
+        });
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [data]);
+
+  const liveBase = liveRef.current || (page ? publishedPage(page) : null);
+  const diffLines: PageDiffLine[] = useMemo(() => {
+    if (!page || !liveBase) return [];
+    try {
+      return diffLiveVsEditor(liveBase, page);
+    } catch {
+      return [];
+    }
+  }, [liveBase, page]);
 
   if (!page) return <p>Сторінку не знайдено</p>;
 
+  const seoHints = pageSeoHints(page);
+  const serverDraftAt = draftSummary(page);
+  const hasDraft = hasServerDraft(page) || editingDraft;
+
   function mark(next: SiteData) {
+    setUndoStack((s) => [...s.slice(-40), data]);
+    setRedoStack([]);
     setData(next);
     setDirty(true);
+  }
+
+  function loadServerDraft() {
+    if (!page || !hasServerDraft(page)) return;
+    const loaded = pageFromDraft(page);
+    if (!loaded) return;
+    mark({
+      ...data,
+      pages: data.pages.map((p, i) => (i === pageIndex ? loaded : p)),
+    });
+    setEditingDraft(true);
+    showToast('Завантажено серверну чернетку в редактор', 'info');
   }
 
   function updatePage(patch: Partial<typeof page>) {
@@ -109,21 +387,241 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
 
   return (
     <div className={previewOpen ? 'admin-constructor admin-constructor--split' : 'admin-constructor'}>
+      <aside className='admin-constructor-outline admin-card' aria-label='Структура секцій'>
+        <h3 className='admin-h3'>Секції</h3>
+        <ul className='admin-outline-list'>
+          {page.sections.map((s, i) => (
+            <li key={s.id}>
+              <button
+                type='button'
+                className={`admin-outline-item${activeSectionId === s.id ? ' is-active' : ''}${
+                  !s.visible ? ' is-hidden' : ''
+                }`}
+                onClick={() => {
+                  setActiveSectionId(s.id);
+                  setCollapsed((prev) => ({ ...prev, [s.id]: false }));
+                  document.getElementById(`section-${s.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
+                <span className='admin-outline-idx'>{i + 1}</span>
+                {SECTION_LABELS[s.type] || s.type}
+                {!s.visible ? ' · hidden' : ''}
+              </button>
+            </li>
+          ))}
+        </ul>
+        {seoHints.length > 0 ? (
+          <div className='admin-seo-hints'>
+            <h3 className='admin-h3'>SEO / якість</h3>
+            <ul>
+              {seoHints.map((h, i) => (
+                <li key={i} className={h.level === 'warn' ? 'is-warn' : 'is-info'}>
+                  {h.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {diffLines.length > 0 ? (
+          <div className='admin-diff-panel'>
+            <h3 className='admin-h3'>Diff vs live ({diffLines.length})</h3>
+            <ul className='admin-diff-list'>
+              {diffLines.slice(0, 24).map((line, i) => (
+                <li key={`${line.field}-${i}`} className={`admin-diff-list__item is-${line.kind}`}>
+                  <strong>{line.field}</strong>
+                  {line.kind === 'added' ? (
+                    <span className='admin-diff-next'>+ {line.next}</span>
+                  ) : line.kind === 'removed' ? (
+                    <span className='admin-diff-live'>− {line.live}</span>
+                  ) : (
+                    <>
+                      <span className='admin-diff-live' title={line.live}>
+                        live: {line.live}
+                      </span>
+                      <span className='admin-diff-next' title={line.next}>
+                        → {line.next}
+                      </span>
+                    </>
+                  )}
+                  {line.kind === 'changed' &&
+                  (line.field === 'Назва' || line.field === 'Meta description') ? (
+                    <button
+                      type='button'
+                      className='admin-linkish'
+                      onClick={() => {
+                        const live = liveRef.current || publishedPage(page);
+                        if (line.field === 'Назва') updatePage({ title: live.title });
+                        if (line.field === 'Meta description') updatePage({ description: live.description });
+                        showToast(`Відкочено: ${line.field}`, 'info');
+                      }}
+                    >
+                      ← live
+                    </button>
+                  ) : null}
+                  {line.kind === 'changed' && line.field.startsWith('Секція ') ? (
+                    <button
+                      type='button'
+                      className='admin-linkish'
+                      onClick={() => {
+                        const live = liveRef.current || publishedPage(page);
+                        // restore full sections order/content from live
+                        updatePage({ sections: structuredClone(live.sections) });
+                        showToast('Секції відновлено з live', 'info');
+                      }}
+                    >
+                      ← усі секції live
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            {diffLines.length > 24 ? (
+              <p className='admin-hint'>…і ще {diffLines.length - 24}</p>
+            ) : null}
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary admin-btn--sm'
+              onClick={() => {
+                const live = liveRef.current || publishedPage(page);
+                mark({
+                  ...data,
+                  pages: data.pages.map((p, i) =>
+                    i === pageIndex ? applyBody(p, pageBodyFrom(live)) : p,
+                  ),
+                });
+                showToast('Редактор = live (без publish)', 'info');
+              }}
+            >
+              Скинути редактор до live
+            </button>
+          </div>
+        ) : (
+          <p className='admin-hint' style={{ marginTop: 12 }}>
+            Diff: редактор = live
+          </p>
+        )}
+        {revisions.length > 0 ? (
+          <div className='admin-revisions'>
+            <h3 className='admin-h3'>Історія</h3>
+            <ul className='admin-checklist'>
+              {revisions.slice(0, 8).map((r) => (
+                <li key={r.id}>
+                  <button
+                    type='button'
+                    className='admin-linkish'
+                    onClick={async () => {
+                      if (!confirm(`Відновити ревізію ${new Date(r.at).toLocaleString('uk-UA')}?`)) return;
+                      const res = await fetch('/api/revisions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'restore', pageId: page.id, revId: r.id }),
+                      });
+                      if (!res.ok) {
+                        showToast('Не вдалося відновити', 'error');
+                        return;
+                      }
+                      showToast('Відновлено — оновлення…', 'success');
+                      window.location.reload();
+                    }}
+                  >
+                    {new Date(r.at).toLocaleString('uk-UA')}
+                    {r.label ? ` · ${r.label}` : ''}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </aside>
+
       <div className='admin-constructor__editor'>
       <div className='admin-card admin-constructor-toolbar'>
         <div className='admin-toolbar'>
-          <button type='button' className='admin-btn' onClick={() => void save()} disabled={saving}>
-            {saving ? 'Збереження…' : 'Зберегти'}
+          <button
+            type='button'
+            className='admin-btn'
+            onClick={() => void save()}
+            disabled={saving || !canPublishLive}
+            title={canPublishLive ? 'Опублікувати на сайт' : 'Лише owner'}
+          >
+            {saving ? 'Збереження…' : 'Опублікувати live'}
           </button>
+          {!canPublishLive ? (
+            <span className='admin-hint'>Publish: owner only · ви — {role}</span>
+          ) : null}
+          {page.reviewRequested ? (
+            <span className='admin-wf-badge admin-wf-badge--waiting'>
+              На ревʼю{page.reviewRequestedBy ? ` · ${page.reviewRequestedBy}` : ''}
+            </span>
+          ) : null}
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            onClick={() => void save({ asDraft: true })}
+            disabled={saving}
+          >
+            Зберегти чернетку
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            onClick={() => void save({ requestReview: true })}
+            disabled={saving}
+            title='Для процесу editor → owner'
+          >
+            На ревʼю
+          </button>
+          {hasServerDraft(page) ? (
+            <>
+              <button
+                type='button'
+                className='admin-btn admin-btn--secondary'
+                disabled={saving}
+                onClick={loadServerDraft}
+              >
+                Відкрити чернетку
+              </button>
+              <button
+                type='button'
+                className='admin-btn admin-btn--danger'
+                disabled={saving}
+                onClick={() => {
+                  if (!confirm('Відхилити серверну чернетку? Live лишиться як є.')) return;
+                  void save({ discardDraft: true });
+                }}
+              >
+                Відхилити чернетку
+              </button>
+            </>
+          ) : null}
+          {hasDraft ? (
+            <span className='admin-wf-badge admin-wf-badge--waiting' title={serverDraftAt || ''}>
+              Чернетка{serverDraftAt ? ` · ${serverDraftAt}` : ''}
+            </span>
+          ) : (
+            <span className='admin-wf-badge admin-wf-badge--done'>Live</span>
+          )}
           <button
             type='button'
             className={`admin-btn admin-btn--secondary${previewOpen ? ' is-active' : ''}`}
             onClick={() => {
               setPreviewOpen((v) => !v);
-              if (!previewOpen) reloadPreview();
+              if (!previewOpen) {
+                if (dirty) void pushLivePreview();
+                else reloadPreview();
+              }
             }}
           >
             {previewOpen ? 'Закрити preview' : 'Preview'}
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            disabled={livePreviewBusy}
+            onClick={() => void pushLivePreview()}
+            title='Попередній перегляд без публікації'
+          >
+            {livePreviewBusy ? 'Preview…' : 'Live draft'}
           </button>
           <a href={publicPath} target='_blank' rel='noreferrer' className='admin-btn admin-btn--secondary'>
             Нова вкладка ↗
@@ -147,15 +645,40 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
               </option>
             ))}
           </select>
+          <select
+            className='admin-select'
+            aria-label='Шаблон блоків'
+            onChange={(e) => {
+              if (!e.target.value) return;
+              const tpl = SECTION_TEMPLATES.find((t) => t.id === e.target.value);
+              e.target.value = '';
+              if (!tpl) return;
+              if (!confirm(`Додати шаблон «${tpl.label}»?`)) return;
+              const created = tpl.build();
+              updateSections([...page.sections, ...created]);
+              showToast(`Додано шаблон: ${tpl.label}`, 'success');
+            }}
+            defaultValue=''
+          >
+            <option value=''>+ Шаблон…</option>
+            {SECTION_TEMPLATES.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setAllCollapsed(true)}>
             Згорнути всі
           </button>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setAllCollapsed(false)}>
             Розгорнути всі
           </button>
-          {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
+          {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S · Ctrl+Z undo</span> : null}
         </div>
-        <p className='admin-hint'>Перетягуйте секції за ⠿ або кнопками ↑↓. Preview показує збережену версію сторінки.</p>
+        <p className='admin-hint'>
+          <strong>Чернетка</strong> не змінює публічний сайт. <strong>Опублікувати live</strong> виводить
+          редактор на сайт і чистить draft. Live draft = preview без публікації.
+        </p>
       </div>
 
       <div className='admin-card'>
@@ -220,6 +743,23 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
               Видима
             </label>
             <label className='admin-field-sm'>
+              Publish at (scheduled)
+              <input
+                type='datetime-local'
+                value={
+                  page.publishAt
+                    ? new Date(page.publishAt).toISOString().slice(0, 16)
+                    : ''
+                }
+                onChange={(e) => {
+                  const v = e.target.value;
+                  updatePage({
+                    publishAt: v ? new Date(v).toISOString() : undefined,
+                  });
+                }}
+              />
+            </label>
+            <label className='admin-field-sm'>
               Розмір заголовків (rem)
               <input
                 type='number'
@@ -256,6 +796,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
         return (
           <div
             key={section.id}
+            id={`section-${section.id}`}
             className={`admin-section-item admin-form${isCollapsed ? ' is-collapsed' : ''}${
               section.visible ? '' : ' is-hidden-section'
             }${isDragging ? ' is-dragging' : ''}${isDropTarget ? ' is-drop-target' : ''}`}
@@ -339,6 +880,22 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                   />
                   видима
                 </label>
+                <label className='admin-check' title='Не показувати на мобільному'>
+                  <input
+                    type='checkbox'
+                    checked={Boolean(section.hideOnMobile)}
+                    onChange={(e) => patchSection(index, { hideOnMobile: e.target.checked })}
+                  />
+                  hide 📱
+                </label>
+                <label className='admin-check' title='Не показувати на desktop'>
+                  <input
+                    type='checkbox'
+                    checked={Boolean(section.hideOnDesktop)}
+                    onChange={(e) => patchSection(index, { hideOnDesktop: e.target.checked })}
+                  />
+                  hide 🖥
+                </label>
                 <button
                   type='button'
                   className='admin-btn admin-btn--secondary'
@@ -394,6 +951,13 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
                         onChange={(e) => patchSection(index, { titleHtml: e.target.value })}
                       />
                     </label>
+                    <RichTextField
+                      label='Заголовок (rich text)'
+                      value={section.titleHtml || ''}
+                      onChange={(html) => patchSection(index, { titleHtml: html })}
+                      rows={3}
+                      hint='Жирний / курсив / посилання. На сайті HTML санітизується.'
+                    />
                     <label>
                       Рядки «про сервіс» (кожен з нового рядка, HTML)
                       <textarea
@@ -921,28 +1485,111 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
           </div>
         );
       })}
+
+      <StickySaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={() => void (canPublishLive ? save() : save({ requestReview: true }))}
+        label={canPublishLive ? 'Опублікувати live' : 'На ревʼю'}
+        extra={
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            disabled={saving}
+            onClick={() => void save({ asDraft: true })}
+          >
+            Чернетка
+          </button>
+        }
+      />
       </div>
 
       {previewOpen ? (
-        <aside className='admin-preview-panel' aria-label='Попередній перегляд сторінки'>
+        <aside
+          className={`admin-preview-panel${previewSplit ? ' admin-preview-panel--split' : ''}`}
+          aria-label='Попередній перегляд сторінки'
+        >
           <div className='admin-preview-toolbar'>
             <strong>Preview</strong>
             <span className='admin-preview-path'>{publicPath}</span>
-            {dirty ? <span className='admin-dirty'>Збережіть, щоб оновити</span> : null}
-            <button type='button' className='admin-btn admin-btn--secondary' onClick={reloadPreview}>
+            {dirty ? <span className='admin-dirty'>є зміни</span> : null}
+            <button
+              type='button'
+              className={`admin-btn admin-btn--secondary${previewMode === 'desktop' ? ' is-active' : ''}`}
+              onClick={() => setPreviewMode('desktop')}
+            >
+              Desktop
+            </button>
+            <button
+              type='button'
+              className={`admin-btn admin-btn--secondary${previewMode === 'mobile' ? ' is-active' : ''}`}
+              onClick={() => setPreviewMode('mobile')}
+            >
+              Mobile
+            </button>
+            <button
+              type='button'
+              className={`admin-btn admin-btn--secondary${previewSplit ? ' is-active' : ''}`}
+              onClick={() => {
+                setPreviewSplit((v) => {
+                  const next = !v;
+                  if (next && !livePreviewPath) void pushLivePreview();
+                  return next;
+                });
+              }}
+              title='Live сайт | чернетка редактора'
+            >
+              Live|Draft
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary'
+              onClick={() => {
+                if (previewSplit || livePreviewPath) void pushLivePreview();
+                else reloadPreview();
+              }}
+            >
               Оновити
             </button>
             <a href={publicPath} target='_blank' rel='noreferrer' className='admin-btn admin-btn--secondary'>
               ↗
             </a>
           </div>
-          <iframe
-            key={previewKey}
-            ref={iframeRef}
-            className='admin-preview-frame'
-            src={publicPath}
-            title={`Preview ${publicPath}`}
-          />
+          {previewSplit ? (
+            <div className={`admin-preview-split admin-preview-frame-wrap--${previewMode}`}>
+              <div className='admin-preview-col'>
+                <div className='admin-preview-col__label'>LIVE (сайт)</div>
+                <iframe
+                  key={`live-${previewKey}`}
+                  className='admin-preview-frame'
+                  src={publicPath}
+                  title={`Live ${publicPath}`}
+                />
+              </div>
+              <div className='admin-preview-col'>
+                <div className='admin-preview-col__label'>
+                  DRAFT {livePreviewPath ? '' : '(натисніть Live draft / Оновити)'}
+                </div>
+                <iframe
+                  key={`draft-${previewKey}`}
+                  ref={iframeRef}
+                  className='admin-preview-frame'
+                  src={livePreviewPath || publicPath}
+                  title={`Draft ${livePreviewPath || publicPath}`}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className={`admin-preview-frame-wrap admin-preview-frame-wrap--${previewMode}`}>
+              <iframe
+                key={previewKey}
+                ref={iframeRef}
+                className='admin-preview-frame'
+                src={livePreviewPath || publicPath}
+                title={`Preview ${livePreviewPath || publicPath}`}
+              />
+            </div>
+          )}
         </aside>
       ) : null}
     </div>

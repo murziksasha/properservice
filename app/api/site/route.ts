@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { getSiteData, saveSiteData } from '@/lib/site-data';
 import type { SiteData } from '@/lib/types';
 import { parseSiteData } from '@/lib/validation';
+import { requireAdminRole } from '@/lib/require-role';
 
 const PATCH_SECTIONS = [
   'goods',
@@ -17,30 +16,17 @@ const PATCH_SECTIONS = [
 type PatchSection = (typeof PATCH_SECTIONS)[number];
 
 export async function GET() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return NextResponse.json({ error: ipGate.error }, { status: ipGate.status });
-  }
-
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Operators may read site for command palette / counts; writes restricted below
+  const g = await requireAdminRole();
+  if (!g.ok) return g.response;
 
   const data = await getSiteData();
   return NextResponse.json(data);
 }
 
 export async function PUT(request: NextRequest) {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return NextResponse.json({ error: ipGate.error }, { status: ipGate.status });
-  }
-
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const g = await requireAdminRole('content');
+  if (!g.ok) return g.response;
 
   const rl = rateLimit(clientKey(request, 'site-write'), { limit: 30, windowMs: 60_000 });
   if (!rl.allowed) {
@@ -62,8 +48,9 @@ export async function PUT(request: NextRequest) {
     const current = await getSiteData();
     const clientRev = parsed.data.updatedAt;
     const serverRev = current.updatedAt;
+    const force = request.headers.get('x-force-overwrite') === '1';
     // Optimistic concurrency: if both have a revision and they differ, reject
-    if (clientRev && serverRev && clientRev !== serverRev) {
+    if (!force && clientRev && serverRev && clientRev !== serverRev) {
       return NextResponse.json(
         {
           error: 'Дані змінені іншим сеансом. Оновіть сторінку та повторіть.',
@@ -75,6 +62,18 @@ export async function PUT(request: NextRequest) {
     }
 
     const saved = await saveSiteData(parsed.data);
+    try {
+      const { appendActivity } = await import('@/lib/admin-activity');
+      const { getSessionClaims } = await import('@/lib/auth');
+      const claims = await getSessionClaims();
+      await appendActivity({
+        kind: 'site_save',
+        message: force ? 'Збережено сайт (force overwrite)' : 'Збережено site.json',
+        actor: claims?.username,
+      });
+    } catch {
+      /* ignore */
+    }
     return NextResponse.json({ ok: true, updatedAt: saved.updatedAt });
   } catch {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });
@@ -86,15 +85,8 @@ export async function PUT(request: NextRequest) {
  * Body: { section: 'goods'|'settings'|..., data: ..., expectedUpdatedAt?: string }
  */
 export async function PATCH(request: NextRequest) {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return NextResponse.json({ error: ipGate.error }, { status: ipGate.status });
-  }
-
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const g = await requireAdminRole('content');
+  if (!g.ok) return g.response;
 
   const rl = rateLimit(clientKey(request, 'site-write'), { limit: 30, windowMs: 60_000 });
   if (!rl.allowed) {

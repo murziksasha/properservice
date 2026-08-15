@@ -2,6 +2,7 @@
 
 import type { PhoneEntry, SiteData, SocialLink } from '@/lib/types';
 import { saveSiteData } from '@/lib/admin/saveSite';
+import { resolveSaveConflict } from '@/lib/admin/handleSaveResult';
 import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import { createId } from '@/lib/id';
 import { useCallback, useState } from 'react';
@@ -9,6 +10,9 @@ import { showToast } from './AdminToast';
 import { BackupPanel } from './BackupPanel';
 import { ImageField } from './ImageField';
 import { TotpSetupPanel } from './TotpSetupPanel';
+import { UsersPanel } from './UsersPanel';
+import { StickySaveBar } from './StickySaveBar';
+import { NotifyPrefsPanel } from './NotifyPrefsPanel';
 
 const SOCIAL_PRESETS: Array<{ type: string; icon: string; label: string }> = [
   { type: 'viber', icon: '/img/icons/viber.svg', label: 'Viber' },
@@ -36,7 +40,15 @@ export function SettingsEditor({ initialData }: { initialData: SiteData }) {
 
   const save = useCallback(async () => {
     setSaving(true);
-    const result = await saveSiteData(data);
+    let result = await saveSiteData(data);
+    if (!result.ok && result.conflict) {
+      const forced = await resolveSaveConflict(data, result);
+      if (forced) result = forced;
+      else {
+        setSaving(false);
+        return;
+      }
+    }
     setSaving(false);
     if (result.ok) {
       if (result.updatedAt) setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
@@ -282,7 +294,40 @@ export function SettingsEditor({ initialData }: { initialData: SiteData }) {
 
       <TotpSetupPanel />
 
+      <NotifyPrefsPanel />
+
+      <UsersPanel />
+
+      <div className='admin-card'>
+        <h2 className='admin-h2'>Ops alerts</h2>
+        <p className='admin-hint'>Перевірка backup &gt;48г та SMTP → Telegram (throttle 12 год).</p>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          onClick={async () => {
+            try {
+              const res = await fetch('/api/ops-alerts', { method: 'POST' });
+              const j = (await res.json().catch(() => ({}))) as { sent?: string[]; error?: string };
+              if (!res.ok) {
+                showToast(j.error || 'Помилка', 'error');
+                return;
+              }
+              showToast(
+                j.sent?.length ? `Надіслано: ${j.sent.join(', ')}` : 'Алертів немає / throttle',
+                'success',
+              );
+            } catch {
+              showToast('Мережева помилка', 'error');
+            }
+          }}
+        >
+          Запустити ops alerts
+        </button>
+      </div>
+
       <BackupPanel />
+
+      <StickySaveBar dirty={dirty} saving={saving} onSave={() => void save()} />
     </div>
   );
 }

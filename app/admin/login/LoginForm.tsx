@@ -40,13 +40,18 @@ export function LoginForm() {
 
     const formData = new FormData(event.currentTarget);
     const password = String(formData.get('password') ?? '');
+    const username = String(formData.get('username') ?? '');
     const totp = String(formData.get('totp') ?? '');
 
     try {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, totp: totp || undefined }),
+        body: JSON.stringify({
+          password,
+          username: username || undefined,
+          totp: totp || undefined,
+        }),
         credentials: 'same-origin',
       });
 
@@ -94,6 +99,16 @@ export function LoginForm() {
       <form onSubmit={handleSubmit} className='admin-login-card' aria-busy={loading}>
         <div className='admin-login-brand'>Proper Service</div>
         <h1>Вхід до адмінки</h1>
+        <label htmlFor='admin-username'>
+          Логін <span className='admin-hint'>(опційно, multi-user)</span>
+          <input
+            id='admin-username'
+            name='username'
+            type='text'
+            autoComplete='username'
+            disabled={loading || locked}
+          />
+        </label>
         <label htmlFor='admin-password'>
           Пароль
           <input

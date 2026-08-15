@@ -1,29 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { getSession } from '@/lib/auth';
 import { appendOrder, deleteOrder, listOrders, updateOrder } from '@/lib/orders';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
-import { assertAdminIp } from '@/lib/require-admin-ip';
 import { escapeText } from '@/lib/sanitize';
-import { isValidUaPhone, normalizePhoneDisplay } from '@/lib/phone';
+import { isValidUaPhone, normalizePhoneCanonical } from '@/lib/phone';
 import { getProduct } from '@/lib/site-data';
 import { notifyOrder } from '@/lib/notify';
 import { toCsv } from '@/lib/csv';
+import { isWorkflowStatus } from '@/lib/workflow';
+import { requireAdminRole } from '@/lib/require-role';
 
 export const dynamic = 'force-dynamic';
 
 const MAX_COMMENT = 1000;
 
 async function guard() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return { ok: false as const, response: NextResponse.json({ error: ipGate.error }, { status: ipGate.status }) };
-  }
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-  return { ok: true as const };
+  return requireAdminRole('orders');
 }
 
 /** Public: create shop order */
@@ -63,7 +55,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, emailed: false });
     }
 
-    phone = normalizePhoneDisplay(phone);
+    phone = normalizePhoneCanonical(phone);
     productId = productId.trim();
     comment = comment.trim().slice(0, MAX_COMMENT);
 
@@ -196,7 +188,7 @@ export async function GET(request: NextRequest) {
   const format = request.nextUrl.searchParams.get('format');
   if (format === 'csv') {
     const csv = toCsv(
-      ['id', 'createdAt', 'phone', 'product', 'code', 'price', 'comment', 'handled', 'note', 'emailed'],
+      ['id', 'createdAt', 'phone', 'product', 'code', 'price', 'comment', 'status', 'handled', 'note', 'emailed', 'callbackAt'],
       orders.map((o) => [
         o.id,
         o.createdAt,
@@ -205,9 +197,11 @@ export async function GET(request: NextRequest) {
         o.product.code || '',
         o.product.price,
         o.comment || '',
+        o.status || '',
         o.handled,
         o.note || '',
         o.emailed,
+        o.callbackAt || '',
       ]),
     );
     return new NextResponse(csv, {
@@ -230,13 +224,24 @@ export async function PATCH(request: NextRequest) {
   if (!g.ok) return g.response;
 
   try {
-    const body = (await request.json()) as { id?: string; handled?: boolean; note?: string };
+    const body = (await request.json()) as {
+      id?: string;
+      handled?: boolean;
+      note?: string;
+      status?: string;
+      callbackAt?: string;
+    };
     if (!body.id || typeof body.id !== 'string') {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+    if (body.status !== undefined && !isWorkflowStatus(body.status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
     const updated = await updateOrder(body.id, {
       handled: body.handled,
       note: body.note,
+      status: body.status as undefined | import('@/lib/workflow').WorkflowStatus,
+      callbackAt: body.callbackAt,
     });
     if (!updated) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

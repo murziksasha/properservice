@@ -49,6 +49,8 @@ export function HealthPanel() {
 
   useEffect(() => {
     void load();
+    // Fire-and-forget ops alerts (server throttles); no UI block
+    void fetch('/api/ops-alerts', { method: 'POST' }).catch(() => {});
     const id = window.setInterval(() => void load(), 30_000);
     return () => window.clearInterval(id);
   }, [load]);
@@ -107,7 +109,7 @@ export function HealthPanel() {
       <p className='admin-hint admin-offsite-hint'>
         <strong>Off-site backup:</strong> {health.offsiteHint}
       </p>
-      <div className='admin-row admin-mb'>
+      <div className='admin-row admin-mb admin-row--wrap'>
         <button
           type='button'
           className='admin-btn admin-btn--secondary'
@@ -126,6 +128,35 @@ export function HealthPanel() {
           }}
         >
           Тест SMTP
+        </button>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(JSON.stringify(health, null, 2));
+              alert('Health JSON скопійовано');
+            } catch {
+              alert(JSON.stringify(health, null, 2));
+            }
+          }}
+        >
+          Копіювати health
+        </button>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          onClick={() => {
+            const blob = new Blob([JSON.stringify(health, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `health-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
+          Export health
         </button>
       </div>
       <p className='admin-hint'>

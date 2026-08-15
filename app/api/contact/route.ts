@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-import { appendLead, updateLead } from '@/lib/leads';
+import { appendLead, findOpenLeadsByPhone, updateLead } from '@/lib/leads';
 import {
   absoluteSiteUrl,
   sanitizePagePath,
@@ -10,7 +10,7 @@ import {
 import { notifyLead } from '@/lib/notify';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { escapeText } from '@/lib/sanitize';
-import { isValidUaPhone, normalizePhoneDisplay } from '@/lib/phone';
+import { isValidUaPhone, normalizePhoneCanonical } from '@/lib/phone';
 import { formatUtmLine, mergeUtm, parseUtmFromBody, parseUtmFromPagePath } from '@/lib/utm';
 
 function clientIp(request: NextRequest): string {
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, emailed: false });
     }
 
-    phone = normalizePhoneDisplay(phone);
+    phone = normalizePhoneCanonical(phone);
 
     if (!phone) {
       return NextResponse.json({ error: 'Missing phone' }, { status: 400 });
@@ -93,15 +93,34 @@ export async function POST(request: NextRequest) {
     const mailFrom = process.env.MAIL_FROM || smtpUser || 'no-reply@example.com';
     const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
 
+    // Dedup: if open lead exists for same phone, append note instead of new row
     let lead;
+    let deduped = false;
     try {
-      lead = await appendLead({
-        phone,
-        emailed: false,
-        source: 'callback',
-        pagePath,
-        utm,
-      });
+      const openSame = await findOpenLeadsByPhone(phone);
+      if (openSame.length > 0) {
+        const existing = openSame[0];
+        const noteLine = [
+          `Повторна заявка ${new Date().toLocaleString('uk-UA')}`,
+          pagePath ? `сторінка ${pagePath}` : '',
+          pageTitle ? `«${pageTitle}»` : '',
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        const prevNote = (existing.note || '').trim();
+        lead = await updateLead(existing.id, {
+          note: prevNote ? `${prevNote}\n${noteLine}` : noteLine,
+        });
+        deduped = true;
+      } else {
+        lead = await appendLead({
+          phone,
+          emailed: false,
+          source: 'callback',
+          pagePath,
+          utm,
+        });
+      }
     } catch (err) {
       console.error('[leads] failed to persist', err);
       lead = null;
@@ -162,7 +181,9 @@ export async function POST(request: NextRequest) {
         });
 
         const html = `
-        <p>Клієнт залишив <strong>заявку на дзвінок</strong>.</p>
+        <p>Клієнт залишив <strong>заявку на дзвінок</strong>${
+          deduped ? ' <em>(повтор · оновлено існуючу)</em>' : ''
+        }.</p>
         <p><strong>Телефон:</strong> <a href="tel:${escapeText(phoneDigits)}">${safePhone}</a></p>
         <p><strong>Час:</strong> ${safeWhen}</p>
         <p><strong>ID заявки:</strong> ${safeId}</p>
@@ -202,13 +223,13 @@ export async function POST(request: NextRequest) {
         await transporter.sendMail({
           from: `"Proper Service" <${mailFrom}>`,
           to: mailTo,
-          subject: `Новий дзвінок з сайту · ${phone}`,
+          subject: `${deduped ? 'Повторний' : 'Новий'} дзвінок з сайту · ${phone}`,
           html,
           text: textLines.join('\n'),
         });
         emailed = true;
 
-        if (lead) {
+        if (lead && !deduped) {
           try {
             await updateLead(lead.id, { emailed: true });
           } catch (err) {
@@ -230,6 +251,8 @@ export async function POST(request: NextRequest) {
       ok: true,
       emailed,
       telegram,
+      deduped,
+      leadId: lead?.id,
       dev: !smtpUser || !smtpPass,
     });
   } catch (err) {

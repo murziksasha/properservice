@@ -158,13 +158,15 @@ npm run backup
 
 ### HTTP cron (якщо сайт запущений)
 
-У `.env`: `BACKUP_CRON_SECRET=...`
+У `.env`: `BACKUP_CRON_SECRET=...` (той самий секрет для ops-alerts)
 
 ```bash
 curl -X POST -H "Authorization: Bearer $BACKUP_CRON_SECRET" http://localhost/api/backup
+# Ops: backup >48h / SMTP missing → Telegram (throttle 12h)
+curl -X POST -H "Authorization: Bearer $BACKUP_CRON_SECRET" http://localhost/api/ops-alerts
 ```
 
-Список snapshot: адмінка → **Налаштування → Backup**.
+Список snapshot: адмінка → **Налаштування → Backup**. Ops alerts також спрацьовують при відкритті Dashboard (HealthPanel).
 
 ## Security notes
 

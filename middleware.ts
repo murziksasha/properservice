@@ -20,8 +20,22 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api/upload') ||
     pathname.startsWith('/api/backup') ||
     pathname.startsWith('/api/leads') ||
+    pathname.startsWith('/api/orders') ||
     pathname.startsWith('/api/media') ||
-    pathname.startsWith('/api/smtp-test');
+    pathname.startsWith('/api/smtp-test') ||
+    pathname.startsWith('/api/inbox') ||
+    pathname.startsWith('/api/inbox/stream') ||
+    pathname.startsWith('/api/activity') ||
+    pathname.startsWith('/api/stats') ||
+    pathname.startsWith('/api/revisions') ||
+    pathname.startsWith('/api/users') ||
+    pathname.startsWith('/api/sessions') ||
+    pathname.startsWith('/api/preview') ||
+    pathname.startsWith('/api/notify') ||
+    pathname.startsWith('/api/clients') ||
+    pathname.startsWith('/api/prices') ||
+    pathname.startsWith('/api/ops-alerts') ||
+    pathname.startsWith('/api/digest');
 
   if (!isAdminUi && !isProtectedApi) {
     return NextResponse.next();
@@ -83,9 +97,36 @@ export const config = {
     '/api/backup/:path*',
     '/api/leads',
     '/api/leads/:path*',
+    '/api/orders',
+    '/api/orders/:path*',
     '/api/media',
     '/api/media/:path*',
     '/api/smtp-test',
     '/api/smtp-test/:path*',
+    '/api/inbox',
+    '/api/inbox/:path*',
+    '/api/inbox/stream',
+    '/api/activity',
+    '/api/activity/:path*',
+    '/api/stats',
+    '/api/stats/:path*',
+    '/api/revisions',
+    '/api/revisions/:path*',
+    '/api/users',
+    '/api/users/:path*',
+    '/api/sessions',
+    '/api/sessions/:path*',
+    '/api/preview',
+    '/api/preview/:path*',
+    '/api/notify',
+    '/api/notify/:path*',
+    '/api/clients',
+    '/api/clients/:path*',
+    '/api/prices',
+    '/api/prices/:path*',
+    '/api/ops-alerts',
+    '/api/ops-alerts/:path*',
+    '/api/digest',
+    '/api/digest/:path*',
   ],
 };

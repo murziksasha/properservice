@@ -3,10 +3,27 @@ import path from 'path';
 import { atomicWriteJson } from './atomic-write';
 import { createId } from './id';
 import type { UtmParams } from './utm';
+import {
+  handledFromStatus,
+  isCloseOutcome,
+  isWorkflowStatus,
+  normalizeStatus,
+  type CloseOutcome,
+  type WorkflowStatus,
+} from './workflow';
 
 export interface LeadAuditEntry {
   at: string;
-  action: 'created' | 'handled' | 'reopened' | 'note' | 'emailed';
+  action:
+    | 'created'
+    | 'handled'
+    | 'reopened'
+    | 'note'
+    | 'emailed'
+    | 'status'
+    | 'callback'
+    | 'assign'
+    | 'outcome';
   detail?: string;
 }
 
@@ -17,7 +34,14 @@ export interface Lead {
   source: 'callback';
   emailed: boolean;
   handled: boolean;
+  /** Workflow status; if missing, derived from `handled`. */
+  status?: WorkflowStatus;
   note?: string;
+  /** Close outcome when done/spam/no_answer */
+  outcome?: CloseOutcome;
+  /** Operator username who claimed the lead */
+  assignee?: string;
+  claimedAt?: string;
   pagePath?: string;
   utmSource?: string;
   utmMedium?: string;
@@ -25,6 +49,8 @@ export interface Lead {
   utmContent?: string;
   utmTerm?: string;
   handledAt?: string;
+  /** Schedule callback ISO */
+  callbackAt?: string;
   audit?: LeadAuditEntry[];
   telegram?: boolean;
 }
@@ -64,14 +90,36 @@ function pushAudit(lead: Lead, entry: LeadAuditEntry): LeadAuditEntry[] {
   return list.slice(-MAX_AUDIT);
 }
 
+export function withNormalizedLead(lead: Lead): Lead {
+  const status = normalizeStatus(lead.status, lead.handled);
+  return {
+    ...lead,
+    status,
+    handled: handledFromStatus(status),
+  };
+}
+
 export async function listLeads(): Promise<Lead[]> {
   const store = await readStore();
-  return store.leads;
+  return store.leads.map(withNormalizedLead);
+}
+
+/** Open leads matching phone (for dedup). */
+export async function findOpenLeadsByPhone(phone: string): Promise<Lead[]> {
+  const { phonesMatch } = await import('./phone');
+  const leads = await listLeads();
+  return leads.filter((l) => {
+    const st = normalizeStatus(l.status, l.handled);
+    if (st === 'done' || st === 'spam') return false;
+    return phonesMatch(l.phone, phone);
+  });
 }
 
 export async function countLeads(options?: { unhandledOnly?: boolean }): Promise<number> {
   const leads = await listLeads();
-  if (options?.unhandledOnly) return leads.filter((l) => !l.handled).length;
+  if (options?.unhandledOnly) {
+    return leads.filter((l) => !handledFromStatus(normalizeStatus(l.status, l.handled))).length;
+  }
   return leads.length;
 }
 
@@ -92,6 +140,7 @@ export async function appendLead(input: {
     source: input.source || 'callback',
     emailed: input.emailed,
     handled: false,
+    status: 'new',
     ...(input.pagePath ? { pagePath: input.pagePath } : {}),
     ...(input.utm?.utmSource ? { utmSource: input.utm.utmSource } : {}),
     ...(input.utm?.utmMedium ? { utmMedium: input.utm.utmMedium } : {}),
@@ -106,26 +155,45 @@ export async function appendLead(input: {
     store.leads = store.leads.slice(0, MAX_LEADS);
   }
   await writeStore(store);
-  return lead;
+  return withNormalizedLead(lead);
 }
 
-export async function updateLead(
-  id: string,
-  patch: Partial<Pick<Lead, 'handled' | 'note' | 'emailed'>>,
-): Promise<Lead | null> {
+export type LeadPatch = Partial<
+  Pick<Lead, 'handled' | 'note' | 'emailed' | 'status' | 'callbackAt' | 'outcome' | 'assignee'>
+>;
+
+export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | null> {
   const store = await readStore();
   const idx = store.leads.findIndex((l) => l.id === id);
   if (idx < 0) return null;
-  const current = store.leads[idx];
+  const current = withNormalizedLead(store.leads[idx]);
   const now = new Date().toISOString();
   let audit = current.audit || [];
 
-  if (typeof patch.handled === 'boolean' && patch.handled !== current.handled) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: patch.handled ? 'handled' : 'reopened' },
-    );
+  let nextStatus = current.status || 'new';
+  if (patch.status !== undefined && isWorkflowStatus(patch.status)) {
+    nextStatus = patch.status;
+  } else if (typeof patch.handled === 'boolean') {
+    nextStatus = patch.handled
+      ? 'done'
+      : current.status === 'done' || current.status === 'spam'
+        ? 'new'
+        : current.status || 'new';
+    if (patch.handled === false && (current.status === 'done' || current.status === 'spam')) {
+      nextStatus = 'new';
+    }
+    if (patch.handled === true) nextStatus = 'done';
   }
+
+  if (nextStatus !== current.status) {
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'status', detail: nextStatus });
+    if (handledFromStatus(nextStatus) && !handledFromStatus(current.status || 'new')) {
+      audit = pushAudit({ ...current, audit }, { at: now, action: 'handled' });
+    } else if (!handledFromStatus(nextStatus) && handledFromStatus(current.status || 'new')) {
+      audit = pushAudit({ ...current, audit }, { at: now, action: 'reopened' });
+    }
+  }
+
   if (patch.note !== undefined && patch.note !== current.note) {
     audit = pushAudit(
       { ...current, audit },
@@ -135,23 +203,51 @@ export async function updateLead(
   if (typeof patch.emailed === 'boolean' && patch.emailed && !current.emailed) {
     audit = pushAudit({ ...current, audit }, { at: now, action: 'emailed' });
   }
+  if (patch.callbackAt !== undefined && patch.callbackAt !== current.callbackAt) {
+    audit = pushAudit(
+      { ...current, audit },
+      { at: now, action: 'callback', detail: patch.callbackAt?.slice(0, 40) || 'cleared' },
+    );
+  }
+  if (patch.assignee !== undefined && patch.assignee !== current.assignee) {
+    audit = pushAudit(
+      { ...current, audit },
+      { at: now, action: 'assign', detail: patch.assignee || 'unassigned' },
+    );
+  }
+  const nextOutcome =
+    patch.outcome !== undefined && isCloseOutcome(patch.outcome)
+      ? patch.outcome
+      : current.outcome;
+  if (patch.outcome !== undefined && patch.outcome !== current.outcome) {
+    audit = pushAudit(
+      { ...current, audit },
+      { at: now, action: 'outcome', detail: String(patch.outcome || '') },
+    );
+  }
 
+  const closed = handledFromStatus(nextStatus);
   const next: Lead = {
     ...current,
-    handled: typeof patch.handled === 'boolean' ? patch.handled : current.handled,
+    status: nextStatus,
+    handled: closed,
     note: patch.note !== undefined ? patch.note : current.note,
     emailed: typeof patch.emailed === 'boolean' ? patch.emailed : current.emailed,
-    audit,
-    handledAt:
-      typeof patch.handled === 'boolean'
-        ? patch.handled
-          ? now
+    callbackAt: patch.callbackAt !== undefined ? patch.callbackAt || undefined : current.callbackAt,
+    outcome: closed ? nextOutcome : undefined,
+    assignee: patch.assignee !== undefined ? patch.assignee || undefined : current.assignee,
+    claimedAt:
+      patch.assignee !== undefined
+        ? patch.assignee
+          ? current.claimedAt || now
           : undefined
-        : current.handledAt,
+        : current.claimedAt,
+    audit,
+    handledAt: closed ? current.handledAt || now : undefined,
   };
   store.leads[idx] = next;
   await writeStore(store);
-  return next;
+  return withNormalizedLead(next);
 }
 
 export async function deleteLead(id: string): Promise<boolean> {

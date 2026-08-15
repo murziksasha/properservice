@@ -162,11 +162,32 @@ export function renameCategoryInGoods<T extends Product>(goods: T[], from: strin
   });
 }
 
+/** Pinned products first (sortPin), preserving relative order within each group. */
+export function applySortPin<T extends Product>(items: T[]): T[] {
+  if (items.length < 2) return items;
+  const pinned: T[] = [];
+  const rest: T[] = [];
+  for (const p of items) {
+    if (p.sortPin) pinned.push(p);
+    else rest.push(p);
+  }
+  if (!pinned.length) return items;
+  return [...pinned, ...rest];
+}
+
 export function sortProducts<T extends Product>(items: T[], sort: ProductSort = 'manual'): T[] {
-  if (sort === 'manual' || items.length < 2) return items;
+  if (items.length < 2) return items;
+
+  if (sort === 'manual') {
+    return applySortPin(items);
+  }
 
   const next = [...items];
   next.sort((a, b) => {
+    // Pinned always float to top for any sort
+    if (Boolean(a.sortPin) !== Boolean(b.sortPin)) {
+      return a.sortPin ? -1 : 1;
+    }
     switch (sort) {
       case 'price-asc':
         return a.price - b.price || a.title.localeCompare(b.title, 'uk');

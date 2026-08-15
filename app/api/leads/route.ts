@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
 import { toCsv } from '@/lib/csv';
-import { assertAdminIp } from '@/lib/require-admin-ip';
 import { deleteLead, listLeads, updateLead } from '@/lib/leads';
+import { isWorkflowStatus } from '@/lib/workflow';
+import { requireAdminRole } from '@/lib/require-role';
 
 export const dynamic = 'force-dynamic';
 
 async function guard() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return { ok: false as const, response: NextResponse.json({ error: ipGate.error }, { status: ipGate.status }) };
-  }
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-  return { ok: true as const };
+  return requireAdminRole('leads');
 }
 
 export async function GET(request: NextRequest) {
@@ -34,9 +26,11 @@ export async function GET(request: NextRequest) {
         'utmSource',
         'utmMedium',
         'utmCampaign',
+        'status',
         'handled',
         'note',
         'emailed',
+        'callbackAt',
       ],
       leads.map((l) => [
         l.id,
@@ -46,9 +40,11 @@ export async function GET(request: NextRequest) {
         l.utmSource || '',
         l.utmMedium || '',
         l.utmCampaign || '',
+        l.status || '',
         l.handled,
         l.note || '',
         l.emailed,
+        l.callbackAt || '',
       ]),
     );
     return new NextResponse(csv, {
@@ -71,13 +67,24 @@ export async function PATCH(request: NextRequest) {
   if (!g.ok) return g.response;
 
   try {
-    const body = (await request.json()) as { id?: string; handled?: boolean; note?: string };
+    const body = (await request.json()) as {
+      id?: string;
+      handled?: boolean;
+      note?: string;
+      status?: string;
+      callbackAt?: string;
+    };
     if (!body.id || typeof body.id !== 'string') {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+    }
+    if (body.status !== undefined && !isWorkflowStatus(body.status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
     const updated = await updateLead(body.id, {
       handled: body.handled,
       note: body.note,
+      status: body.status as undefined | import('@/lib/workflow').WorkflowStatus,
+      callbackAt: body.callbackAt,
     });
     if (!updated) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -10,6 +10,9 @@ export type PublicImageProps = Omit<ImageProps, 'onLoad' | 'onLoadingComplete'> 
   wrapperClassName?: string;
   /** Named view-transition element (e.g. service-hero). */
   viewTransitionName?: string;
+  /** object-position focus (0–100). */
+  focusX?: number;
+  focusY?: number;
 };
 
 function srcKey(src: ImageProps['src']): string {
@@ -21,9 +24,6 @@ function srcKey(src: ImageProps['src']): string {
 /**
  * Public-site image with reserved box, soft reveal after decode, and optional
  * view-transition name. Priority images stay visible immediately (LCP-safe).
- *
- * Loaded state is keyed by `src` so we never reset after onLoad (a useEffect
- * reset was leaving opacity:0 forever on cached / fast loads).
  */
 export function PublicImage({
   className,
@@ -33,6 +33,9 @@ export function PublicImage({
   priority,
   src,
   alt,
+  focusX,
+  focusY,
+  style: styleProp,
   ...rest
 }: PublicImageProps) {
   const key = srcKey(src);
@@ -52,18 +55,28 @@ export function PublicImage({
     .filter(Boolean)
     .join(' ');
 
-  const style: CSSProperties | undefined = viewTransitionName
-    ? ({ viewTransitionName } as CSSProperties)
-    : undefined;
+  const objectPosition =
+    focusX != null || focusY != null
+      ? `${focusX != null && Number.isFinite(focusX) ? focusX : 50}% ${
+          focusY != null && Number.isFinite(focusY) ? focusY : 50
+        }%`
+      : undefined;
+
+  const style: CSSProperties = {
+    ...(styleProp as CSSProperties | undefined),
+    ...(viewTransitionName ? ({ viewTransitionName } as CSSProperties) : {}),
+    ...(objectPosition ? { objectPosition } : {}),
+  };
 
   return (
-    <span className={wrapClass} style={style}>
+    <span className={wrapClass} style={viewTransitionName ? ({ viewTransitionName } as CSSProperties) : undefined}>
       <Image
         {...rest}
         src={src}
         alt={alt}
         priority={priority}
         className={imgClass}
+        style={Object.keys(style).length ? style : undefined}
         onLoad={() => setLoadedKey(key)}
         onLoadingComplete={() => setLoadedKey(key)}
       />

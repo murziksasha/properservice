@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
+import { requireAdminRole } from '@/lib/require-role';
 import {
   deleteUpload,
   folderCounts,
@@ -25,15 +24,7 @@ import { getSiteData } from '@/lib/site-data';
 export const dynamic = 'force-dynamic';
 
 async function guard() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return { ok: false as const, response: NextResponse.json({ error: ipGate.error }, { status: ipGate.status }) };
-  }
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-  return { ok: true as const };
+  return requireAdminRole('media');
 }
 
 function parseSort(raw: string | null): 'manual' | 'mtime' | 'name' {
@@ -114,6 +105,8 @@ export async function PATCH(request: NextRequest) {
       purpose?: string;
       tags?: string[] | string;
       alt?: string;
+      focusX?: number;
+      focusY?: number;
       folderId?: string;
       sortOrder?: number;
       /** Bulk reorder within a folder */
@@ -163,6 +156,8 @@ export async function PATCH(request: NextRequest) {
       purpose,
       tags,
       alt: typeof body.alt === 'string' ? body.alt : undefined,
+      focusX: typeof body.focusX === 'number' ? body.focusX : undefined,
+      focusY: typeof body.focusY === 'number' ? body.focusY : undefined,
       folderId,
       sortOrder:
         typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder)

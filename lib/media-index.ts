@@ -31,6 +31,9 @@ export type MediaMeta = {
   /** Manual order within folder (lower first) */
   sortOrder: number;
   alt?: string;
+  /** Focal point 0–100 (object-position %) */
+  focusX?: number;
+  focusY?: number;
   width?: number;
   height?: number;
   createdAt: string;
@@ -54,6 +57,8 @@ export type MediaListItem = {
   folderId: string;
   sortOrder: number;
   alt?: string;
+  focusX?: number;
+  focusY?: number;
   width?: number;
   height?: number;
 };
@@ -134,6 +139,14 @@ function normalizeItem(raw: Partial<MediaMeta> & { name?: string }): MediaMeta |
     folderId,
     sortOrder,
     alt: typeof raw.alt === 'string' ? raw.alt : undefined,
+    focusX:
+      typeof raw.focusX === 'number' && Number.isFinite(raw.focusX)
+        ? Math.min(100, Math.max(0, raw.focusX))
+        : undefined,
+    focusY:
+      typeof raw.focusY === 'number' && Number.isFinite(raw.focusY)
+        ? Math.min(100, Math.max(0, raw.focusY))
+        : undefined,
     width: typeof raw.width === 'number' && Number.isFinite(raw.width) ? raw.width : undefined,
     height: typeof raw.height === 'number' && Number.isFinite(raw.height) ? raw.height : undefined,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : now,
@@ -336,6 +349,8 @@ export async function patchMediaMeta(
     purpose?: MediaPurpose;
     tags?: string[];
     alt?: string;
+    focusX?: number;
+    focusY?: number;
     folderId?: string;
     sortOrder?: number;
   },
@@ -374,11 +389,19 @@ export async function patchMediaMeta(
           : existing.folderId;
   }
 
+  const clampFocus = (v: number | undefined, fallback?: number) => {
+    if (v === undefined) return fallback;
+    if (!Number.isFinite(v)) return fallback;
+    return Math.min(100, Math.max(0, v));
+  };
+
   const next: MediaMeta = {
     ...existing,
     purpose: patch.purpose && isMediaPurpose(patch.purpose) ? patch.purpose : existing.purpose,
     tags: patch.tags !== undefined ? patch.tags : existing.tags,
     alt: patch.alt !== undefined ? patch.alt : existing.alt,
+    focusX: clampFocus(patch.focusX, existing.focusX),
+    focusY: clampFocus(patch.focusY, existing.focusY),
     folderId,
     sortOrder:
       typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder)

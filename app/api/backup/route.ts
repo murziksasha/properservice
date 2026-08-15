@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, getSessionClaims } from '@/lib/auth';
 import {
   createSiteBackupFromData,
   deleteBackupFile,
@@ -9,6 +9,7 @@ import {
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { getSiteData, saveSiteData } from '@/lib/site-data';
 import { parseSiteData } from '@/lib/validation';
+import { roleCan } from '@/lib/admin-users';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,11 +33,18 @@ async function requireAdminOrCron(request: NextRequest) {
   return { ok: true as const, via: 'admin' as const };
 }
 
-async function requireAdminOnly(_request: NextRequest) {
+async function requireAdminOnly(_request: NextRequest, action?: string) {
   const ipGate = await assertAdminIp();
   if (!ipGate.ok) return { ok: false as const, status: ipGate.status, error: ipGate.error };
   const session = await getSession();
   if (!session) return { ok: false as const, status: 401, error: 'Unauthorized' };
+  if (action) {
+    const claims = await getSessionClaims();
+    const role = (claims?.role || 'legacy') as import('@/lib/admin-users').AdminRole | 'legacy';
+    if (!roleCan(role, action)) {
+      return { ok: false as const, status: 403, error: 'Forbidden' };
+    }
+  }
   return { ok: true as const };
 }
 
@@ -80,7 +88,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.action === 'restore') {
-    const gate = await requireAdminOnly(request);
+    const gate = await requireAdminOnly(request, 'restore_backup');
     if (!gate.ok) {
       return NextResponse.json({ error: gate.error }, { status: gate.status });
     }

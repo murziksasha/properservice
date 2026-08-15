@@ -1,17 +1,20 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import type { TimeFilter } from '@/lib/journal-filter';
 import { matchesPhoneQuery, matchesTimeFilter } from '@/lib/journal-filter';
 import { formatTelHref } from '@/lib/phone';
+import {
+  WORKFLOW_LABELS,
+  WORKFLOW_STATUSES,
+  normalizeStatus,
+  statusBadgeClass,
+  type WorkflowStatus,
+} from '@/lib/workflow';
 import { showToast } from './AdminToast';
-
-interface LeadAudit {
-  at: string;
-  action: string;
-  detail?: string;
-}
+import { useAdminCounts } from './AdminCountsContext';
+import { JournalToolbar } from './JournalToolbar';
+import Link from 'next/link';
 
 interface Lead {
   id: string;
@@ -20,13 +23,15 @@ interface Lead {
   source: string;
   emailed: boolean;
   handled: boolean;
+  status?: WorkflowStatus;
   note?: string;
   pagePath?: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
   handledAt?: string;
-  audit?: LeadAudit[];
+  callbackAt?: string;
+  audit?: { at: string; action: string; detail?: string }[];
 }
 
 function formatWhen(iso: string): string {
@@ -41,10 +46,12 @@ export function LeadsPanel() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [statusFilter, setStatusFilter] = useState<WorkflowStatus | 'all'>('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [phoneQ, setPhoneQ] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
+  const { refresh: refreshCounts } = useAdminCounts();
 
   const load = useCallback(async () => {
     try {
@@ -67,7 +74,11 @@ export function LeadsPanel() {
     void load();
   }, [load]);
 
-  async function patchLead(id: string, body: { handled?: boolean; note?: string }, okMsg: string) {
+  async function patchLead(
+    id: string,
+    body: { handled?: boolean; note?: string; status?: WorkflowStatus; callbackAt?: string },
+    okMsg: string,
+  ) {
     setBusyId(id);
     try {
       const res = await fetch('/api/leads', {
@@ -82,6 +93,7 @@ export function LeadsPanel() {
       }
       showToast(okMsg, 'success');
       await load();
+      await refreshCounts();
     } catch {
       showToast('Мережева помилка', 'error');
     } finally {
@@ -104,6 +116,7 @@ export function LeadsPanel() {
       }
       showToast('Видалено', 'success');
       await load();
+      await refreshCounts();
     } catch {
       showToast('Мережева помилка', 'error');
     } finally {
@@ -113,71 +126,75 @@ export function LeadsPanel() {
 
   const visible = useMemo(() => {
     return leads.filter((l) => {
+      const st = normalizeStatus(l.status, l.handled);
       if (filter === 'open' && l.handled) return false;
       if (filter === 'done' && !l.handled) return false;
+      if (statusFilter !== 'all' && st !== statusFilter) return false;
       if (!matchesTimeFilter(l.createdAt, timeFilter)) return false;
       if (!matchesPhoneQuery(l.phone, phoneQ)) return false;
       return true;
     });
-  }, [leads, filter, timeFilter, phoneQ]);
+  }, [leads, filter, timeFilter, phoneQ, statusFilter]);
 
   const openCount = leads.filter((l) => !l.handled).length;
 
   return (
     <div className='admin-card'>
-      <div className='admin-row admin-row--between admin-mb'>
-        <h2 className='admin-h2' style={{ margin: 0 }}>
-          Журнал {openCount > 0 ? <span className='admin-badge'>{openCount} нових</span> : null}
-        </h2>
-        <div className='admin-row admin-row--wrap'>
-          <select
-            className='admin-select'
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as typeof filter)}
-            aria-label='Статус'
-          >
-            <option value='open'>Нові</option>
-            <option value='done'>Опрацьовані</option>
-            <option value='all'>Усі</option>
-          </select>
-          <select
-            className='admin-select'
-            value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-            aria-label='Період'
-          >
-            <option value='all'>Весь час</option>
-            <option value='today'>Сьогодні</option>
-            <option value='week'>7 днів</option>
-          </select>
-          <input
-            type='search'
-            className='admin-field-sm'
-            placeholder='Телефон…'
-            value={phoneQ}
-            onChange={(e) => setPhoneQ(e.target.value)}
-            aria-label='Пошук за телефоном'
-          />
-          <Link className='admin-btn admin-btn--secondary' href='/api/leads?format=csv'>
-            CSV
-          </Link>
-          <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
-            Оновити
-          </button>
-        </div>
-      </div>
+      <JournalToolbar
+        title='Журнал'
+        openCount={openCount}
+        filter={filter}
+        onFilter={setFilter}
+        timeFilter={timeFilter}
+        onTimeFilter={setTimeFilter}
+        phoneQ={phoneQ}
+        onPhoneQ={setPhoneQ}
+        csvHref='/api/leads?format=csv'
+        onRefresh={() => void load()}
+        extra={
+          <>
+            <Link className='admin-btn' href='/admin/inbox'>
+              Inbox →
+            </Link>
+            <select
+              className='admin-select'
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
+              aria-label='Workflow'
+            >
+              <option value='all'>Усі статуси</option>
+              {WORKFLOW_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {WORKFLOW_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
 
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-      {!loading && visible.length === 0 ? <p className='admin-hint'>Немає заявок у цьому фільтрі.</p> : null}
+      {!loading && visible.length === 0 ? (
+        <div className='admin-empty'>
+          <p className='admin-hint'>Немає заявок у цьому фільтрі.</p>
+          <Link href='/admin/inbox' className='admin-btn admin-btn--secondary'>
+            Відкрити Inbox
+          </Link>
+        </div>
+      ) : null}
 
       <ul className='admin-leads-list'>
         {visible.map((lead) => {
           const noteVal = noteDraft[lead.id] ?? lead.note ?? '';
           const busy = busyId === lead.id;
+          const status = normalizeStatus(lead.status, lead.handled);
           const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign].filter(Boolean).join(' / ');
           return (
             <li key={lead.id} className={`admin-lead-item${lead.handled ? ' is-handled' : ''}`}>
               <div className='admin-lead-main'>
+                <div className='admin-row admin-row--wrap' style={{ gap: 8, marginBottom: 4 }}>
+                  <span className={statusBadgeClass(status)}>{WORKFLOW_LABELS[status]}</span>
+                </div>
                 <a className='admin-lead-phone' href={formatTelHref(lead.phone)}>
                   {lead.phone}
                 </a>
@@ -192,11 +209,31 @@ export function LeadsPanel() {
                   </span>
                 ) : null}
                 {utm ? <span className='admin-lead-meta'>UTM: {utm}</span> : null}
+                {lead.callbackAt ? (
+                  <span className='admin-lead-meta'>Передзвінок: {formatWhen(lead.callbackAt)}</span>
+                ) : null}
                 {lead.audit && lead.audit.length > 0 ? (
                   <span className='admin-lead-meta' title={lead.audit.map((a) => `${a.action} ${a.at}`).join('\n')}>
                     Історія: {lead.audit.slice(-3).map((a) => a.action).join(' → ')}
                   </span>
                 ) : null}
+                <label className='admin-field' style={{ marginTop: 6 }}>
+                  Статус
+                  <select
+                    className='admin-select'
+                    value={status}
+                    disabled={busy}
+                    onChange={(e) =>
+                      void patchLead(lead.id, { status: e.target.value as WorkflowStatus }, 'Статус оновлено')
+                    }
+                  >
+                    {WORKFLOW_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {WORKFLOW_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <label className='admin-lead-meta' style={{ display: 'block', marginTop: 6 }}>
                   Нотатка
                   <input
@@ -215,26 +252,23 @@ export function LeadsPanel() {
                   />
                 </label>
               </div>
-              <div className='admin-row'>
-                {!lead.handled ? (
-                  <button
-                    type='button'
-                    className='admin-btn'
-                    disabled={busy}
-                    onClick={() => void patchLead(lead.id, { handled: true }, 'Позначено обробленою')}
-                  >
-                    Оброблено
-                  </button>
-                ) : (
-                  <button
-                    type='button'
-                    className='admin-btn admin-btn--secondary'
-                    disabled={busy}
-                    onClick={() => void patchLead(lead.id, { handled: false }, 'Повернуто в нові')}
-                  >
-                    Відкрити знову
-                  </button>
-                )}
+              <div className='admin-row admin-row--wrap'>
+                <button
+                  type='button'
+                  className='admin-btn admin-btn--secondary'
+                  disabled={busy}
+                  onClick={() => void patchLead(lead.id, { status: 'no_answer' }, 'Не взяв')}
+                >
+                  Не взяв
+                </button>
+                <button
+                  type='button'
+                  className='admin-btn'
+                  disabled={busy}
+                  onClick={() => void patchLead(lead.id, { status: 'done' }, 'Готово')}
+                >
+                  Готово
+                </button>
                 <button
                   type='button'
                   className='admin-btn admin-btn--danger'

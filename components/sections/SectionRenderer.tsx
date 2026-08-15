@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Product, Section, ServiceNavItem, SiteSettings } from '@/lib/types';
 import { AboutLinksSection } from './AboutLinksSection';
 import { AdvantagesSection } from './AdvantagesSection';
@@ -38,20 +39,21 @@ export function SectionRenderer({
   return (
     <>
       {visible.map((section) => {
+        let node: ReactNode = null;
         switch (section.type) {
           case 'hero':
-            return (
+            node = (
               <HeroSection
-                key={section.id}
                 section={section}
                 servicesNav={servicesNav}
                 heroImages={heroImages}
               />
             );
+            break;
           case 'services-nav':
             if (hasHero) return null;
-            return (
-              <div key={section.id} className='wrapper' style={{ paddingTop: '1.5rem' }}>
+            node = (
+              <div className='wrapper' style={{ paddingTop: '1.5rem' }}>
                 <ServicesNav
                   items={servicesNav}
                   activeSlug={section.activeSlug}
@@ -59,19 +61,20 @@ export function SectionRenderer({
                 />
               </div>
             );
+            break;
           case 'advantages':
-            // Rendered inside about-links or malfunctions when those exist
             if (advantagesHosted) return null;
-            return (
-              <div key={section.id} className='about-link'>
+            node = (
+              <div className='about-link'>
                 <div className='about-link__wrapper wrapper'>
                   <AdvantagesSection section={section} />
                 </div>
               </div>
             );
+            break;
           case 'malfunctions':
-            return (
-              <div key={section.id} className='about-link'>
+            node = (
+              <div className='about-link'>
                 <div className='about-link__wrapper wrapper'>
                   {advantages && advantages.type === 'advantages' ? (
                     <AdvantagesSection section={advantages} />
@@ -80,31 +83,50 @@ export function SectionRenderer({
                 </div>
               </div>
             );
+            break;
           case 'about-links':
-            return (
+            node = (
               <AboutLinksSection
-                key={section.id}
                 section={section}
                 advantages={advantages && advantages.type === 'advantages' ? advantages : undefined}
               />
             );
+            break;
           case 'callback':
-            return (
-              <div key={section.id} className='about-link'>
+            node = (
+              <div className='about-link'>
                 <div className='about-link__wrapper wrapper'>
                   <CallbackBlock section={section} />
                 </div>
               </div>
             );
+            break;
           case 'feedback':
-            return <FeedbackSection key={section.id} section={section} reviewsUrl={reviewsUrl} />;
+            node = <FeedbackSection section={section} reviewsUrl={reviewsUrl} />;
+            break;
           case 'contacts':
-            return <ContactsSection key={section.id} section={section} settings={settings} />;
+            node = <ContactsSection section={section} settings={settings} />;
+            break;
           case 'shop-grid':
-            return <ShopGridSection key={section.id} section={section} products={products} />;
+            node = <ShopGridSection section={section} products={products} />;
+            break;
           default:
             return null;
         }
+        const vp = [
+          section.hideOnMobile ? 'ps-hide-mobile' : '',
+          section.hideOnDesktop ? 'ps-hide-desktop' : '',
+        ]
+          .filter(Boolean)
+          .join(' ');
+        if (!vp) {
+          return <div key={section.id}>{node}</div>;
+        }
+        return (
+          <div key={section.id} className={vp}>
+            {node}
+          </div>
+        );
       })}
     </>
   );
