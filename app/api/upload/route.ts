@@ -11,6 +11,7 @@ import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { atomicWriteFile } from '@/lib/atomic-write';
 import { uploadsDir } from '@/lib/uploads-path';
+import { isSafeUploadName } from '@/lib/media-name';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
@@ -181,7 +182,22 @@ export async function POST(request: NextRequest) {
       maxWidth: Number.isFinite(maxWidth) ? maxWidth : undefined,
       maxHeight: Number.isFinite(maxHeight) ? maxHeight : undefined,
     });
-    const safeName = `${Date.now()}-${createId()}${optimized.ext}`;
+
+    // Replace-in-place: keep same filename/URL so all site references stay valid.
+    const replaceRaw = String(formData.get('replaceName') || '').trim();
+    let safeName: string;
+    if (replaceRaw && isSafeUploadName(replaceRaw)) {
+      const replaceExt = path.extname(replaceRaw).toLowerCase();
+      // Only replace when optimized format matches existing extension family
+      if (replaceExt === optimized.ext || (replaceExt === '.jpg' && optimized.ext === '.jpg')) {
+        safeName = replaceRaw;
+      } else {
+        // Overwrite bytes under original name even if format differs — browsers follow content-type from route
+        safeName = replaceRaw;
+      }
+    } else {
+      safeName = `${Date.now()}-${createId()}${optimized.ext}`;
+    }
 
     await atomicWriteFile(path.join(dir, safeName), optimized.buffer);
 

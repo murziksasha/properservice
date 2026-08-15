@@ -7,6 +7,8 @@ import { useSaveShortcut, useUnsavedGuard } from '@/lib/admin/useUnsavedGuard';
 import { createId } from '@/lib/id';
 import { useCallback, useState } from 'react';
 import { showToast } from './AdminToast';
+import { StickySaveBar } from './StickySaveBar';
+import { resolveSaveConflict } from '@/lib/admin/handleSaveResult';
 
 function emptyMenuItem(): MenuItem {
   return { id: createId(), label: 'Новий пункт', href: '/', visible: true };
@@ -27,7 +29,15 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
 
   const save = useCallback(async () => {
     setSaving(true);
-    const result = await saveSiteData(data);
+    let result = await saveSiteData(data);
+    if (!result.ok && result.conflict) {
+      const forced = await resolveSaveConflict(data, result);
+      if (forced) result = forced;
+      else {
+        setSaving(false);
+        return;
+      }
+    }
     setSaving(false);
     if (result.ok) {
       if (result.updatedAt) setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
@@ -274,6 +284,8 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
         ))}
         {!data.servicesNav.length ? <p className='admin-hint'>Немає послуг — додайте.</p> : null}
       </div>
+
+      <StickySaveBar dirty={dirty} saving={saving} onSave={() => void save()} />
     </div>
   );
 }

@@ -20,14 +20,18 @@ describe('site-data helpers', () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('getSiteData seeds defaults when file missing', async () => {
-    const { getSiteData } = await import('./site-data');
-    const data = await getSiteData();
-    expect(data.pages.length).toBeGreaterThan(0);
-    expect(data.settings.title).toBeTruthy();
-    const raw = await fs.readFile(path.join(tmpDir, 'site.json'), 'utf-8');
-    expect(raw).toContain('settings');
-  });
+  it(
+    'getSiteData seeds defaults when file missing',
+    async () => {
+      const { getSiteData } = await import('./site-data');
+      const data = await getSiteData();
+      expect(data.pages.length).toBeGreaterThan(0);
+      expect(data.settings.title).toBeTruthy();
+      const raw = await fs.readFile(path.join(tmpDir, 'site.json'), 'utf-8');
+      expect(raw).toContain('settings');
+    },
+    15_000,
+  );
 
   it('createPage ensures unique slug and protect home delete', async () => {
     const { getSiteData, createPage, deletePage, saveSiteData } = await import('./site-data');

@@ -7,7 +7,6 @@ const SESSION_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000; // 7 days
  * Prefer SESSION_SECRET; fall back to ADMIN_PASSWORD for local convenience.
  */
 function getSecret(): string {
-  // Bracket access avoids some static replacements at build time
   const secret = process.env['SESSION_SECRET'] || process.env['ADMIN_PASSWORD'];
   if (!secret) {
     return 'dev-insecure-session-secret-change-me';
@@ -52,7 +51,6 @@ async function verifySignature(payload: string, signatureHex: string): Promise<b
   const sig = fromHex(signatureHex);
   if (!sig) return false;
   try {
-    // Copy into a fresh ArrayBuffer-backed view (TS + Edge/Node compatible)
     const sigCopy = new Uint8Array(sig);
     return await crypto.subtle.verify('HMAC', key, sigCopy, new TextEncoder().encode(payload));
   } catch {
@@ -60,35 +58,95 @@ async function verifySignature(payload: string, signatureHex: string): Promise<b
   }
 }
 
-/** Create a signed session cookie value: `token.expiry.signature` */
-export async function createSessionToken(): Promise<string> {
+export type SessionClaims = {
+  username: string;
+  role: string;
+};
+
+function encodeClaims(claims?: SessionClaims): string {
+  if (!claims) return '';
+  const raw = `${claims.username}|${claims.role}`;
+  return toHex(new TextEncoder().encode(raw));
+}
+
+function decodeClaims(hex: string): SessionClaims | null {
+  if (!hex) return null;
+  const bytes = fromHex(hex);
+  if (!bytes) return null;
+  try {
+    const raw = new TextDecoder().decode(bytes);
+    const [username, role] = raw.split('|');
+    if (!username) return null;
+    return { username, role: role || 'owner' };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create a signed session cookie value.
+ * Format: `token.expiry.signature` (legacy 3 parts)
+ * or `token.expiry.claimsHex.signature` (4 parts with user claims)
+ */
+export async function createSessionToken(claims?: SessionClaims): Promise<string> {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   const token = toHex(bytes);
   const expiry = String(Date.now() + SESSION_MAX_AGE_MS);
-  const payload = `${token}.${expiry}`;
+  const claimsHex = encodeClaims(claims);
+  const payload = claimsHex ? `${token}.${expiry}.${claimsHex}` : `${token}.${expiry}`;
   const signature = await sign(payload);
   return `${payload}.${signature}`;
 }
 
-/** Validate signed session cookie. */
-export async function isValidSession(session: string | undefined): Promise<boolean> {
-  if (!session) return false;
+export type ParsedSession = {
+  valid: boolean;
+  token?: string;
+  claims?: SessionClaims | null;
+  fingerprint?: string;
+};
+
+/** Validate signed session cookie and extract claims. */
+export async function parseSession(session: string | undefined): Promise<ParsedSession> {
+  if (!session) return { valid: false };
 
   const parts = session.split('.');
-  if (parts.length !== 3) return false;
+  // 3 parts: token.expiry.sig  OR  4 parts: token.expiry.claims.sig
+  if (parts.length !== 3 && parts.length !== 4) return { valid: false };
 
-  const [token, expiry, signature] = parts;
-  if (!token || !expiry || !signature) return false;
+  let token: string;
+  let expiry: string;
+  let claimsHex = '';
+  let signature: string;
 
-  const payload = `${token}.${expiry}`;
+  if (parts.length === 3) {
+    [token, expiry, signature] = parts;
+  } else {
+    [token, expiry, claimsHex, signature] = parts;
+  }
+
+  if (!token || !expiry || !signature) return { valid: false };
+
+  const payload =
+    parts.length === 4 ? `${token}.${expiry}.${claimsHex}` : `${token}.${expiry}`;
   const ok = await verifySignature(payload, signature);
-  if (!ok) return false;
+  if (!ok) return { valid: false };
 
   const exp = Number(expiry);
-  if (!Number.isFinite(exp) || Date.now() > exp) return false;
+  if (!Number.isFinite(exp) || Date.now() > exp) return { valid: false };
 
-  return true;
+  return {
+    valid: true,
+    token,
+    claims: claimsHex ? decodeClaims(claimsHex) : { username: 'admin', role: 'legacy' },
+    fingerprint: token.slice(0, 16),
+  };
+}
+
+/** Validate signed session cookie. */
+export async function isValidSession(session: string | undefined): Promise<boolean> {
+  const parsed = await parseSession(session);
+  return parsed.valid;
 }
 
 export const SESSION_MAX_AGE_SECONDS = Math.floor(SESSION_MAX_AGE_MS / 1000);

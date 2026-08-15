@@ -38,6 +38,8 @@ interface MediaItem {
   folderId: string;
   sortOrder: number;
   alt?: string;
+  focusX?: number;
+  focusY?: number;
   width?: number;
   height?: number;
   usedBy?: MediaRef[];
@@ -91,6 +93,9 @@ export function MediaLibrary() {
   const [editPurpose, setEditPurpose] = useState<MediaPurpose>('other');
   const [editTags, setEditTags] = useState('');
   const [editFolderId, setEditFolderId] = useState('');
+  const [editAlt, setEditAlt] = useState('');
+  const [editFocusX, setEditFocusX] = useState('50');
+  const [editFocusY, setEditFocusY] = useState('50');
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -98,7 +103,10 @@ export function MediaLibrary() {
   const [folderDropTarget, setFolderDropTarget] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
   const [dragMoveActive, setDragMoveActive] = useState(false);
+  const [orphanOnly, setOrphanOnly] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const replaceRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     try {
@@ -140,6 +148,77 @@ export function MediaLibrary() {
   useEffect(() => {
     setUploadPurpose(purposeFromPreset(preset));
   }, [preset]);
+
+  const displayItems = orphanOnly
+    ? items.filter((i) => !i.usedBy || i.usedBy.length === 0)
+    : items;
+
+  async function replaceInPlace(name: string, file: File) {
+    const fd = new FormData();
+    fd.set('file', file);
+    fd.set('replaceName', name);
+    fd.set('preset', preset);
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) {
+        showToast('Не вдалося замінити файл', 'error');
+        return;
+      }
+      showToast('Файл замінено (URL той самий). Оновіть публічну сторінку (Ctrl+F5).', 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    }
+  }
+
+  async function bulkFillAltFromName() {
+    const targets = displayItems.filter((i) => !i.alt?.trim());
+    if (!targets.length) {
+      showToast('Усі alt уже заповнені', 'info');
+      return;
+    }
+    let n = 0;
+    for (const item of targets) {
+      const alt = item.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+      try {
+        const res = await fetch('/api/media', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: item.name, alt }),
+        });
+        if (res.ok) n++;
+      } catch {
+        /* skip */
+      }
+    }
+    showToast(`Заповнено alt: ${n}`, 'success');
+    await load();
+  }
+
+  async function purgeOrphans() {
+    const orphans = items.filter((i) => !i.usedBy || i.usedBy.length === 0).map((i) => i.name);
+    if (!orphans.length) {
+      showToast('Немає невикористаних файлів', 'info');
+      return;
+    }
+    if (!confirm(`Видалити ${orphans.length} невикористаних файлів?`)) return;
+    try {
+      const res = await fetch('/api/media/purge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: orphans }),
+      });
+      if (!res.ok) {
+        showToast('Помилка очищення', 'error');
+        return;
+      }
+      const json = (await res.json().catch(() => ({}))) as { deleted?: string[] };
+      showToast(`Видалено: ${json.deleted?.length || 0}`, 'success');
+      await load();
+    } catch {
+      showToast('Мережева помилка', 'error');
+    }
+  }
 
   const uploadFolderId =
     folder !== 'all' && folder !== 'root' ? folder : '';
@@ -294,10 +373,15 @@ export function MediaLibrary() {
     setEditPurpose(item.purpose || 'other');
     setEditTags((item.tags || []).join(', '));
     setEditFolderId(item.folderId || '');
+    setEditAlt(item.alt || '');
+    setEditFocusX(String(item.focusX ?? 50));
+    setEditFocusY(String(item.focusY ?? 50));
   }
 
   async function saveEdit(name: string) {
     try {
+      const fx = Number(editFocusX);
+      const fy = Number(editFocusY);
       const res = await fetch('/api/media', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -306,6 +390,9 @@ export function MediaLibrary() {
           purpose: editPurpose,
           tags: editTags,
           folderId: editFolderId || 'root',
+          alt: editAlt,
+          focusX: Number.isFinite(fx) ? fx : 50,
+          focusY: Number.isFinite(fy) ? fy : 50,
         }),
       });
       if (!res.ok) {
@@ -584,7 +671,7 @@ export function MediaLibrary() {
             Файли
           </h2>
           <span className='admin-hint' style={{ margin: 0 }}>
-            {items.length} у вигляді · {formatBytes(totalBytes)}
+            {displayItems.length}/{items.length} у вигляді · {formatBytes(totalBytes)}
           </span>
         </div>
 
@@ -643,7 +730,32 @@ export function MediaLibrary() {
           ))}
         </div>
 
-        <div className='admin-toolbar admin-mb'>
+        <div className='admin-toolbar admin-mb admin-row--wrap'>
+          <button
+            type='button'
+            className={`admin-btn admin-btn--secondary${orphanOnly ? ' is-active' : ''}`}
+            onClick={() => setOrphanOnly((v) => !v)}
+          >
+            Лише невикористані
+          </button>
+          <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void bulkFillAltFromName()}>
+            Alt з назви
+          </button>
+          <button type='button' className='admin-btn admin-btn--danger' onClick={() => void purgeOrphans()}>
+            Очистити orphans
+          </button>
+          <input
+            ref={replaceRef}
+            type='file'
+            accept='image/*,video/*'
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f && replaceTarget) void replaceInPlace(replaceTarget, f);
+              setReplaceTarget(null);
+              e.target.value = '';
+            }}
+          />
           <label className='admin-inline-label'>
             Розмір
             <select
@@ -782,10 +894,12 @@ export function MediaLibrary() {
         ) : null}
 
         {loading ? <p className='admin-hint'>Завантаження…</p> : null}
-        {!loading && items.length === 0 ? <p className='admin-hint'>Немає файлів.</p> : null}
+        {!loading && displayItems.length === 0 ? (
+          <p className='admin-hint'>{orphanOnly ? 'Немає невикористаних файлів.' : 'Немає файлів.'}</p>
+        ) : null}
 
         <div className='admin-media-grid'>
-          {items.map((item, index) => {
+          {displayItems.map((item, index) => {
             const isSelected = selected.has(item.name);
             return (
               <div
@@ -831,7 +945,34 @@ export function MediaLibrary() {
                   </div>
                 ) : (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={item.url} alt={item.alt || item.name} loading='lazy' />
+                  <img
+                    src={item.url}
+                    alt={item.alt || item.name}
+                    loading='lazy'
+                    style={
+                      item.focusX != null || item.focusY != null
+                        ? {
+                            objectPosition: `${item.focusX ?? 50}% ${item.focusY ?? 50}%`,
+                          }
+                        : undefined
+                    }
+                    title={
+                      editing === item.name
+                        ? 'Клік — задати focus point'
+                        : item.focusX != null
+                          ? `Focus ${item.focusX}% ${item.focusY}%`
+                          : undefined
+                    }
+                    onClick={(e) => {
+                      if (editing !== item.name) return;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                      const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                      setEditFocusX(String(Math.min(100, Math.max(0, x))));
+                      setEditFocusY(String(Math.min(100, Math.max(0, y))));
+                      showToast(`Focus ${x}% ${y}% — натисніть OK`, 'info');
+                    }}
+                  />
                 )}
                 <div className='admin-media-meta'>
                   <span title={item.name}>{item.name}</span>
@@ -887,6 +1028,30 @@ export function MediaLibrary() {
                       Теги
                       <input value={editTags} onChange={(e) => setEditTags(e.target.value)} />
                     </label>
+                    <label className='admin-inline-label'>
+                      Alt
+                      <input value={editAlt} onChange={(e) => setEditAlt(e.target.value)} />
+                    </label>
+                    <label className='admin-inline-label'>
+                      Focus X%
+                      <input
+                        type='number'
+                        min={0}
+                        max={100}
+                        value={editFocusX}
+                        onChange={(e) => setEditFocusX(e.target.value)}
+                      />
+                    </label>
+                    <label className='admin-inline-label'>
+                      Focus Y%
+                      <input
+                        type='number'
+                        min={0}
+                        max={100}
+                        value={editFocusY}
+                        onChange={(e) => setEditFocusY(e.target.value)}
+                      />
+                    </label>
                     <div className='admin-row'>
                       <button
                         type='button'
@@ -921,6 +1086,17 @@ export function MediaLibrary() {
                         onClick={() => startEdit(item)}
                       >
                         Мета
+                      </button>
+                      <button
+                        type='button'
+                        className='admin-btn admin-btn--secondary'
+                        title='Замінити файл, URL лишається'
+                        onClick={() => {
+                          setReplaceTarget(item.name);
+                          replaceRef.current?.click();
+                        }}
+                      >
+                        ↻
                       </button>
                       <button
                         type='button'

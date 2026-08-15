@@ -5,7 +5,16 @@ import Link from 'next/link';
 import type { TimeFilter } from '@/lib/journal-filter';
 import { matchesPhoneQuery, matchesTimeFilter } from '@/lib/journal-filter';
 import { formatTelHref } from '@/lib/phone';
+import {
+  WORKFLOW_LABELS,
+  WORKFLOW_STATUSES,
+  normalizeStatus,
+  statusBadgeClass,
+  type WorkflowStatus,
+} from '@/lib/workflow';
 import { showToast } from './AdminToast';
+import { useAdminCounts } from './AdminCountsContext';
+import { JournalToolbar } from './JournalToolbar';
 
 interface OrderProduct {
   id: string;
@@ -24,8 +33,10 @@ interface Order {
   source: string;
   emailed: boolean;
   handled: boolean;
+  status?: WorkflowStatus;
   note?: string;
   handledAt?: string;
+  callbackAt?: string;
   audit?: { at: string; action: string }[];
 }
 
@@ -41,10 +52,12 @@ export function OrdersPanel() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'open' | 'done'>('open');
+  const [statusFilter, setStatusFilter] = useState<WorkflowStatus | 'all'>('all');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
   const [phoneQ, setPhoneQ] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState<Record<string, string>>({});
+  const { refresh: refreshCounts } = useAdminCounts();
 
   const load = useCallback(async () => {
     try {
@@ -67,7 +80,11 @@ export function OrdersPanel() {
     void load();
   }, [load]);
 
-  async function patchOrder(id: string, body: { handled?: boolean; note?: string }, okMsg: string) {
+  async function patchOrder(
+    id: string,
+    body: { handled?: boolean; note?: string; status?: WorkflowStatus; callbackAt?: string },
+    okMsg: string,
+  ) {
     setBusyId(id);
     try {
       const res = await fetch('/api/orders', {
@@ -81,6 +98,7 @@ export function OrdersPanel() {
       }
       showToast(okMsg, 'success');
       await load();
+      await refreshCounts();
     } catch {
       showToast('Мережева помилка', 'error');
     } finally {
@@ -103,6 +121,7 @@ export function OrdersPanel() {
       }
       showToast('Видалено', 'success');
       await load();
+      await refreshCounts();
     } catch {
       showToast('Мережева помилка', 'error');
     } finally {
@@ -112,72 +131,74 @@ export function OrdersPanel() {
 
   const visible = useMemo(() => {
     return orders.filter((o) => {
+      const st = normalizeStatus(o.status, o.handled);
       if (filter === 'open' && o.handled) return false;
       if (filter === 'done' && !o.handled) return false;
+      if (statusFilter !== 'all' && st !== statusFilter) return false;
       if (!matchesTimeFilter(o.createdAt, timeFilter)) return false;
       if (!matchesPhoneQuery(o.phone, phoneQ)) return false;
       return true;
     });
-  }, [orders, filter, timeFilter, phoneQ]);
+  }, [orders, filter, timeFilter, phoneQ, statusFilter]);
 
   const openCount = orders.filter((o) => !o.handled).length;
 
   return (
     <div className='admin-card'>
-      <div className='admin-row admin-row--between admin-mb'>
-        <h2 className='admin-h2' style={{ margin: 0 }}>
-          Журнал {openCount > 0 ? <span className='admin-badge'>{openCount} нових</span> : null}
-        </h2>
-        <div className='admin-row admin-row--wrap'>
-          <select
-            className='admin-select'
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as typeof filter)}
-            aria-label='Статус'
-          >
-            <option value='open'>Нові</option>
-            <option value='done'>Опрацьовані</option>
-            <option value='all'>Усі</option>
-          </select>
-          <select
-            className='admin-select'
-            value={timeFilter}
-            onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
-            aria-label='Період'
-          >
-            <option value='all'>Весь час</option>
-            <option value='today'>Сьогодні</option>
-            <option value='week'>7 днів</option>
-          </select>
-          <input
-            type='search'
-            className='admin-field-sm'
-            placeholder='Телефон…'
-            value={phoneQ}
-            onChange={(e) => setPhoneQ(e.target.value)}
-            aria-label='Пошук за телефоном'
-          />
-          <Link className='admin-btn admin-btn--secondary' href='/api/orders?format=csv'>
-            CSV
-          </Link>
-          <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
-            Оновити
-          </button>
-        </div>
-      </div>
+      <JournalToolbar
+        title='Журнал'
+        openCount={openCount}
+        filter={filter}
+        onFilter={setFilter}
+        timeFilter={timeFilter}
+        onTimeFilter={setTimeFilter}
+        phoneQ={phoneQ}
+        onPhoneQ={setPhoneQ}
+        csvHref='/api/orders?format=csv'
+        onRefresh={() => void load()}
+        extra={
+          <>
+            <Link className='admin-btn' href='/admin/inbox'>
+              Inbox →
+            </Link>
+            <select
+              className='admin-select'
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
+              aria-label='Workflow'
+            >
+              <option value='all'>Усі статуси</option>
+              {WORKFLOW_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {WORKFLOW_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
 
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
       {!loading && visible.length === 0 ? (
-        <p className='admin-hint'>Немає замовлень у цьому фільтрі.</p>
+        <div className='admin-empty'>
+          <p className='admin-hint'>Немає замовлень у цьому фільтрі.</p>
+          <Link href='/admin/goods' className='admin-btn admin-btn--secondary'>
+            До товарів
+          </Link>
+        </div>
       ) : null}
 
       <ul className='admin-leads-list'>
         {visible.map((order) => {
           const noteVal = noteDraft[order.id] ?? order.note ?? '';
           const busy = busyId === order.id;
+          const status = normalizeStatus(order.status, order.handled);
           return (
             <li key={order.id} className={`admin-lead-item${order.handled ? ' is-handled' : ''}`}>
               <div className='admin-lead-main'>
+                <div className='admin-row' style={{ gap: 8, marginBottom: 4 }}>
+                  <span className={statusBadgeClass(status)}>{WORKFLOW_LABELS[status]}</span>
+                </div>
                 <a className='admin-lead-phone' href={formatTelHref(order.phone)}>
                   {order.phone}
                 </a>
@@ -198,14 +219,36 @@ export function OrdersPanel() {
                     Історія: {order.audit.slice(-3).map((a) => a.action).join(' → ')}
                   </span>
                 ) : null}
-                <a
-                  className='admin-lead-meta'
-                  href={`/shop/${order.product.id}`}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  Сторінка товару ↗
-                </a>
+                <div className='admin-row admin-row--wrap' style={{ marginTop: 4 }}>
+                  <a
+                    className='admin-lead-meta'
+                    href={`/shop/${order.product.id}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    Сторінка ↗
+                  </a>
+                  <Link className='admin-lead-meta' href={`/admin/goods?edit=${order.product.id}`}>
+                    Редагувати товар
+                  </Link>
+                </div>
+                <label className='admin-field' style={{ marginTop: 6 }}>
+                  Статус
+                  <select
+                    className='admin-select'
+                    value={status}
+                    disabled={busy}
+                    onChange={(e) =>
+                      void patchOrder(order.id, { status: e.target.value as WorkflowStatus }, 'Статус оновлено')
+                    }
+                  >
+                    {WORKFLOW_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {WORKFLOW_LABELS[s]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <label className='admin-lead-meta' style={{ display: 'block', marginTop: 6 }}>
                   Нотатка
                   <input
@@ -224,26 +267,15 @@ export function OrdersPanel() {
                   />
                 </label>
               </div>
-              <div className='admin-row'>
-                {!order.handled ? (
-                  <button
-                    type='button'
-                    className='admin-btn'
-                    disabled={busy}
-                    onClick={() => void patchOrder(order.id, { handled: true }, 'Позначено обробленим')}
-                  >
-                    Оброблено
-                  </button>
-                ) : (
-                  <button
-                    type='button'
-                    className='admin-btn admin-btn--secondary'
-                    disabled={busy}
-                    onClick={() => void patchOrder(order.id, { handled: false }, 'Повернуто в нові')}
-                  >
-                    Відкрити знову
-                  </button>
-                )}
+              <div className='admin-row admin-row--wrap'>
+                <button
+                  type='button'
+                  className='admin-btn'
+                  disabled={busy}
+                  onClick={() => void patchOrder(order.id, { status: 'done' }, 'Готово')}
+                >
+                  Готово
+                </button>
                 <button
                   type='button'
                   className='admin-btn admin-btn--danger'

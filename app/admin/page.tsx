@@ -1,8 +1,10 @@
 import { AdminShell } from '@/components/admin/AdminShell';
 import { HealthPanel } from '@/components/admin/HealthPanel';
+import { DashboardExtras, OnboardingChecklist } from '@/components/admin/DashboardExtras';
 import { countLeads } from '@/lib/leads';
 import { countOrders } from '@/lib/orders';
 import { getSiteData } from '@/lib/site-data';
+import { getTotpSecret } from '@/lib/totp';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +20,7 @@ export default async function AdminDashboard() {
     process.env.ADMIN_PASSWORD !== 'changeme' &&
     (process.env.ADMIN_PASSWORD?.length ?? 0) >= 8;
   const hasSessionSecret = Boolean(process.env.SESSION_SECRET);
+  const totp = await getTotpSecret();
 
   let openLeads = 0;
   try {
@@ -33,14 +36,39 @@ export default async function AdminDashboard() {
     openOrders = 0;
   }
 
+  const hasLogo = Boolean(site.settings.logo && !site.settings.logo.includes('placeholder'));
+  const hasPhone = Boolean(site.settings.headerPhone?.tel || site.settings.phones?.[0]?.tel);
+
   return (
     <AdminShell>
       <h1>Dashboard</h1>
       <p className='admin-hint admin-mb-lg'>
-        Керування контентом сайту. Зміни зберігаються у <code>data/site.json</code> (atomic write).
+        Операційний центр: черга звернень, контент, здоровʼя системи. Швидкий пошук —{' '}
+        <kbd>Ctrl+K</kbd>.
       </p>
 
       <div className='admin-stats'>
+        <div className='admin-stat-card'>
+          <span className='admin-stat-value'>{openLeads + openOrders}</span>
+          <span className='admin-stat-label'>Відкритих у черзі</span>
+          <span className='admin-stat-meta'>
+            <Link href='/admin/inbox'>Inbox →</Link>
+          </span>
+        </div>
+        <div className='admin-stat-card'>
+          <span className='admin-stat-value'>{openLeads}</span>
+          <span className='admin-stat-label'>Нові заявки</span>
+          <span className='admin-stat-meta'>
+            <Link href='/admin/leads'>журнал →</Link>
+          </span>
+        </div>
+        <div className='admin-stat-card'>
+          <span className='admin-stat-value'>{openOrders}</span>
+          <span className='admin-stat-label'>Нові замовлення</span>
+          <span className='admin-stat-meta'>
+            <Link href='/admin/orders'>журнал →</Link>
+          </span>
+        </div>
         <div className='admin-stat-card'>
           <span className='admin-stat-value'>{site.pages.length}</span>
           <span className='admin-stat-label'>Сторінок</span>
@@ -51,30 +79,24 @@ export default async function AdminDashboard() {
           <span className='admin-stat-label'>Товарів</span>
           <span className='admin-stat-meta'>{visibleGoods} у каталозі</span>
         </div>
-        <div className='admin-stat-card'>
-          <span className='admin-stat-value'>{openLeads}</span>
-          <span className='admin-stat-label'>Нові заявки</span>
-          <span className='admin-stat-meta'>
-            <Link href='/admin/leads'>відкрити журнал →</Link>
-          </span>
-        </div>
-        <div className='admin-stat-card'>
-          <span className='admin-stat-value'>{openOrders}</span>
-          <span className='admin-stat-label'>Нові замовлення</span>
-          <span className='admin-stat-meta'>
-            <Link href='/admin/orders'>відкрити журнал →</Link>
-          </span>
-        </div>
-        <div className='admin-stat-card'>
-          <span className='admin-stat-value'>{site.headerMenu.filter((m) => m.visible).length}</span>
-          <span className='admin-stat-label'>Пунктів меню</span>
-          <span className='admin-stat-meta'>{site.servicesNav.filter((m) => m.visible).length} у послугах</span>
-        </div>
       </div>
+
+      <OnboardingChecklist
+        hasLogo={hasLogo}
+        hasPhone={hasPhone}
+        goodsCount={site.goods.length}
+        smtpConfigured={smtpConfigured}
+        totpHint={Boolean(totp)}
+      />
+
+      <DashboardExtras />
 
       <div className='admin-card'>
         <h2 className='admin-h2'>Швидкі дії</h2>
         <div className='admin-row admin-row--wrap'>
+          <Link href='/admin/inbox' className='admin-btn'>
+            Inbox{openLeads + openOrders > 0 ? ` (${openLeads + openOrders})` : ''}
+          </Link>
           <Link href='/admin/leads' className='admin-btn'>
             Заявки{openLeads > 0 ? ` (${openLeads})` : ''}
           </Link>
@@ -103,7 +125,7 @@ export default async function AdminDashboard() {
       </div>
 
       <div className='admin-card'>
-        <h2 className='admin-h2'>Live health (Keen DNS / Docker)</h2>
+        <h2 className='admin-h2'>Live health</h2>
         <HealthPanel />
       </div>
 
@@ -127,6 +149,9 @@ export default async function AdminDashboard() {
             {!smtpConfigured
               ? ' — email вимкнено; заявки/замовлення все одно в журналах'
               : ''}
+          </li>
+          <li className={totp ? 'is-ok' : 'is-info'}>
+            {totp ? '✓ 2FA TOTP увімкнено' : '2FA вимкнено — увімкніть у Налаштуваннях'}
           </li>
           <li className={process.env.ADMIN_IP_ALLOWLIST ? 'is-ok' : 'is-info'}>
             {process.env.ADMIN_IP_ALLOWLIST

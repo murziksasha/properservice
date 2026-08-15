@@ -12,7 +12,7 @@
 - Форма зворотного дзвінка → `data/leads.json` + email (SMTP / nodemailer) з службовими метаданими (сторінка, IP, UA, ID заявки)
 - Мобільний sticky-call, honeypot на contact/orders, optimistic concurrency / partial PATCH `site.json`
 - Telegram notify, UTM у лідах, CSV export, 2FA TOTP (опційно: QR у **Налаштування** або `ADMIN_TOTP_SECRET`), FAQ JSON-LD, галерея/схожі товари
-- Адмінка `/admin` для меню, сторінок, товарів, заявок, **замовлень**, медіатеки і налаштувань
+- Адмінка `/admin`: Inbox (workflow статуси + SLA), Dashboard-аналітика, меню/сторінки/товари/медіа, command palette (Ctrl+K), bulk/CSV товарів, ревізії сторінок, multi-user (опційно), 2FA
 - Збереження контенту в `data/site.json` (atomic write, без окремої БД)
 - Журнали `data/leads.json` / `data/orders.json`, media library + WebP optimize
 - LocalBusiness JSON-LD + mobile sticky call

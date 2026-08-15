@@ -45,6 +45,11 @@ const productSchema = z.object({
     .refine((v) => v == null || v.trim() === '' || v.trim().length >= 2, {
       message: 'Product code must be at least 2 characters when set',
     }),
+  inStock: z.boolean().optional(),
+  badge: z.string().optional(),
+  promoText: z.string().optional(),
+  sortPin: z.boolean().optional(),
+  relatedIds: z.array(z.string()).optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -52,6 +57,8 @@ const productSchema = z.object({
 const sectionBase = {
   id: z.string(),
   visible: z.boolean(),
+  hideOnMobile: z.boolean().optional(),
+  hideOnDesktop: z.boolean().optional(),
 };
 
 const sectionSchema = z
@@ -60,6 +67,18 @@ const sectionSchema = z
     type: z.string(),
   })
   .passthrough();
+
+const pageDraftSchema = z
+  .object({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    sections: z.array(sectionSchema).optional(),
+    contentHtml: z.string().optional(),
+    titleSize: z.number().optional(),
+    textScale: z.number().optional(),
+    updatedAt: z.string().optional(),
+  })
+  .optional();
 
 const pageSchema = z.object({
   id: z.string(),
@@ -71,6 +90,11 @@ const pageSchema = z.object({
   contentHtml: z.string().optional(),
   titleSize: z.number().optional(),
   textScale: z.number().optional(),
+  draft: pageDraftSchema,
+  publishAt: z.string().optional(),
+  reviewRequested: z.boolean().optional(),
+  reviewRequestedAt: z.string().optional(),
+  reviewRequestedBy: z.string().optional(),
 });
 
 const settingsSchema = z

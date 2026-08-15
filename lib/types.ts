@@ -46,6 +46,8 @@ export interface ServiceNavItem {
   visible: boolean;
 }
 
+export type ProductBadge = 'hit' | 'sale' | 'new' | '';
+
 export interface Product {
   id: string;
   title: string;
@@ -68,6 +70,16 @@ export interface Product {
    * min 2 chars when set; included in catalog search.
    */
   code?: string;
+  /** Optional stock flag for admin/shop badge */
+  inStock?: boolean;
+  /** Promo badge on card */
+  badge?: ProductBadge | string;
+  /** Short promo line under title */
+  promoText?: string;
+  /** Pin to top of catalog when sorting manual */
+  sortPin?: boolean;
+  /** Manual related product ids (optional; else auto-related) */
+  relatedIds?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -76,6 +88,10 @@ export interface SectionBase {
   id: string;
   type: string;
   visible: boolean;
+  /** Hide on narrow viewports (public CSS) */
+  hideOnMobile?: boolean;
+  /** Hide on wide viewports (public CSS) */
+  hideOnDesktop?: boolean;
 }
 
 export interface HeroSection extends SectionBase {
@@ -186,6 +202,25 @@ export interface Page {
   contentHtml?: string;
   titleSize?: number;   // optional rem size for main titles on this page
   textScale?: number;   // optional multiplier for body text
+  /**
+   * Optional unpublished draft snapshot. Public site ignores this;
+   * admin can save draft without changing live sections/title/etc.
+   */
+  draft?: {
+    title?: string;
+    description?: string;
+    sections?: Section[];
+    contentHtml?: string;
+    titleSize?: number;
+    textScale?: number;
+    updatedAt?: string;
+  };
+  /** ISO: when to auto-publish draft → live */
+  publishAt?: string;
+  /** Editor requested owner review before live publish */
+  reviewRequested?: boolean;
+  reviewRequestedAt?: string;
+  reviewRequestedBy?: string;
 }
 
 export interface SiteData {

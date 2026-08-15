@@ -64,7 +64,24 @@ export default async function ProductPage({ params }: PageProps) {
       <div className='shop-detail__grid'>
         <ProductGallery images={gallery} alt={product.title} />
         <div className='shop-detail__info'>
+          <div className='shop-detail__badges'>
+            {product.badge ? (
+              <span className={`shop-card__badge shop-card__badge--${String(product.badge).toLowerCase()}`}>
+                {product.badge === 'hit'
+                  ? 'Хіт'
+                  : product.badge === 'sale'
+                    ? 'Акція'
+                    : product.badge === 'new'
+                      ? 'Новинка'
+                      : product.badge}
+              </span>
+            ) : null}
+            {product.inStock === false ? (
+              <span className='shop-card__oos shop-card__oos--inline'>Немає в наявності</span>
+            ) : null}
+          </div>
           <h1 className='shop-detail__title _title'>{product.title}</h1>
+          {product.promoText ? <p className='shop-detail__promo'>{product.promoText}</p> : null}
           {product.code ? <p className='shop-detail__code'>Код: {product.code}</p> : null}
           <p className='shop-detail__price'>{product.price.toLocaleString('uk-UA')} ₴</p>
           <p className='shop-detail__desc _paragr'>{product.description}</p>

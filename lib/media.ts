@@ -69,6 +69,8 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
       folderId: meta?.folderId || '',
       sortOrder: meta?.sortOrder ?? 0,
       alt: meta?.alt,
+      focusX: meta?.focusX,
+      focusY: meta?.focusY,
       width: meta?.width,
       height: meta?.height,
     });

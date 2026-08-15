@@ -22,7 +22,29 @@ export async function getSiteData(): Promise<SiteData> {
   const filePath = getDataFilePath();
   try {
     const raw = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(raw) as SiteData;
+    let data = JSON.parse(raw) as SiteData;
+    // Apply due scheduled publishes (best-effort write-back)
+    try {
+      const { applyScheduledPublishes } = await import('./scheduled-publish');
+      const { site: next, published } = applyScheduledPublishes(data);
+      if (published.length) {
+        data = await saveSiteData(next);
+        try {
+          const { appendActivity } = await import('./admin-activity');
+          await appendActivity({
+            kind: 'site_save',
+            message: `Scheduled publish: ${published.length} page(s)`,
+          });
+        } catch {
+          /* ignore */
+        }
+      } else {
+        data = next;
+      }
+    } catch {
+      /* ignore schedule errors */
+    }
+    return data;
   } catch {
     const { defaultSiteData } = await import('./default-site-data');
     await ensureDataDir(filePath);
@@ -34,6 +56,30 @@ export async function getSiteData(): Promise<SiteData> {
 export async function saveSiteData(data: SiteData): Promise<SiteData> {
   const filePath = getDataFilePath();
   await ensureDataDir(filePath);
+
+  // Price history when goods change
+  try {
+    const prevRaw = await fs.readFile(filePath, 'utf-8').catch(() => '');
+    if (prevRaw) {
+      const prev = JSON.parse(prevRaw) as SiteData;
+      const { recordPriceChange } = await import('./price-history');
+      const prevById = new Map((prev.goods || []).map((g) => [g.id, g]));
+      for (const g of data.goods || []) {
+        const old = prevById.get(g.id);
+        if (old && old.price !== g.price) {
+          await recordPriceChange({
+            productId: g.id,
+            price: g.price,
+            title: g.title,
+            prevPrice: old.price,
+          });
+        }
+      }
+    }
+  } catch {
+    /* ignore price history errors */
+  }
+
   const next: SiteData = {
     ...data,
     updatedAt: new Date().toISOString(),

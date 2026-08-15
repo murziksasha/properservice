@@ -212,3 +212,8 @@
     }
   }
 }
+ 
+.ps-hide-mobile{display:contents}  
+@media (max-width:767px){.ps-hide-mobile{display:none !important}}  
+.ps-hide-desktop{display:contents}  
+@media (min-width:768px){.ps-hide-desktop{display:none !important}}  

@@ -250,3 +250,28 @@ describe('productCategoryKey / display / normalize', () => {
     expect(isDefaultCategory(p({ id: 'a', title: 'A', price: 1, category: 'ТВ' }))).toBe(false);
   });
 });
+
+describe('applySortPin / sortProducts pin', () => {
+  it('moves pinned products first while keeping relative order', () => {
+    const list = [
+      p({ id: 'a', title: 'A', price: 1 }),
+      p({ id: 'b', title: 'B', price: 2, sortPin: true }),
+      p({ id: 'c', title: 'C', price: 3 }),
+      p({ id: 'd', title: 'D', price: 4, sortPin: true }),
+    ];
+    const sorted = sortProducts(list, 'manual');
+    expect(sorted.map((x) => x.id)).toEqual(['b', 'd', 'a', 'c']);
+  });
+
+  it('keeps pins on top for price sort', () => {
+    const list = [
+      p({ id: 'cheap', title: 'Cheap', price: 10 }),
+      p({ id: 'pin', title: 'Pin', price: 999, sortPin: true }),
+      p({ id: 'mid', title: 'Mid', price: 50 }),
+    ];
+    const sorted = sortProducts(list, 'price-asc');
+    expect(sorted[0].id).toBe('pin');
+    expect(sorted.slice(1).map((x) => x.id)).toEqual(['cheap', 'mid']);
+  });
+});
+

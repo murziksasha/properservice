@@ -27,6 +27,9 @@ import {
 } from '@/lib/media-usage';
 import { showToast } from './AdminToast';
 import { ProductMediaEditor } from './ProductMediaEditor';
+import { StickySaveBar } from './StickySaveBar';
+import { PriceHistory } from './PriceHistory';
+import { RelatedProductsPicker } from './RelatedProductsPicker';
 
 type ListMode = 'grouped' | 'flat';
 
@@ -73,12 +76,25 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [renamingKey, setRenamingKey] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [bulkCategory, setBulkCategory] = useState('');
+  const [bulkPct, setBulkPct] = useState('');
   const orderToastAt = useRef(0);
   const editFormRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const prevEditingId = useRef<string | null>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   useUnsavedGuard(dirty || Boolean(editing));
+
+  // Deep-link ?edit=productId
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = new URLSearchParams(window.location.search).get('edit');
+    if (!id) return;
+    const product = initialData.goods.find((g) => g.id === id);
+    if (product) setEditing(product);
+  }, [initialData.goods]);
 
   /** Scroll admin main to the product form and focus title when opening edit/create. */
   useEffect(() => {
@@ -207,12 +223,188 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
     }
   }
 
+  const selectedIds = useMemo(
+    () => Object.entries(selected).filter(([, v]) => v).map(([id]) => id),
+    [selected],
+  );
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function selectAllFiltered() {
+    const next: Record<string, boolean> = { ...selected };
+    for (const { product } of filtered) next[product.id] = true;
+    setSelected(next);
+  }
+
+  function clearSelection() {
+    setSelected({});
+  }
+
+  function applyBulk(mutator: (p: Product) => Product, msg: string) {
+    if (!selectedIds.length) {
+      showToast('Оберіть товари', 'info');
+      return;
+    }
+    const set = new Set(selectedIds);
+    setData({
+      ...data,
+      goods: data.goods.map((g) => (set.has(g.id) ? mutator(g) : g)),
+    });
+    setDirty(true);
+    showToast(msg, 'success');
+  }
+
+  function exportCsv() {
+    const rows = [
+      ['id', 'code', 'title', 'price', 'category', 'visible', 'inStock', 'badge', 'promoText', 'description'],
+      ...data.goods.map((g) => [
+        g.id,
+        g.code || '',
+        g.title,
+        String(g.price),
+        g.category || '',
+        g.visible ? '1' : '0',
+        g.inStock === false ? '0' : '1',
+        g.badge || '',
+        g.promoText || '',
+        (g.description || '').replace(/\r?\n/g, ' '),
+      ]),
+    ];
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'goods.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV експортовано', 'success');
+  }
+
+  async function importCsv(file: File) {
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) {
+      showToast('Порожній CSV', 'error');
+      return;
+    }
+    function parseLine(line: string): string[] {
+      const out: string[] = [];
+      let cur = '';
+      let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (inQ && line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else inQ = !inQ;
+        } else if (ch === ',' && !inQ) {
+          out.push(cur);
+          cur = '';
+        } else cur += ch;
+      }
+      out.push(cur);
+      return out;
+    }
+    const header = parseLine(lines[0]).map((h) => h.trim().toLowerCase());
+    const idx = (name: string) => header.indexOf(name);
+    const iCode = idx('code');
+    const iTitle = idx('title');
+    const iPrice = idx('price');
+    const iCat = idx('category');
+    const iVis = idx('visible');
+    const iId = idx('id');
+    const iStock = idx('instock');
+    const iBadge = idx('badge');
+    const iPromo = idx('promotext');
+    const iDesc = idx('description');
+    if (iTitle < 0 || iPrice < 0) {
+      showToast('CSV: потрібні колонки title, price', 'error');
+      return;
+    }
+
+    let created = 0;
+    let updated = 0;
+    const goods = [...data.goods];
+    for (const line of lines.slice(1)) {
+      const cols = parseLine(line);
+      const title = (cols[iTitle] || '').trim();
+      if (!title) continue;
+      const price = Number(cols[iPrice] || 0) || 0;
+      const code = iCode >= 0 ? (cols[iCode] || '').trim() : '';
+      const id = iId >= 0 ? (cols[iId] || '').trim() : '';
+      let found = id ? goods.findIndex((g) => g.id === id) : -1;
+      if (found < 0 && code) found = goods.findIndex((g) => (g.code || '') === code);
+      const patch: Partial<Product> = {
+        title,
+        price,
+        code: code.length >= 2 ? code : undefined,
+        category: iCat >= 0 ? normalizeCategoryInput(cols[iCat]) : undefined,
+        visible: iVis >= 0 ? cols[iVis] === '1' || cols[iVis].toLowerCase() === 'true' : true,
+        inStock: iStock >= 0 ? !(cols[iStock] === '0' || cols[iStock].toLowerCase() === 'false') : true,
+        badge: iBadge >= 0 ? cols[iBadge] || undefined : undefined,
+        promoText: iPromo >= 0 ? cols[iPromo] || undefined : undefined,
+        description: iDesc >= 0 ? cols[iDesc] || '' : undefined,
+      };
+      if (found >= 0) {
+        goods[found] = { ...goods[found], ...patch, updatedAt: new Date().toISOString() };
+        updated++;
+      } else {
+        goods.push({
+          ...emptyProduct(),
+          ...patch,
+          title,
+          price,
+          description: patch.description || '',
+          image: PRODUCT_PLACEHOLDER_IMAGE,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        created++;
+      }
+    }
+    setData({ ...data, goods });
+    setDirty(true);
+    showToast(`Імпорт: +${created} нових, ${updated} оновлено. Збережіть.`, 'success');
+  }
+
   async function saveProduct() {
     if (!editing) return;
     const codeTrimmed = (editing.code || '').trim();
     if (codeTrimmed.length === 1) {
       showToast('Код товару: мінімум 2 символи (або залиште порожнім)', 'error');
       return;
+    }
+    const prev = data.goods.find((g) => g.id === editing.id);
+    if (prev && prev.price > 0 && editing.price > 0) {
+      const delta = Math.abs(editing.price - prev.price) / prev.price;
+      if (delta >= 0.2) {
+        if (
+          !confirm(
+            `Ціна змінюється на ${Math.round(delta * 100)}% (${prev.price} → ${editing.price}). Підтвердити?`,
+          )
+        ) {
+          return;
+        }
+      }
+    }
+    if (editing.visible) {
+      const { productPublishIssues } = await import('@/lib/catalog-health');
+      const issues = productPublishIssues(editing);
+      if (issues.length) {
+        if (
+          !confirm(
+            `Чекліст опублікованого товару:\n· ${issues.join('\n· ')}\n\nВсе одно зберегти як опублікований?`,
+          )
+        ) {
+          return;
+        }
+      }
     }
     const goods = [...data.goods];
     const idx = goods.findIndex((g) => g.id === editing.id);
@@ -435,8 +627,23 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
           <img src={product.image || '/img/services/technika_img.png'} alt='' />
         </div>
 
+        <label className='admin-goods-row__check' title='Вибрати'>
+          <input
+            type='checkbox'
+            checked={Boolean(selected[product.id])}
+            onChange={() => toggleSelect(product.id)}
+            aria-label={`Вибрати ${product.title}`}
+          />
+        </label>
+
         <div className='admin-goods-row__meta'>
-          <div className='admin-goods-row__title'>{product.title}</div>
+          <div className='admin-goods-row__title'>
+            {product.title}
+            {product.badge ? <span className='admin-goods-pill admin-goods-pill--badge'>{product.badge}</span> : null}
+            {product.inStock === false ? (
+              <span className='admin-goods-pill admin-goods-pill--muted'>немає</span>
+            ) : null}
+          </div>
           <div className='admin-goods-row__sub'>
             <span className='admin-goods-row__price'>{product.price} ₴</span>
             {product.code ? <span className='admin-goods-row__code'>{product.code}</span> : null}
@@ -512,8 +719,118 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => setEditing(emptyProduct())}>
             + Товар
           </button>
+          <button type='button' className='admin-btn admin-btn--secondary' onClick={exportCsv}>
+            CSV ↓
+          </button>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            onClick={() => csvInputRef.current?.click()}
+          >
+            CSV ↑
+          </button>
+          <input
+            ref={csvInputRef}
+            type='file'
+            accept='.csv,text/csv'
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void importCsv(f);
+              e.target.value = '';
+            }}
+          />
           {dirty ? <span className='admin-dirty'>Є незбережені зміни · Ctrl+S</span> : null}
         </div>
+
+        {selectedIds.length > 0 ? (
+          <div className='admin-goods-toolbar__row admin-bulk-bar'>
+            <span className='admin-hint' style={{ margin: 0 }}>
+              Обрано: {selectedIds.length}
+            </span>
+            <button type='button' className='admin-btn admin-btn--secondary admin-btn--sm' onClick={selectAllFiltered}>
+              Усі у фільтрі
+            </button>
+            <button type='button' className='admin-btn admin-btn--secondary admin-btn--sm' onClick={clearSelection}>
+              Зняти
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary admin-btn--sm'
+              onClick={() => applyBulk((p) => ({ ...p, visible: true }), 'Опубліковано')}
+            >
+              Опублікувати
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary admin-btn--sm'
+              onClick={() => applyBulk((p) => ({ ...p, visible: false }), 'Приховано')}
+            >
+              Приховати
+            </button>
+            <input
+              className='admin-field-sm'
+              placeholder='Категорія bulk'
+              value={bulkCategory}
+              onChange={(e) => setBulkCategory(e.target.value)}
+              list='goods-category-suggestions'
+            />
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary admin-btn--sm'
+              onClick={() =>
+                applyBulk(
+                  (p) => ({ ...p, category: normalizeCategoryInput(bulkCategory) }),
+                  'Категорію змінено',
+                )
+              }
+            >
+              Категорія
+            </button>
+            <input
+              className='admin-field-sm'
+              style={{ width: 72 }}
+              placeholder='% ±'
+              value={bulkPct}
+              onChange={(e) => setBulkPct(e.target.value)}
+              title='Напр. 10 або -5'
+            />
+            <button
+              type='button'
+              className='admin-btn admin-btn--secondary admin-btn--sm'
+              onClick={() => {
+                const pct = Number(bulkPct);
+                if (!Number.isFinite(pct) || pct === 0) {
+                  showToast('Вкажіть відсоток', 'error');
+                  return;
+                }
+                applyBulk(
+                  (p) => ({
+                    ...p,
+                    price: Math.max(0, Math.round(p.price * (1 + pct / 100))),
+                  }),
+                  `Ціни ${pct > 0 ? '+' : ''}${pct}%`,
+                );
+              }}
+            >
+              Ціна %
+            </button>
+            <button
+              type='button'
+              className='admin-btn admin-btn--danger admin-btn--sm'
+              onClick={() => {
+                if (!confirm(`Видалити ${selectedIds.length} товар(ів)? (медіа не чиститься bulk)`)) return;
+                const set = new Set(selectedIds);
+                setData({ ...data, goods: data.goods.filter((g) => !set.has(g.id)) });
+                setDirty(true);
+                clearSelection();
+                showToast('Видалено зі списку — збережіть', 'success');
+              }}
+            >
+              Видалити
+            </button>
+          </div>
+        ) : null}
 
         <div className='admin-goods-toolbar__row admin-goods-toolbar__filters'>
           <input
@@ -722,6 +1039,47 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
               </span>
             </span>
           </label>
+          <label className='admin-check'>
+            <input
+              type='checkbox'
+              checked={editing.inStock !== false}
+              onChange={(e) => setEditing({ ...editing, inStock: e.target.checked })}
+            />
+            В наявності
+          </label>
+          <label>
+            Бейдж (hit / sale / new)
+            <input
+              value={editing.badge || ''}
+              onChange={(e) => setEditing({ ...editing, badge: e.target.value })}
+              placeholder='hit, sale…'
+            />
+          </label>
+          <label>
+            Промо-текст
+            <input
+              value={editing.promoText || ''}
+              onChange={(e) => setEditing({ ...editing, promoText: e.target.value })}
+              placeholder='Короткий рядок під назвою'
+            />
+          </label>
+          <label className='admin-check'>
+            <input
+              type='checkbox'
+              checked={Boolean(editing.sortPin)}
+              onChange={(e) => setEditing({ ...editing, sortPin: e.target.checked })}
+            />
+            Закріпити на початку каталогу
+          </label>
+          <RelatedProductsPicker
+            products={data.goods}
+            currentId={editing.id}
+            value={editing.relatedIds || []}
+            onChange={(ids) =>
+              setEditing({ ...editing, relatedIds: ids.length ? ids : undefined })
+            }
+          />
+          <PriceHistory productId={editing.id} />
           <div className='admin-row'>
             <button type='button' className='admin-btn' onClick={() => void saveProduct()} disabled={saving}>
               Зберегти товар
@@ -736,9 +1094,35 @@ export function GoodsEditor({ initialData }: { initialData: SiteData }) {
             >
               Скасувати
             </button>
+            {(() => {
+              const idx = data.goods.findIndex((g) => g.id === editing.id);
+              if (idx < 0) return null;
+              return (
+                <>
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--secondary'
+                    disabled={idx <= 0}
+                    onClick={() => setEditing(data.goods[idx - 1])}
+                  >
+                    ← Попередній
+                  </button>
+                  <button
+                    type='button'
+                    className='admin-btn admin-btn--secondary'
+                    disabled={idx >= data.goods.length - 1}
+                    onClick={() => setEditing(data.goods[idx + 1])}
+                  >
+                    Наступний →
+                  </button>
+                </>
+              );
+            })()}
           </div>
         </div>
       ) : null}
+
+      <StickySaveBar dirty={dirty && !editing} saving={saving} onSave={() => void save()} label='Зберегти всі' />
 
       <div className='admin-card admin-goods-list'>
         {!data.goods.length ? <p>Товарів ще немає. Натисніть «+ Товар».</p> : null}
