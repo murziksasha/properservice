@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { navAllowedForRole, roleCan } from './admin-users';
+import { navAllowedForRole, roleCan } from './admin-roles';
 
 describe('roleCan', () => {
   it('owner and legacy can everything', () => {

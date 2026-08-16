@@ -1480,6 +1480,122 @@ body:has(.admin-body) {
     margin: 0 0 16px;
     font-size: 1.35rem;
   }
+
+  /* Stack fields even if admin-form utilities are missing elsewhere */
+  label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: #374151;
+  }
+
+  input:not([type='checkbox']):not([type='radio']):not(.admin-password-field__input) {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cfd6dd;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    line-height: 1.4;
+    background: #fff;
+    color: #111;
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    &:focus {
+      outline: 2px solid rgba(2, 166, 83, 0.35);
+      outline-offset: 1px;
+      border-color: #02a653;
+    }
+  }
+}
+
+/* Input + eye as one control: border on wrapper (matches plain login inputs) */
+.admin-password-field {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+  border: 1px solid #cfd6dd;
+  border-radius: 8px;
+  background: #fff;
+  padding-right: 4px;
+
+  &:focus-within {
+    outline: 2px solid rgba(2, 166, 83, 0.35);
+    outline-offset: 1px;
+    border-color: #02a653;
+  }
+}
+
+.admin-password-field__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 10px 8px 10px 12px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-sizing: border-box;
+  font-size: 1rem !important;
+  line-height: 1.4;
+  background: transparent !important;
+  color: #111;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  box-shadow: none !important;
+  outline: none !important;
+
+  &[type='password'] {
+    letter-spacing: 0.08em;
+  }
+
+  &:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
+.admin-password-field__toggle {
+  flex: 0 0 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  line-height: 0;
+
+  svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover:not(:disabled) {
+    color: #0f3d2e;
+    background: rgba(15, 61, 46, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(2, 166, 83, 0.45);
+    outline-offset: 0;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 .admin-login-brand {
@@ -1487,6 +1603,12 @@ body:has(.admin-body) {
   font-weight: 700;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
+}
+
+.admin-login-optional {
+  color: #6b7280;
+  font-weight: 400;
+  font-size: 0.85em;
 }
 
 .admin-login-error {

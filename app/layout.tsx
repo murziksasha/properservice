@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { PwaRegister } from '@/components/PwaRegister';
+import { TextSizeProvider } from '@/components/layout/TextSizeProvider';
 import { ThemeProvider } from '@/components/layout/ThemeProvider';
 import { getSiteData } from '@/lib/site-data';
 import '@/styles/globals.scss';
@@ -11,9 +12,9 @@ export const viewport: Viewport = {
   ],
 };
 
-/** Runs before paint to avoid light flash when user prefers dark. */
+/** Runs before paint to avoid light flash when user prefers dark / text size. */
 const THEME_BOOT =
-  "(function(){try{var k='ps-theme';var p=localStorage.getItem(k)||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='dark'||(p!=='light'&&d)?'dark':'light';var r=document.documentElement;r.dataset.theme=t;r.style.colorScheme=t;}catch(e){}})();";
+  "(function(){try{var r=document.documentElement;var k='ps-theme';var p=localStorage.getItem(k)||'system';var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=p==='dark'||(p!=='light'&&d)?'dark':'light';r.dataset.theme=t;r.style.colorScheme=t;var ts=localStorage.getItem('ps-text-size')||localStorage.getItem('ps-shop-text-size')||'md';if(ts==='sm'||ts==='md'||ts==='lg')r.dataset.textSize=ts;}catch(e){}})();";
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getSiteData();
@@ -69,8 +70,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
         <ThemeProvider>
-          {children}
-          <PwaRegister />
+          <TextSizeProvider>
+            {children}
+            <PwaRegister />
+          </TextSizeProvider>
         </ThemeProvider>
       </body>
     </html>

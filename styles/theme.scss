@@ -264,9 +264,21 @@ body:not(:has(.admin-body)) .feedback__status {
   color: var(--ps-muted);
 }
 
-body:not(:has(.admin-body)) .feedback-btn,
-body:not(:has(.admin-body)) .feedback-btn a {
-  color: var(--ps-brand);
+/* Green pill button — white label (brand text would be invisible on brand bg) */
+body:not(:has(.admin-body)) a.feedback-btn,
+body:not(:has(.admin-body)) .feedback-btn._btn {
+  color: #fff;
+  background: var(--ps-brand);
+  box-shadow: var(--ps-shadow-hover, 0 8px 8px rgba(30, 165, 97, 0.35));
+
+  &:hover {
+    color: #fff;
+    background: var(--ps-brand-hover);
+  }
+
+  &:active {
+    color: #fff;
+  }
 }
 
 body:not(:has(.admin-body)) .feedback .left-arrow,
@@ -316,7 +328,15 @@ body:not(:has(.admin-body)) ._list-reset {
   color: var(--ps-text);
 }
 
-/* Theme toggle */
+/* Theme + text-size prefs (header) */
+.header__prefs,
+.menu__mobile-prefs {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
 .theme-toggle {
   display: inline-flex;
   align-items: center;
@@ -351,6 +371,53 @@ body:not(:has(.admin-body)) ._list-reset {
   line-height: 0;
 }
 
+.text-size-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--ps-border);
+  background: var(--ps-surface);
+}
+
+.text-size-toggle__btn {
+  min-width: 3.2rem;
+  height: 3.2rem;
+  padding: 0 0.4rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ps-text);
+  font-weight: 700;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &[data-size='sm'] {
+    font-size: 1.15rem;
+  }
+
+  &[data-size='lg'] {
+    font-size: 1.65rem;
+  }
+
+  &:hover {
+    color: var(--ps-brand);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-brand);
+    outline-offset: 1px;
+  }
+
+  &.is-active {
+    background: var(--ps-brand);
+    color: #fff;
+  }
+}
+
 .menu__mobile-theme {
   display: flex;
   justify-content: flex-start;
@@ -367,4 +434,9 @@ html[data-theme='dark'] body:not(:has(.admin-body)) .menu__mobile-meta p {
 
 html[data-theme='dark'] body:not(:has(.admin-body)) .menu {
   border-left: 1px solid var(--ps-border);
+}
+
+html[data-theme='dark'] body:not(:has(.admin-body)) .menu__close {
+  background: var(--ps-surface-2);
+  color: var(--ps-text);
 }

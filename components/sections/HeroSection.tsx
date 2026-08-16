@@ -48,7 +48,7 @@ export function HeroSection({
               src={section.image}
               alt={section.imageAlt}
               width={500}
-              height={400}
+              height={500}
               className={section.imageClass}
               sizes="(max-width: 900px) 90vw, 500px"
               priority

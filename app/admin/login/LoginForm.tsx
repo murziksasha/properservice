@@ -8,12 +8,40 @@ import {
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
+function EyeIcon({ open }: { open: boolean }) {
+  if (open) {
+    return (
+      <svg width='20' height='20' viewBox='0 0 24 24' fill='none' aria-hidden='true'>
+        <path
+          d='M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.1A10.4 10.4 0 0112 5c5 0 9.3 3.1 11 7.5a11.7 11.7 0 01-4.2 5.1M6.1 6.1A11.7 11.7 0 001 12.5C2.7 16.9 7 20 12 20c1.6 0 3.1-.3 4.5-.9'
+          stroke='currentColor'
+          strokeWidth='1.8'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg width='20' height='20' viewBox='0 0 24 24' fill='none' aria-hidden='true'>
+      <path
+        d='M1 12.5C2.7 8.1 7 5 12 5s9.3 3.1 11 7.5c-1.7 4.4-6 7.5-11 7.5S2.7 16.9 1 12.5z'
+        stroke='currentColor'
+        strokeWidth='1.8'
+        strokeLinejoin='round'
+      />
+      <circle cx='12' cy='12.5' r='3' stroke='currentColor' strokeWidth='1.8' />
+    </svg>
+  );
+}
+
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [lockSeconds, setLockSeconds] = useState(0);
   const [needTotp, setNeedTotp] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (lockSeconds <= 0) return;
@@ -96,11 +124,16 @@ export function LoginForm() {
 
   return (
     <div className='admin-body admin-login'>
-      <form onSubmit={handleSubmit} className='admin-login-card' aria-busy={loading}>
+      <form
+        onSubmit={handleSubmit}
+        className='admin-login-card admin-form'
+        aria-busy={loading}
+      >
         <div className='admin-login-brand'>Proper Service</div>
         <h1>Вхід до адмінки</h1>
         <label htmlFor='admin-username'>
-          Логін <span className='admin-hint'>(опційно, multi-user)</span>
+          Логін{' '}
+          <span className='admin-login-optional'>(опційно, multi-user)</span>
           <input
             id='admin-username'
             name='username'
@@ -111,15 +144,28 @@ export function LoginForm() {
         </label>
         <label htmlFor='admin-password'>
           Пароль
-          <input
-            id='admin-password'
-            type='password'
-            name='password'
-            required
-            autoFocus
-            autoComplete='current-password'
-            disabled={loading || locked}
-          />
+          <div className='admin-password-field'>
+            <input
+              id='admin-password'
+              type={showPassword ? 'text' : 'password'}
+              name='password'
+              required
+              autoFocus
+              autoComplete='current-password'
+              disabled={loading || locked}
+              className='admin-password-field__input'
+            />
+            <button
+              type='button'
+              className='admin-password-field__toggle'
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
+              aria-pressed={showPassword}
+              disabled={loading || locked}
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          </div>
         </label>
         <label htmlFor='admin-totp'>
           Код 2FA {needTotp ? '(обовʼязково)' : '(якщо увімкнено)'}

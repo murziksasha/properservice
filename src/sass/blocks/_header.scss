@@ -86,16 +86,29 @@ body.nav-open {
     border: none;
     z-index: 100;
     cursor: pointer;
-    animation: ps-overlay-in 0.25s ease;
+    opacity: 0;
+    transition: opacity 0.28s ease;
+
+    &.is-open {
+      opacity: 1;
+    }
+
+    &.is-closing {
+      opacity: 0;
+    }
 
     @media (prefers-reduced-motion: reduce) {
-      animation: none;
+      transition: none;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .menu {
-      transition: none;
+      transition: none !important;
+    }
+
+    .menu__close-icon span {
+      transition: none !important;
     }
   }
 
@@ -230,6 +243,11 @@ body.nav-open {
   &__mobile-social {
     display: none;
   }
+
+  /* Close (X) — hidden on desktop, shown in mobile drawer */
+  &__close {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {
@@ -257,18 +275,102 @@ body.nav-open {
       z-index: 110;
       background: var(--ps-surface, #fff);
       color: var(--ps-text, #1a1a1a);
-      padding: 7rem 2.4rem 2.4rem;
+      padding: 5.6rem 2.4rem 2.4rem;
       box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
       min-width: 0;
       margin: 0;
       overflow-y: auto;
+      /* Closed / closing: slide out to the right (reverse of open) */
       transform: translateX(105%);
       visibility: hidden;
-      transition: transform 0.28s ease, visibility 0.28s ease;
+      pointer-events: none;
+      transition:
+        transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+        visibility 0.28s linear,
+        box-shadow 0.28s ease;
 
       &.is-open {
         transform: translateX(0);
         visibility: visible;
+        pointer-events: auto;
+        box-shadow: -8px 0 28px rgba(0, 0, 0, 0.16);
+      }
+
+      &.is-closing {
+        transform: translateX(105%);
+        visibility: visible; /* stay paintable until slide finishes */
+        pointer-events: none;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+      }
+
+      &__close {
+        display: flex;
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        z-index: 2;
+        align-items: center;
+        justify-content: center;
+        width: 4.4rem;
+        height: 4.4rem;
+        padding: 0;
+        border: none;
+        border-radius: 999px;
+        background: var(--ps-surface-2, #f0f2f1);
+        color: var(--ps-text, #1a1a1a);
+        cursor: pointer;
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+
+        &:hover {
+          background: color-mix(in srgb, var(--ps-brand, #02a653) 12%, var(--ps-surface-2, #f0f2f1));
+        }
+
+        &:active {
+          transform: scale(0.96);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--ps-brand, #02a653);
+          outline-offset: 2px;
+        }
+      }
+
+      &__close-icon {
+        position: relative;
+        display: block;
+        width: 1.8rem;
+        height: 1.8rem;
+
+        span {
+          position: absolute;
+          left: 0;
+          top: 50%;
+          display: block;
+          width: 100%;
+          height: 0.24rem;
+          border-radius: 2px;
+          background: currentColor;
+          transition: transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+
+        span:nth-child(1) {
+          transform: translateY(-50%) rotate(45deg);
+        }
+
+        span:nth-child(2) {
+          transform: translateY(-50%) rotate(-45deg);
+        }
+      }
+
+      /* When drawer is open, X is fully formed; on close it can ease slightly */
+      &.is-open .menu__close-icon span:nth-child(1) {
+        transform: translateY(-50%) rotate(45deg);
+      }
+      &.is-open .menu__close-icon span:nth-child(2) {
+        transform: translateY(-50%) rotate(-45deg);
       }
 
       &__list {
@@ -308,15 +410,6 @@ body.nav-open {
     &__contact {
       display: none;
     }
-  }
-}
-
-@keyframes ps-overlay-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 

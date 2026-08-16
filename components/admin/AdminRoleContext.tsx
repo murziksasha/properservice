@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { navAllowedForRole, type AdminRole } from '@/lib/admin-users';
+import { navAllowedForRole, type AdminRole } from '@/lib/admin-roles';
 
 type Ctx = {
   username: string;

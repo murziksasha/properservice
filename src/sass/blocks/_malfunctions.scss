@@ -38,27 +38,75 @@
 
   &__right-side {
     width: 50%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 28rem;
+
+    .ps-image {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: 42rem;
+      line-height: 0;
+    }
   }
 
   &__img {
     width: 100%;
-    height: 82%;
-    &.h100-set{
+    height: auto;
+    max-height: 42rem;
+    object-fit: contain;
+    object-position: top center;
+
+    &.h100-set {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 48rem;
     }
   }
 }
 .wrapper-malfunctions-under {
   padding: 6rem 6.5rem 0;
   display: flex;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Title row: heading stays centered; line is an accent on the right, clipped to the block */
+.wrapper-malfunctions-under:has(.malfunctions__line) {
+  display: block;
+  overflow: hidden;
+
+  .about-link__title {
+    position: relative;
+    z-index: 1;
+    margin: 0 auto;
+    max-width: min(70%, 52rem);
+  }
+
+  .malfunctions__line {
+    position: absolute;
+    top: 50%;
+    right: 6.5rem;
+    left: auto;
+    width: min(22rem, 18%);
+    max-width: calc(50% - 12rem);
+    min-width: 8rem;
+    margin: 0;
+    transform: translateY(-50%);
+    /* room for the half-dot past the stroke end */
+    padding-right: 0.8rem;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
 }
 
 .malfunctions {
-
   &__line {
-    top: 15px;
-    left: 118px;
-    width: 269px;
+    width: min(26.9rem, 100%);
+    max-width: 100%;
   }
 }

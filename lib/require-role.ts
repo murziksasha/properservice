@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession, getSessionClaims } from './auth';
 import { assertAdminIp } from './require-admin-ip';
-import { roleCan, type AdminRole } from './admin-users';
+import { roleCan, type AdminRole } from './admin-roles';
 
 export type RoleGate =
   | { ok: true; role: AdminRole | 'legacy'; username: string }
