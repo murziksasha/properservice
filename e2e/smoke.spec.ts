@@ -196,8 +196,12 @@ test.describe.serial('admin happy-path', () => {
       expect(typeof body.configured).toBe('boolean');
     }
 
-    await page.getByRole('button', { name: /вийти/i }).click();
-    await expect(page).toHaveURL(/\/admin\/login/, { timeout: 10_000 });
+    // Logout shows window.confirm before DELETE /api/auth + hard redirect
+    page.once('dialog', dialog => dialog.accept());
+    await Promise.all([
+      page.waitForURL(/\/admin\/login/, { timeout: 15_000 }),
+      page.getByRole('button', { name: /вийти/i }).click(),
+    ]);
   });
 });
 
