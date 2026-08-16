@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MenuItem, SiteSettings } from '@/lib/types';
 import { formatTelHref } from '@/lib/phone';
 import { TextSizeToggle } from './TextSizeToggle';
@@ -49,6 +49,27 @@ export function Header({ settings, menu }: HeaderProps) {
     };
   }, []);
 
+  function openMenu() {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setOverlayMounted(true);
+    // Next frame so overlay enter animation runs from opacity 0
+    requestAnimationFrame(() => setOpen(true));
+  }
+
+  const closeMenu = useCallback(() => {
+    if (!open && !overlayMounted) return;
+    setOpen(false);
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setOverlayMounted(false);
+      closeTimerRef.current = null;
+      burgerRef.current?.focus();
+    }, MENU_CLOSE_MS);
+  }, [open, overlayMounted]);
+
   useEffect(() => {
     if (!open) return;
 
@@ -81,28 +102,7 @@ export function Header({ settings, menu }: HeaderProps) {
     closeBtnRef.current?.focus();
 
     return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
-
-  function openMenu() {
-    if (closeTimerRef.current) {
-      clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
-    setOverlayMounted(true);
-    // Next frame so overlay enter animation runs from opacity 0
-    requestAnimationFrame(() => setOpen(true));
-  }
-
-  function closeMenu() {
-    if (!open && !overlayMounted) return;
-    setOpen(false);
-    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
-    closeTimerRef.current = setTimeout(() => {
-      setOverlayMounted(false);
-      closeTimerRef.current = null;
-      burgerRef.current?.focus();
-    }, MENU_CLOSE_MS);
-  }
+  }, [open, closeMenu]);
 
   function toggleMenu() {
     if (open) closeMenu();

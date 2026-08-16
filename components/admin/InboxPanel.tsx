@@ -162,16 +162,21 @@ export function InboxPanel({
     return visible.find((i) => `${i.kind}:${i.id}` === selectedKey) || visible[0] || null;
   }, [visible, selectedKey]);
 
+  const selectedId = selected?.id;
+  const selectedKind = selected?.kind;
+  const selectedPhone = selected?.phone;
+  const selectedNote = selected?.note;
+
   useEffect(() => {
-    if (!selected) {
+    if (!selectedId || !selectedPhone) {
       setNoteDraft('');
       setHistory([]);
       return;
     }
-    setNoteDraft(selected.note || '');
+    setNoteDraft(selectedNote || '');
     void (async () => {
       try {
-        const res = await fetch(`/api/inbox?phone=${encodeURIComponent(selected.phone)}`);
+        const res = await fetch(`/api/inbox?phone=${encodeURIComponent(selectedPhone)}`);
         if (!res.ok) return;
         const json = (await res.json()) as { items?: InboxItem[] };
         setHistory(json.items || []);
@@ -179,7 +184,58 @@ export function InboxPanel({
         /* ignore */
       }
     })();
-  }, [selected?.id, selected?.kind, selected?.phone]);
+  }, [selectedId, selectedKind, selectedPhone, selectedNote]);
+
+  const patch = useCallback(
+    async (
+      item: InboxItem,
+      body: {
+        status?: WorkflowStatus;
+        note?: string;
+        callbackAt?: string;
+        handled?: boolean;
+        outcome?: CloseOutcome;
+        assignee?: string;
+      },
+      okMsg: string,
+    ) => {
+      if (body.status && statusRequiresOutcome(body.status)) {
+        const outcome = body.outcome || (closeOutcome as CloseOutcome) || undefined;
+        const note = body.note ?? noteDraft;
+        if (!outcome) {
+          showToast('Оберіть результат закриття (outcome)', 'error');
+          return;
+        }
+        if (!(note || '').trim()) {
+          showToast('Додайте нотатку при закритті', 'error');
+          return;
+        }
+        body = { ...body, outcome, note };
+      }
+      setBusy(true);
+      try {
+        const res = await fetch('/api/inbox', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: item.kind, id: item.id, ...body }),
+        });
+        if (!res.ok) {
+          const j = (await res.json().catch(() => ({}))) as { error?: string };
+          showToast(j.error || 'Не вдалося оновити', 'error');
+          return;
+        }
+        showToast(okMsg, 'success');
+        setCloseOutcome('');
+        await load();
+        await refreshCounts();
+      } catch {
+        showToast('Мережева помилка', 'error');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [closeOutcome, load, noteDraft, refreshCounts],
+  );
 
   // Keyboard navigation
   useEffect(() => {
@@ -214,55 +270,7 @@ export function InboxPanel({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [visible, selected]);
-
-  async function patch(
-    item: InboxItem,
-    body: {
-      status?: WorkflowStatus;
-      note?: string;
-      callbackAt?: string;
-      handled?: boolean;
-      outcome?: CloseOutcome;
-      assignee?: string;
-    },
-    okMsg: string,
-  ) {
-    if (body.status && statusRequiresOutcome(body.status)) {
-      const outcome = body.outcome || (closeOutcome as CloseOutcome) || undefined;
-      const note = body.note ?? noteDraft;
-      if (!outcome) {
-        showToast('Оберіть результат закриття (outcome)', 'error');
-        return;
-      }
-      if (!(note || '').trim()) {
-        showToast('Додайте нотатку при закритті', 'error');
-        return;
-      }
-      body = { ...body, outcome, note };
-    }
-    setBusy(true);
-    try {
-      const res = await fetch('/api/inbox', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: item.kind, id: item.id, ...body }),
-      });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        showToast(j.error || 'Не вдалося оновити', 'error');
-        return;
-      }
-      showToast(okMsg, 'success');
-      setCloseOutcome('');
-      await load();
-      await refreshCounts();
-    } catch {
-      showToast('Мережева помилка', 'error');
-    } finally {
-      setBusy(false);
-    }
-  }
+  }, [visible, selected, patch]);
 
   async function remove(item: InboxItem) {
     if (!confirm('Видалити запис?')) return;
@@ -420,9 +428,15 @@ export function InboxPanel({
             onChange={(e) => setPhoneQ(e.target.value)}
             aria-label='Пошук телефону'
           />
-          <a className='admin-btn admin-btn--secondary' href='/api/inbox?format=csv'>
+          <button
+            type='button'
+            className='admin-btn admin-btn--secondary'
+            onClick={() => {
+              window.location.href = '/api/inbox?format=csv';
+            }}
+          >
             CSV
-          </a>
+          </button>
           <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
             Оновити
           </button>
