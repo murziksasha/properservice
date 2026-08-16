@@ -114,11 +114,7 @@ export function CallbackForm({
         </label>
       </div>
       <button className='_callback__btn _btn' type='submit' disabled={loading} aria-busy={loading}>
-        {buttonHtml ? (
-          <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(buttonHtml) }} />
-        ) : (
-          buttonText
-        )}
+        {buttonHtml ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(buttonHtml) }} /> : buttonText}
       </button>
       {status ? (
         <div

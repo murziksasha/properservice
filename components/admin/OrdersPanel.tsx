@@ -130,7 +130,7 @@ export function OrdersPanel() {
   }
 
   const visible = useMemo(() => {
-    return orders.filter((o) => {
+    return orders.filter(o => {
       const st = normalizeStatus(o.status, o.handled);
       if (filter === 'open' && o.handled) return false;
       if (filter === 'done' && !o.handled) return false;
@@ -141,7 +141,7 @@ export function OrdersPanel() {
     });
   }, [orders, filter, timeFilter, phoneQ, statusFilter]);
 
-  const openCount = orders.filter((o) => !o.handled).length;
+  const openCount = orders.filter(o => !o.handled).length;
 
   return (
     <div className='admin-card'>
@@ -164,11 +164,11 @@ export function OrdersPanel() {
             <select
               className='admin-select'
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
+              onChange={e => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
               aria-label='Workflow'
             >
               <option value='all'>Усі статуси</option>
-              {WORKFLOW_STATUSES.map((s) => (
+              {WORKFLOW_STATUSES.map(s => (
                 <option key={s} value={s}>
                   {WORKFLOW_LABELS[s]}
                 </option>
@@ -189,7 +189,7 @@ export function OrdersPanel() {
       ) : null}
 
       <ul className='admin-leads-list'>
-        {visible.map((order) => {
+        {visible.map(order => {
           const noteVal = noteDraft[order.id] ?? order.note ?? '';
           const busy = busyId === order.id;
           const status = normalizeStatus(order.status, order.handled);
@@ -216,7 +216,11 @@ export function OrdersPanel() {
                 </span>
                 {order.audit && order.audit.length > 0 ? (
                   <span className='admin-lead-meta'>
-                    Історія: {order.audit.slice(-3).map((a) => a.action).join(' → ')}
+                    Історія:{' '}
+                    {order.audit
+                      .slice(-3)
+                      .map(a => a.action)
+                      .join(' → ')}
                   </span>
                 ) : null}
                 <div className='admin-row admin-row--wrap' style={{ marginTop: 4 }}>
@@ -238,11 +242,11 @@ export function OrdersPanel() {
                     className='admin-select'
                     value={status}
                     disabled={busy}
-                    onChange={(e) =>
+                    onChange={e =>
                       void patchOrder(order.id, { status: e.target.value as WorkflowStatus }, 'Статус оновлено')
                     }
                   >
-                    {WORKFLOW_STATUSES.map((s) => (
+                    {WORKFLOW_STATUSES.map(s => (
                       <option key={s} value={s}>
                         {WORKFLOW_LABELS[s]}
                       </option>
@@ -256,7 +260,7 @@ export function OrdersPanel() {
                     style={{ display: 'block', width: '100%', marginTop: 4 }}
                     value={noteVal}
                     disabled={busy}
-                    onChange={(e) => setNoteDraft((d) => ({ ...d, [order.id]: e.target.value }))}
+                    onChange={e => setNoteDraft(d => ({ ...d, [order.id]: e.target.value }))}
                     onBlur={() => {
                       const next = (noteDraft[order.id] ?? order.note ?? '').trim();
                       const prev = (order.note || '').trim();

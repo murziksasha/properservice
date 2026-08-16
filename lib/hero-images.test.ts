@@ -56,9 +56,7 @@ describe('collectHeroImages', () => {
           ],
         },
       ],
-      servicesNav: [
-        { id: 'n1', label: 'TV', href: '/televizori', slug: 'televizori', visible: true },
-      ],
+      servicesNav: [{ id: 'n1', label: 'TV', href: '/televizori', slug: 'televizori', visible: true }],
     });
 
     const map = collectHeroImages(data);

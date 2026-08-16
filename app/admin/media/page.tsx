@@ -8,9 +8,9 @@ export default function AdminMediaPage() {
     <AdminShell>
       <h1>Медіатека</h1>
       <p className='admin-hint admin-mb-lg'>
-        Тематичні <strong>папки</strong> (зліва) і <strong>роль</strong> (товар / hero…) — для
-        сортування та швидкого вибору. URL лишається <code>/uploads/…</code>. Великі
-        зображення зменшуються; JPEG → WebP; PNG/GIF без зміни формату.
+        Тематичні <strong>папки</strong> (зліва) і <strong>роль</strong> (товар / hero…) — для сортування та швидкого
+        вибору. URL лишається <code>/uploads/…</code>. Великі зображення зменшуються; JPEG → WebP; PNG/GIF без зміни
+        формату.
       </p>
       <MediaLibrary />
     </AdminShell>

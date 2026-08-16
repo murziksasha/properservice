@@ -25,12 +25,7 @@ for (const soc of data.settings.social || []) {
 for (const g of data.goods || []) {
   const t = (g.title || '').toLowerCase();
   const d = (g.description || '').toLowerCase();
-  if (
-    t === 'test' ||
-    t.includes('new test') ||
-    d.includes('super goods') ||
-    d.includes('the best goods')
-  ) {
+  if (t === 'test' || t.includes('new test') || d.includes('super goods') || d.includes('the best goods')) {
     g.visible = false;
   }
 }
@@ -46,7 +41,7 @@ for (const page of data.pages || []) {
       sec.aboutLines = sec.aboutLines.map(fixStr);
     }
     if (Array.isArray(sec.items)) {
-      sec.items = sec.items.map((item) => {
+      sec.items = sec.items.map(item => {
         if (typeof item === 'string') return fixStr(item);
         if (item && typeof item === 'object') {
           for (const k of Object.keys(item)) {
@@ -67,9 +62,4 @@ if (!data.updatedAt) data.updatedAt = new Date().toISOString();
 
 writeFileSync(p, JSON.stringify(data, null, 2) + '\n');
 console.log('ok officeHours=', data.settings.officeHours);
-console.log(
-  'visible goods',
-  data.goods.filter((g) => g.visible).length,
-  '/',
-  data.goods.length,
-);
+console.log('visible goods', data.goods.filter(g => g.visible).length, '/', data.goods.length);

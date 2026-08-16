@@ -4,16 +4,12 @@ import { sanitizeHtml } from '@/lib/sanitize';
 
 export function CallbackBlock({ section }: { section: CallbackSectionType }) {
   return (
-    <div className="about-link__callback _callback">
+    <div className='about-link__callback _callback'>
       <p
-        className="_callback__title _paragr"
+        className='_callback__title _paragr'
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml ?? section.title) }}
       />
-      <CallbackForm
-        buttonText={section.buttonText}
-        buttonHtml={section.buttonHtml}
-        placeholder={section.placeholder}
-      />
+      <CallbackForm buttonText={section.buttonText} buttonHtml={section.buttonHtml} placeholder={section.placeholder} />
     </div>
   );
 }

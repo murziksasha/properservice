@@ -8,12 +8,9 @@ import type { Page, SiteData } from './types';
  * - publishAt?: ISO string — when to publish draft to live
  * - draft?: body snapshot
  */
-export function applyScheduledPublishes(
-  site: SiteData,
-  now = Date.now(),
-): { site: SiteData; published: string[] } {
+export function applyScheduledPublishes(site: SiteData, now = Date.now()): { site: SiteData; published: string[] } {
   const published: string[] = [];
-  const pages = site.pages.map((page) => {
+  const pages = site.pages.map(page => {
     const at = page.publishAt ? Date.parse(page.publishAt) : NaN;
     if (!Number.isFinite(at) || at > now) return page;
     if (!page.draft) {

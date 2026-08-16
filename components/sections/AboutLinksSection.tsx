@@ -25,7 +25,7 @@ export function AboutLinksSection({
         />
         {section.subtitle ? <p className='about-link__paragr'>{section.subtitle}</p> : null}
         <div className='about-link__items-wrapper'>
-          {section.items.map((item) => (
+          {section.items.map(item => (
             <div key={`${item.href}-${item.label}`} className='about-link__item'>
               <Link href={item.href} className='about-link__link'>
                 <PublicImage

@@ -18,15 +18,11 @@ const DEFAULT_FAQ = [
 ];
 
 /** FAQPage JSON-LD for rich results. */
-export function FaqJsonLd({
-  items = DEFAULT_FAQ,
-}: {
-  items?: { q: string; a: string }[];
-}) {
+export function FaqJsonLd({ items = DEFAULT_FAQ }: { items?: { q: string; a: string }[] }) {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: items.map((item) => ({
+    mainEntity: items.map(item => ({
       '@type': 'Question',
       name: item.q,
       acceptedAnswer: {
@@ -36,7 +32,5 @@ export function FaqJsonLd({
     })),
   };
 
-  return (
-    <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
-  );
+  return <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
 }

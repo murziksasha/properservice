@@ -73,20 +73,20 @@ describe('media-index folders', () => {
 
     await reorderMediaItems(folder.id, ['two.webp', 'one.webp']);
     let index = await readMediaIndex();
-    const two = index.items.find((i) => i.name === 'two.webp');
-    const one = index.items.find((i) => i.name === 'one.webp');
+    const two = index.items.find(i => i.name === 'two.webp');
+    const one = index.items.find(i => i.name === 'one.webp');
     expect(two?.sortOrder).toBe(0);
     expect(one?.sortOrder).toBe(1);
 
     await patchMediaMeta('one.webp', { folderId: '' });
     index = await readMediaIndex();
-    expect(index.items.find((i) => i.name === 'one.webp')?.folderId).toBe('');
+    expect(index.items.find(i => i.name === 'one.webp')?.folderId).toBe('');
 
     const ok = await deleteMediaFolder(folder.id);
     expect(ok).toBe(true);
     index = await readMediaIndex();
     expect(index.folders).toHaveLength(0);
-    expect(index.items.every((i) => i.folderId === '')).toBe(true);
+    expect(index.items.every(i => i.folderId === '')).toBe(true);
   });
 
   it('bulk-moves items into a folder and back to root', async () => {
@@ -100,18 +100,18 @@ describe('media-index folders', () => {
     expect(r1.missing).toEqual(['missing.webp']);
 
     let index = await readMediaIndex();
-    expect(index.items.find((i) => i.name === 'a.webp')?.folderId).toBe(folder.id);
-    expect(index.items.find((i) => i.name === 'b.webp')?.folderId).toBe(folder.id);
-    expect(index.items.find((i) => i.name === 'c.webp')?.folderId).toBe('');
+    expect(index.items.find(i => i.name === 'a.webp')?.folderId).toBe(folder.id);
+    expect(index.items.find(i => i.name === 'b.webp')?.folderId).toBe(folder.id);
+    expect(index.items.find(i => i.name === 'c.webp')?.folderId).toBe('');
 
     const r2 = await moveMediaToFolder(['a.webp'], '');
     expect(r2.moved).toBe(1);
     index = await readMediaIndex();
-    expect(index.items.find((i) => i.name === 'a.webp')?.folderId).toBe('');
+    expect(index.items.find(i => i.name === 'a.webp')?.folderId).toBe('');
 
     const r3 = await moveMediaToFolder(['b.webp'], 'not-a-real-folder');
     expect(r3.moved).toBe(1);
     index = await readMediaIndex();
-    expect(index.items.find((i) => i.name === 'b.webp')?.folderId).toBe('');
+    expect(index.items.find(i => i.name === 'b.webp')?.folderId).toBe('');
   });
 });

@@ -4,13 +4,13 @@ import { sanitizeHtml } from '@/lib/sanitize';
 
 export function AdvantagesSection({ section }: { section: AdvantagesSectionType }) {
   return (
-    <div className="advantages">
-      <div className="advantages__wrapper wrapper">
+    <div className='advantages'>
+      <div className='advantages__wrapper wrapper'>
         {section.items.map((item, index) => (
-          <div key={`${item.icon}-${index}`} className="advantages__block">
-            <div className="advantages__ico">
+          <div key={`${item.icon}-${index}`} className='advantages__block'>
+            <div className='advantages__ico'>
               <Image src={item.icon} alt={item.iconAlt} width={48} height={48} />
-              <p className="_paragr" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.textHtml) }} />
+              <p className='_paragr' dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.textHtml) }} />
             </div>
           </div>
         ))}

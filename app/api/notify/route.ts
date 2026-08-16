@@ -3,12 +3,7 @@ import { requireAdminRole } from '@/lib/require-role';
 import { listLeads } from '@/lib/leads';
 import { listOrders } from '@/lib/orders';
 import { sendTelegramMessage, telegramConfigured } from '@/lib/notify';
-import {
-  formatBulkSummaryLine,
-  notifyOneLead,
-  notifyOneOrder,
-  type NotifyTarget,
-} from '@/lib/notify-admin';
+import { formatBulkSummaryLine, notifyOneLead, notifyOneOrder, type NotifyTarget } from '@/lib/notify-admin';
 import { appendActivity } from '@/lib/admin-activity';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +75,7 @@ export async function POST(request: NextRequest) {
       let failed = 0;
       for (const t of targets) {
         if (t.kind === 'lead') {
-          const lead = leads.find((l) => l.id === t.id);
+          const lead = leads.find(l => l.id === t.id);
           if (!lead) {
             failed++;
             continue;
@@ -89,7 +84,7 @@ export async function POST(request: NextRequest) {
           if (ok) sent++;
           else failed++;
         } else {
-          const order = orders.find((o) => o.id === t.id);
+          const order = orders.find(o => o.id === t.id);
           if (!order) {
             failed++;
             continue;
@@ -119,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     if (body.kind === 'lead') {
       const leads = await listLeads();
-      const lead = leads.find((l) => l.id === body.id);
+      const lead = leads.find(l => l.id === body.id);
       if (!lead) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       const ok = await notifyOneLead(lead, note || undefined);
       if (!ok) return NextResponse.json({ error: 'Не вдалося надіслати' }, { status: 502 });
@@ -136,7 +131,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orders = await listOrders();
-    const order = orders.find((o) => o.id === body.id);
+    const order = orders.find(o => o.id === body.id);
     if (!order) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const ok = await notifyOneOrder(order, note || undefined);
     if (!ok) return NextResponse.json({ error: 'Не вдалося надіслати' }, { status: 502 });

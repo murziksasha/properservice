@@ -50,7 +50,7 @@ export const REPLY_TEMPLATES: ReplyTemplate[] = [
 
 export function templatesForStatus(status?: WorkflowStatus): ReplyTemplate[] {
   if (!status) return REPLY_TEMPLATES;
-  const matched = REPLY_TEMPLATES.filter((t) => !t.statuses || t.statuses.includes(status));
+  const matched = REPLY_TEMPLATES.filter(t => !t.statuses || t.statuses.includes(status));
   return matched.length ? matched : REPLY_TEMPLATES;
 }
 

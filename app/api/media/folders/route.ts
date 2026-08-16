@@ -89,10 +89,7 @@ export async function PATCH(request: NextRequest) {
     }
     const folder = await patchMediaFolder(body.id, {
       label: typeof body.label === 'string' ? body.label : undefined,
-      sortOrder:
-        typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder)
-          ? body.sortOrder
-          : undefined,
+      sortOrder: typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder) ? body.sortOrder : undefined,
     });
     if (!folder) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

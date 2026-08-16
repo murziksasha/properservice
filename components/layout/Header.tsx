@@ -31,7 +31,7 @@ export function Header({ settings, menu }: HeaderProps) {
   const [open, setOpen] = useState(false);
   /** Overlay stays mounted while closing so exit animation can play */
   const [overlayMounted, setOverlayMounted] = useState(false);
-  const visibleMenu = menu.filter((item) => item.visible);
+  const visibleMenu = menu.filter(item => item.visible);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
@@ -80,9 +80,7 @@ export function Header({ settings, menu }: HeaderProps) {
       }
       if (e.key !== 'Tab' || !navRef.current) return;
 
-      const focusable = navRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled])',
-      );
+      const focusable = navRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
       if (!focusable.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -172,7 +170,7 @@ export function Header({ settings, menu }: HeaderProps) {
                   </Link>
                 </li>
               ) : null}
-              {visibleMenu.map((item) => (
+              {visibleMenu.map(item => (
                 <li key={item.id} className='_list-reset'>
                   <Link href={item.href} className='menu__link' onClick={closeMenu}>
                     {item.label}
@@ -198,7 +196,7 @@ export function Header({ settings, menu }: HeaderProps) {
                 <ThemeToggle />
               </div>
               <div className='menu__mobile-social'>
-                {settings.social.map((link) => (
+                {settings.social.map(link => (
                   <a
                     key={link.id}
                     href={link.url}
@@ -206,12 +204,7 @@ export function Header({ settings, menu }: HeaderProps) {
                     rel='noopener noreferrer'
                     aria-label={SOCIAL_LABELS[link.type] || link.type}
                   >
-                    <Image
-                      src={link.icon}
-                      alt={SOCIAL_LABELS[link.type] || link.type}
-                      width={28}
-                      height={28}
-                    />
+                    <Image src={link.icon} alt={SOCIAL_LABELS[link.type] || link.type} width={28} height={28} />
                   </a>
                 ))}
               </div>
@@ -235,7 +228,7 @@ export function Header({ settings, menu }: HeaderProps) {
             </div>
             <div className='header__contact_row'>
               <div className='header__contact_social'>
-                {settings.social.map((link) => (
+                {settings.social.map(link => (
                   <a
                     key={link.id}
                     href={link.url}
@@ -243,12 +236,7 @@ export function Header({ settings, menu }: HeaderProps) {
                     rel='noopener noreferrer'
                     aria-label={SOCIAL_LABELS[link.type] || link.type}
                   >
-                    <Image
-                      src={link.icon}
-                      alt={SOCIAL_LABELS[link.type] || link.type}
-                      width={24}
-                      height={24}
-                    />
+                    <Image src={link.icon} alt={SOCIAL_LABELS[link.type] || link.type} width={24} height={24} />
                   </a>
                 ))}
               </div>

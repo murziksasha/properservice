@@ -83,10 +83,7 @@ export function generateTotpSecret(): string {
   return base32Encode(randomBytes(20));
 }
 
-export function buildOtpauthUrl(
-  secretBase32: string,
-  options?: { account?: string; issuer?: string },
-): string {
+export function buildOtpauthUrl(secretBase32: string, options?: { account?: string; issuer?: string }): string {
   const issuer = options?.issuer || 'ProperService';
   const account = options?.account || 'admin';
   const label = encodeURIComponent(`${issuer}:${account}`);

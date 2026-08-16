@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         'emailed',
         'callbackAt',
       ],
-      leads.map((l) => [
+      leads.map(l => [
         l.id,
         l.createdAt,
         l.phone,
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     leads,
     total: leads.length,
-    unhandled: leads.filter((l) => !l.handled).length,
+    unhandled: leads.filter(l => !l.handled).length,
   });
 }
 

@@ -16,7 +16,7 @@ export function readRecents(): RecentEntry[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as RecentEntry[];
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((e) => e && typeof e.href === 'string' && typeof e.label === 'string');
+    return parsed.filter(e => e && typeof e.href === 'string' && typeof e.label === 'string');
   } catch {
     return [];
   }
@@ -27,7 +27,7 @@ export function pushRecent(href: string, label: string): void {
   if (!href.startsWith('/admin')) return;
   if (href.startsWith('/admin/login')) return;
   try {
-    const list = readRecents().filter((e) => e.href !== href);
+    const list = readRecents().filter(e => e.href !== href);
     list.unshift({ href, label, at: Date.now() });
     localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX)));
   } catch {
@@ -43,7 +43,7 @@ export function readFavorites(): string[] {
     const raw = localStorage.getItem(FAV_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as string[];
-    return Array.isArray(parsed) ? parsed.filter((h) => typeof h === 'string') : [];
+    return Array.isArray(parsed) ? parsed.filter(h => typeof h === 'string') : [];
   } catch {
     return [];
   }
@@ -51,7 +51,7 @@ export function readFavorites(): string[] {
 
 export function toggleFavorite(href: string): string[] {
   const cur = readFavorites();
-  const next = cur.includes(href) ? cur.filter((h) => h !== href) : [...cur, href].slice(0, 20);
+  const next = cur.includes(href) ? cur.filter(h => h !== href) : [...cur, href].slice(0, 20);
   try {
     localStorage.setItem(FAV_KEY, JSON.stringify(next));
   } catch {

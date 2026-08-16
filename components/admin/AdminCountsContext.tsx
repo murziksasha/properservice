@@ -1,11 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  readNotifyPrefs,
-  shouldNotify,
-  type NotifyPrefs,
-} from '@/lib/admin-notify-prefs';
+import { readNotifyPrefs, shouldNotify, type NotifyPrefs } from '@/lib/admin-notify-prefs';
 
 type Counts = {
   openLeads: number;
@@ -42,7 +38,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
         open?: number;
         stale?: number;
       };
-      setCounts((prev) => ({
+      setCounts(prev => ({
         ...prev,
         openLeads: json.openLeads || 0,
         openOrders: json.openOrders || 0,
@@ -75,7 +71,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
         if (!cancelled) setLive(true);
       };
 
-      es.onmessage = (ev) => {
+      es.onmessage = ev => {
         try {
           const json = JSON.parse(ev.data) as Counts;
           setCounts({
@@ -166,10 +162,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
     }
   }, [counts.openTotal, counts.latestKind]);
 
-  const value = useMemo(
-    () => ({ ...counts, refresh, loading, live }),
-    [counts, refresh, loading, live],
-  );
+  const value = useMemo(() => ({ ...counts, refresh, loading, live }), [counts, refresh, loading, live]);
 
   return <AdminCountsContext.Provider value={value}>{children}</AdminCountsContext.Provider>;
 }

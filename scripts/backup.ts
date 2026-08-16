@@ -21,7 +21,7 @@ async function main() {
   console.log(`Backup written: ${info.name} (${info.size} bytes)`);
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error(err);
   process.exit(1);
 });

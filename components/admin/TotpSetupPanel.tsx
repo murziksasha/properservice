@@ -209,31 +209,25 @@ export function TotpSetupPanel() {
     <div className='admin-card admin-totp-panel'>
       <h2 className='admin-h2'>Безпека · 2FA (TOTP)</h2>
       <p className='admin-hint admin-mb'>
-        Другий фактор для входу в адмінку. Google Authenticator, Aegis, 1Password тощо. Secret
-        зберігається в <code>data/admin-totp.json</code> (не в <code>site.json</code>).
+        Другий фактор для входу в адмінку. Google Authenticator, Aegis, 1Password тощо. Secret зберігається в{' '}
+        <code>data/admin-totp.json</code> (не в <code>site.json</code>).
       </p>
 
       <ul className='admin-checklist admin-mb'>
         <li className={status.enabled ? 'is-ok' : 'is-info'}>
           {status.enabled ? '✓' : '·'} Статус:{' '}
-          {status.enabled
-            ? status.source === 'env'
-              ? 'увімкнено (через .env)'
-              : 'увімкнено (з адмінки)'
-            : 'вимкнено'}
+          {status.enabled ? (status.source === 'env' ? 'увімкнено (через .env)' : 'увімкнено (з адмінки)') : 'вимкнено'}
         </li>
         {status.enabledAt ? (
-          <li className='is-info'>
-            Увімкнено: {new Date(status.enabledAt).toLocaleString('uk-UA')}
-          </li>
+          <li className='is-info'>Увімкнено: {new Date(status.enabledAt).toLocaleString('uk-UA')}</li>
         ) : null}
       </ul>
 
       {status.managedByEnv ? (
         <div className='admin-totp-env-note'>
           <p>
-            2FA задано через <code>ADMIN_TOTP_SECRET</code> у <code>.env</code>. Керування з адмінки
-            (QR / вимкнення) недоступне — змініть або приберіть змінну і перезапустіть сервер.
+            2FA задано через <code>ADMIN_TOTP_SECRET</code> у <code>.env</code>. Керування з адмінки (QR / вимкнення)
+            недоступне — змініть або приберіть змінну і перезапустіть сервер.
           </p>
           {status.fileConfigured ? (
             <p className='admin-hint'>
@@ -251,17 +245,12 @@ export function TotpSetupPanel() {
               type='password'
               autoComplete='current-password'
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               disabled={busy}
             />
           </label>
           <div className='admin-row admin-row--wrap'>
-            <button
-              type='button'
-              className='admin-btn'
-              disabled={busy || !password}
-              onClick={() => void beginSetup()}
-            >
+            <button type='button' className='admin-btn' disabled={busy || !password} onClick={() => void beginSetup()}>
               {busy ? 'Генерація…' : 'Увімкнути 2FA'}
             </button>
           </div>
@@ -271,8 +260,8 @@ export function TotpSetupPanel() {
       {!status.managedByEnv && phase === 'setup' && draft ? (
         <div className='admin-totp-setup'>
           <p className='admin-hint admin-mb'>
-            1. Відскануйте QR у застосунку Authenticator. 2. Введіть 6-значний код для підтвердження.
-            Secret показується <strong>один раз</strong> — збережіть його в надійному місці.
+            1. Відскануйте QR у застосунку Authenticator. 2. Введіть 6-значний код для підтвердження. Secret показується{' '}
+            <strong>один раз</strong> — збережіть його в надійному місці.
           </p>
           <div className='admin-totp-qr-wrap'>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -299,7 +288,7 @@ export function TotpSetupPanel() {
               type='password'
               autoComplete='current-password'
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               disabled={busy}
             />
           </label>
@@ -313,7 +302,7 @@ export function TotpSetupPanel() {
               maxLength={6}
               placeholder='000000'
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               disabled={busy}
             />
           </label>
@@ -326,18 +315,12 @@ export function TotpSetupPanel() {
             >
               {busy ? 'Збереження…' : 'Підтвердити і увімкнути'}
             </button>
-            <button
-              type='button'
-              className='admin-btn admin-btn--secondary'
-              disabled={busy}
-              onClick={resetForm}
-            >
+            <button type='button' className='admin-btn admin-btn--secondary' disabled={busy} onClick={resetForm}>
               Скасувати
             </button>
           </div>
           <p className='admin-hint'>
-            otpauth URI (для ручного додавання):{' '}
-            <code className='admin-totp-uri'>{draft.otpauthUrl}</code>
+            otpauth URI (для ручного додавання): <code className='admin-totp-uri'>{draft.otpauthUrl}</code>
           </p>
         </div>
       ) : null}
@@ -368,7 +351,7 @@ export function TotpSetupPanel() {
                   type='password'
                   autoComplete='current-password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   disabled={busy}
                 />
               </label>
@@ -382,7 +365,7 @@ export function TotpSetupPanel() {
                   maxLength={6}
                   placeholder='000000'
                   value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   disabled={busy}
                 />
               </label>
@@ -395,12 +378,7 @@ export function TotpSetupPanel() {
                 >
                   {busy ? 'Вимкнення…' : 'Підтвердити вимкнення'}
                 </button>
-                <button
-                  type='button'
-                  className='admin-btn admin-btn--secondary'
-                  disabled={busy}
-                  onClick={resetForm}
-                >
+                <button type='button' className='admin-btn admin-btn--secondary' disabled={busy} onClick={resetForm}>
                   Скасувати
                 </button>
               </div>

@@ -71,7 +71,7 @@ export async function listAdminUsers(): Promise<Omit<AdminUser, 'passwordHash'>[
 export async function getAdminUserByUsername(username: string): Promise<AdminUser | null> {
   const store = await readStore();
   const key = username.trim().toLowerCase();
-  return store.users.find((u) => u.username.toLowerCase() === key && !u.disabled) || null;
+  return store.users.find(u => u.username.toLowerCase() === key && !u.disabled) || null;
 }
 
 export async function createAdminUser(input: {
@@ -83,7 +83,7 @@ export async function createAdminUser(input: {
   if (!username || username.length < 2) return { error: 'Username too short' };
   if (!input.password || input.password.length < 8) return { error: 'Password must be ≥8 chars' };
   const store = await readStore();
-  if (store.users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
+  if (store.users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
     return { error: 'Username already exists' };
   }
   const user: AdminUser = {
@@ -104,7 +104,7 @@ export async function updateAdminUser(
   patch: Partial<Pick<AdminUser, 'role' | 'disabled'>> & { password?: string },
 ): Promise<boolean> {
   const store = await readStore();
-  const idx = store.users.findIndex((u) => u.id === id);
+  const idx = store.users.findIndex(u => u.id === id);
   if (idx < 0) return false;
   const cur = store.users[idx];
   store.users[idx] = {
@@ -120,7 +120,7 @@ export async function updateAdminUser(
 export async function deleteAdminUser(id: string): Promise<boolean> {
   const store = await readStore();
   const before = store.users.length;
-  store.users = store.users.filter((u) => u.id !== id);
+  store.users = store.users.filter(u => u.id !== id);
   if (store.users.length === before) return false;
   await writeStore(store);
   return true;
@@ -128,7 +128,7 @@ export async function deleteAdminUser(id: string): Promise<boolean> {
 
 export async function hasMultiUserMode(): Promise<boolean> {
   const store = await readStore();
-  return store.users.some((u) => !u.disabled);
+  return store.users.some(u => !u.disabled);
 }
 
 export function fingerprintSession(token: string): string {

@@ -40,7 +40,7 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
     }
     setSaving(false);
     if (result.ok) {
-      if (result.updatedAt) setData((prev) => ({ ...prev, updatedAt: result.updatedAt }));
+      if (result.updatedAt) setData(prev => ({ ...prev, updatedAt: result.updatedAt }));
       setDirty(false);
       showToast('Збережено', 'success');
     } else {
@@ -90,7 +90,7 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
         role='button'
         tabIndex={0}
         aria-label='Перемістити пункт'
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === 'ArrowUp' && index > 0) {
             e.preventDefault();
             if (list === 'header') mark({ ...data, headerMenu: moveByDir(data.headerMenu, index, -1) });
@@ -136,7 +136,7 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
               drag?.list === 'header' && drag.index === i ? ' is-dragging' : ''
             }${over?.list === 'header' && over.index === i && drag?.index !== i ? ' is-drop-target' : ''}`}
             draggable
-            onDragStart={(e) => {
+            onDragStart={e => {
               if (!(e.target as HTMLElement).closest('.admin-drag-handle')) {
                 e.preventDefault();
                 return;
@@ -149,11 +149,11 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
               setDrag(null);
               setOver(null);
             }}
-            onDragOver={(e) => {
+            onDragOver={e => {
               e.preventDefault();
               setOver({ list: 'header', index: i });
             }}
-            onDrop={(e) => {
+            onDrop={e => {
               e.preventDefault();
               onDrop('header', i);
             }}
@@ -178,17 +178,17 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
             </div>
             <label>
               Назва
-              <input value={item.label} onChange={(e) => updateHeader(i, { label: e.target.value })} />
+              <input value={item.label} onChange={e => updateHeader(i, { label: e.target.value })} />
             </label>
             <label>
               Посилання
-              <input value={item.href} onChange={(e) => updateHeader(i, { href: e.target.value })} />
+              <input value={item.href} onChange={e => updateHeader(i, { href: e.target.value })} />
             </label>
             <label className='admin-check'>
               <input
                 type='checkbox'
                 checked={item.visible}
-                onChange={(e) => updateHeader(i, { visible: e.target.checked })}
+                onChange={e => updateHeader(i, { visible: e.target.checked })}
               />
               Видимий
             </label>
@@ -215,7 +215,7 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
               drag?.list === 'services' && drag.index === i ? ' is-dragging' : ''
             }${over?.list === 'services' && over.index === i && drag?.index !== i ? ' is-drop-target' : ''}`}
             draggable
-            onDragStart={(e) => {
+            onDragStart={e => {
               if (!(e.target as HTMLElement).closest('.admin-drag-handle')) {
                 e.preventDefault();
                 return;
@@ -227,11 +227,11 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
               setDrag(null);
               setOver(null);
             }}
-            onDragOver={(e) => {
+            onDragOver={e => {
               e.preventDefault();
               setOver({ list: 'services', index: i });
             }}
-            onDrop={(e) => {
+            onDrop={e => {
               e.preventDefault();
               onDrop('services', i);
             }}
@@ -256,13 +256,13 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
             </div>
             <label>
               Назва
-              <input value={item.label} onChange={(e) => updateService(i, { label: e.target.value })} />
+              <input value={item.label} onChange={e => updateService(i, { label: e.target.value })} />
             </label>
             <label>
               slug
               <input
                 value={item.slug}
-                onChange={(e) => {
+                onChange={e => {
                   const slug = e.target.value;
                   updateService(i, { slug, href: `/${slug}` });
                 }}
@@ -270,13 +270,13 @@ export function MenuEditor({ initialData }: { initialData: SiteData }) {
             </label>
             <label>
               Посилання
-              <input value={item.href} onChange={(e) => updateService(i, { href: e.target.value })} />
+              <input value={item.href} onChange={e => updateService(i, { href: e.target.value })} />
             </label>
             <label className='admin-check'>
               <input
                 type='checkbox'
                 checked={item.visible}
-                onChange={(e) => updateService(i, { visible: e.target.checked })}
+                onChange={e => updateService(i, { visible: e.target.checked })}
               />
               Видимий
             </label>

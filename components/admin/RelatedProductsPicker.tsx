@@ -18,8 +18,8 @@ export function RelatedProductsPicker({ products, currentId, value, onChange }: 
   const candidates = useMemo(() => {
     const query = q.trim().toLowerCase();
     return products
-      .filter((p) => p.id !== currentId)
-      .filter((p) => {
+      .filter(p => p.id !== currentId)
+      .filter(p => {
         if (!query) return true;
         return (
           p.title.toLowerCase().includes(query) ||
@@ -33,7 +33,7 @@ export function RelatedProductsPicker({ products, currentId, value, onChange }: 
 
   function toggle(id: string) {
     if (selected.has(id)) {
-      onChange(value.filter((x) => x !== id));
+      onChange(value.filter(x => x !== id));
     } else {
       onChange([...value, id]);
     }
@@ -50,15 +50,11 @@ export function RelatedProductsPicker({ products, currentId, value, onChange }: 
     onChange(next);
   }
 
-  const selectedProducts = value
-    .map((id) => products.find((p) => p.id === id))
-    .filter(Boolean) as Product[];
+  const selectedProducts = value.map(id => products.find(p => p.id === id)).filter(Boolean) as Product[];
 
   return (
     <div className='admin-related-picker'>
-      <span className='admin-hint'>
-        Схожі товари (ручний порядок). Порожньо = авто за категорією на сайті.
-      </span>
+      <span className='admin-hint'>Схожі товари (ручний порядок). Порожньо = авто за категорією на сайті.</span>
       {selectedProducts.length > 0 ? (
         <ul className='admin-related-selected'>
           {selectedProducts.map((p, idx) => (
@@ -106,11 +102,11 @@ export function RelatedProductsPicker({ products, currentId, value, onChange }: 
         className='admin-field-sm admin-grow admin-mb'
         placeholder='Пошук товарів для звʼязку…'
         value={q}
-        onChange={(e) => setQ(e.target.value)}
+        onChange={e => setQ(e.target.value)}
         aria-label='Пошук схожих'
       />
       <div className='admin-related-grid'>
-        {candidates.map((p) => {
+        {candidates.map(p => {
           const on = selected.has(p.id);
           return (
             <button
@@ -122,8 +118,7 @@ export function RelatedProductsPicker({ products, currentId, value, onChange }: 
             >
               <span className='admin-related-chip__title'>{p.title}</span>
               <span className='admin-related-chip__meta'>
-                {p.price.toLocaleString('uk-UA')} ₴
-                {p.category ? ` · ${p.category}` : ''}
+                {p.price.toLocaleString('uk-UA')} ₴{p.category ? ` · ${p.category}` : ''}
                 {on ? ' · ✓' : ''}
               </span>
             </button>

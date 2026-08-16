@@ -70,8 +70,8 @@ export function ClientProfile({ initialPhone = '' }: { initialPhone?: string }) 
             type='search'
             placeholder='+380…'
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
+            onChange={e => setQ(e.target.value)}
+            onKeyDown={e => {
               if (e.key === 'Enter') void load(q);
             }}
             aria-label='Телефон клієнта'
@@ -118,10 +118,7 @@ export function ClientProfile({ initialPhone = '' }: { initialPhone?: string }) 
             </p>
           ) : null}
           <div className='admin-row'>
-            <Link
-              className='admin-btn admin-btn--secondary'
-              href={`/admin/inbox?phone=${encodeURIComponent(phone)}`}
-            >
+            <Link className='admin-btn admin-btn--secondary' href={`/admin/inbox?phone=${encodeURIComponent(phone)}`}>
               Відкрити в Inbox
             </Link>
           </div>
@@ -132,7 +129,7 @@ export function ClientProfile({ initialPhone = '' }: { initialPhone?: string }) 
         <h2 className='admin-h2'>Історія</h2>
         {!items.length && !loading ? <p className='admin-hint'>Немає записів</p> : null}
         <ul className='admin-leads-list'>
-          {items.map((item) => (
+          {items.map(item => (
             <li key={`${item.kind}:${item.id}`} className={`admin-lead-item${item.open ? '' : ' is-handled'}`}>
               <div className='admin-lead-main'>
                 <span className={statusBadgeClass(item.status)}>{WORKFLOW_LABELS[item.status]}</span>

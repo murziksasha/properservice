@@ -2,10 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { atomicWriteJson } from './atomic-write';
 import { createId } from './id';
-import {
-  isMediaPurpose,
-  type MediaPurpose,
-} from './media-purpose';
+import { isMediaPurpose, type MediaPurpose } from './media-purpose';
 import { projectRoot } from './uploads-path';
 
 /** Empty string = uncategorized root (no virtual folder). */
@@ -105,31 +102,24 @@ export function slugifyFolderLabel(label: string): string {
 
 function normalizeFolder(raw: Partial<MediaFolder>): MediaFolder | null {
   if (!raw.id || typeof raw.id !== 'string' || !isSafeFolderId(raw.id)) return null;
-  const label =
-    typeof raw.label === 'string' && raw.label.trim() ? raw.label.trim().slice(0, 80) : raw.id;
-  const sortOrder =
-    typeof raw.sortOrder === 'number' && Number.isFinite(raw.sortOrder) ? raw.sortOrder : 0;
+  const label = typeof raw.label === 'string' && raw.label.trim() ? raw.label.trim().slice(0, 80) : raw.id;
+  const sortOrder = typeof raw.sortOrder === 'number' && Number.isFinite(raw.sortOrder) ? raw.sortOrder : 0;
   return { id: raw.id, label, sortOrder };
 }
 
 function normalizeItem(raw: Partial<MediaMeta> & { name?: string }): MediaMeta | null {
   if (!raw.name || typeof raw.name !== 'string') return null;
-  const purpose =
-    raw.purpose && isMediaPurpose(raw.purpose) ? raw.purpose : ('other' as MediaPurpose);
+  const purpose = raw.purpose && isMediaPurpose(raw.purpose) ? raw.purpose : ('other' as MediaPurpose);
   const tags = Array.isArray(raw.tags)
-    ? raw.tags
-        .filter((t): t is string => typeof t === 'string' && t.trim() !== '')
-        .map((t) => t.trim())
+    ? raw.tags.filter((t): t is string => typeof t === 'string' && t.trim() !== '').map(t => t.trim())
     : [];
   const now = new Date().toISOString();
   let folderId = '';
   if (typeof raw.folderId === 'string' && raw.folderId.trim()) {
     folderId = isSafeFolderId(raw.folderId.trim()) ? raw.folderId.trim() : '';
   }
-  const sortOrder =
-    typeof raw.sortOrder === 'number' && Number.isFinite(raw.sortOrder) ? raw.sortOrder : 0;
-  const kind: MediaKind =
-    raw.kind && isMediaKind(raw.kind) ? raw.kind : mediaKindFromName(raw.name);
+  const sortOrder = typeof raw.sortOrder === 'number' && Number.isFinite(raw.sortOrder) ? raw.sortOrder : 0;
+  const kind: MediaKind = raw.kind && isMediaKind(raw.kind) ? raw.kind : mediaKindFromName(raw.name);
   return {
     name: raw.name,
     url: raw.url && typeof raw.url === 'string' ? raw.url : `/uploads/${raw.name}`,
@@ -175,7 +165,7 @@ export async function readMediaIndex(): Promise<MediaIndex> {
     }
     folders.sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label, 'uk'));
     // Drop orphan folder refs on items (folder deleted / corrupt)
-    const folderIds = new Set(folders.map((f) => f.id));
+    const folderIds = new Set(folders.map(f => f.id));
     for (const item of items) {
       if (item.folderId && !folderIds.has(item.folderId)) {
         item.folderId = '';
@@ -208,7 +198,7 @@ export async function createMediaFolder(label: string): Promise<MediaFolder> {
   if (!trimmed) throw new Error('Empty label');
 
   let id = slugifyFolderLabel(trimmed);
-  if (!isSafeFolderId(id) || index.folders.some((f) => f.id === id)) {
+  if (!isSafeFolderId(id) || index.folders.some(f => f.id === id)) {
     id = `${slugifyFolderLabel(trimmed).slice(0, 32)}-${createId().slice(0, 6)}`;
   }
   if (!isSafeFolderId(id)) {
@@ -232,27 +222,22 @@ export async function patchMediaFolder(
 ): Promise<MediaFolder | null> {
   if (!isSafeFolderId(id)) return null;
   const index = await readMediaIndex();
-  const existing = index.folders.find((f) => f.id === id);
+  const existing = index.folders.find(f => f.id === id);
   if (!existing) return null;
   const next: MediaFolder = {
     ...existing,
-    label:
-      typeof patch.label === 'string' && patch.label.trim()
-        ? patch.label.trim().slice(0, 80)
-        : existing.label,
+    label: typeof patch.label === 'string' && patch.label.trim() ? patch.label.trim().slice(0, 80) : existing.label,
     sortOrder:
-      typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder)
-        ? patch.sortOrder
-        : existing.sortOrder,
+      typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder) ? patch.sortOrder : existing.sortOrder,
   };
-  index.folders = index.folders.map((f) => (f.id === id ? next : f));
+  index.folders = index.folders.map(f => (f.id === id ? next : f));
   await writeMediaIndex(index);
   return next;
 }
 
 export async function reorderMediaFolders(orderedIds: string[]): Promise<MediaFolder[]> {
   const index = await readMediaIndex();
-  const byId = new Map(index.folders.map((f) => [f.id, f]));
+  const byId = new Map(index.folders.map(f => [f.id, f]));
   const next: MediaFolder[] = [];
   let order = 0;
   for (const id of orderedIds) {
@@ -274,12 +259,10 @@ export async function reorderMediaFolders(orderedIds: string[]): Promise<MediaFo
 export async function deleteMediaFolder(id: string): Promise<boolean> {
   if (!isSafeFolderId(id)) return false;
   const index = await readMediaIndex();
-  if (!index.folders.some((f) => f.id === id)) return false;
-  index.folders = index.folders.filter((f) => f.id !== id);
-  index.items = index.items.map((item) =>
-    item.folderId === id
-      ? { ...item, folderId: '', updatedAt: new Date().toISOString() }
-      : item,
+  if (!index.folders.some(f => f.id === id)) return false;
+  index.folders = index.folders.filter(f => f.id !== id);
+  index.items = index.items.map(item =>
+    item.folderId === id ? { ...item, folderId: '', updatedAt: new Date().toISOString() } : item,
   );
   await writeMediaIndex(index);
   return true;
@@ -299,26 +282,23 @@ export async function upsertMediaMeta(
 ): Promise<MediaMeta> {
   const index = await readMediaIndex();
   const now = new Date().toISOString();
-  const existing = index.items.find((i) => i.name === entry.name);
-  const folderIds = new Set(index.folders.map((f) => f.id));
+  const existing = index.items.find(i => i.name === entry.name);
+  const folderIds = new Set(index.folders.map(f => f.id));
   let folderId = existing?.folderId ?? '';
   if (entry.folderId !== undefined) {
-    folderId =
-      entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : '';
+    folderId = entry.folderId && folderIds.has(entry.folderId) ? entry.folderId : '';
   }
 
   let sortOrder = existing?.sortOrder ?? 0;
   if (typeof entry.sortOrder === 'number' && Number.isFinite(entry.sortOrder)) {
     sortOrder = entry.sortOrder;
   } else if (!existing) {
-    const peers = index.items.filter((i) => i.folderId === folderId);
+    const peers = index.items.filter(i => i.folderId === folderId);
     sortOrder = peers.reduce((m, i) => Math.max(m, i.sortOrder), -1) + 1;
   }
 
   const kind: MediaKind =
-    entry.kind && isMediaKind(entry.kind)
-      ? entry.kind
-      : existing?.kind || mediaKindFromName(entry.name);
+    entry.kind && isMediaKind(entry.kind) ? entry.kind : existing?.kind || mediaKindFromName(entry.name);
 
   const next: MediaMeta = {
     name: entry.name,
@@ -335,7 +315,7 @@ export async function upsertMediaMeta(
     updatedAt: now,
   };
   if (existing) {
-    index.items = index.items.map((i) => (i.name === entry.name ? next : i));
+    index.items = index.items.map(i => (i.name === entry.name ? next : i));
   } else {
     index.items.unshift(next);
   }
@@ -356,8 +336,8 @@ export async function patchMediaMeta(
   },
 ): Promise<MediaMeta | null> {
   const index = await readMediaIndex();
-  const existing = index.items.find((i) => i.name === name);
-  const folderIds = new Set(index.folders.map((f) => f.id));
+  const existing = index.items.find(i => i.name === name);
+  const folderIds = new Set(index.folders.map(f => f.id));
 
   if (!existing) {
     if (
@@ -404,12 +384,10 @@ export async function patchMediaMeta(
     focusY: clampFocus(patch.focusY, existing.focusY),
     folderId,
     sortOrder:
-      typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder)
-        ? patch.sortOrder
-        : existing.sortOrder,
+      typeof patch.sortOrder === 'number' && Number.isFinite(patch.sortOrder) ? patch.sortOrder : existing.sortOrder,
     updatedAt: new Date().toISOString(),
   };
-  index.items = index.items.map((i) => (i.name === name ? next : i));
+  index.items = index.items.map(i => (i.name === name ? next : i));
   await writeMediaIndex(index);
   return next;
 }
@@ -424,15 +402,14 @@ export async function moveMediaToFolder(
   folderId: string,
 ): Promise<{ moved: number; missing: string[] }> {
   const index = await readMediaIndex();
-  const folderIds = new Set(index.folders.map((f) => f.id));
-  const targetId =
-    folderId && folderIds.has(folderId) && isSafeFolderId(folderId) ? folderId : '';
+  const folderIds = new Set(index.folders.map(f => f.id));
+  const targetId = folderId && folderIds.has(folderId) && isSafeFolderId(folderId) ? folderId : '';
 
-  const uniqueNames = [...new Set(names.filter((n) => typeof n === 'string' && n.trim()))];
+  const uniqueNames = [...new Set(names.filter(n => typeof n === 'string' && n.trim()))];
   const missing: string[] = [];
   const toMove: string[] = [];
   for (const name of uniqueNames) {
-    if (index.items.some((i) => i.name === name)) toMove.push(name);
+    if (index.items.some(i => i.name === name)) toMove.push(name);
     else missing.push(name);
   }
 
@@ -441,13 +418,10 @@ export async function moveMediaToFolder(
   }
 
   const now = new Date().toISOString();
-  let nextOrder =
-    index.items
-      .filter((i) => i.folderId === targetId)
-      .reduce((m, i) => Math.max(m, i.sortOrder), -1) + 1;
+  let nextOrder = index.items.filter(i => i.folderId === targetId).reduce((m, i) => Math.max(m, i.sortOrder), -1) + 1;
 
   const moveSet = new Set(toMove);
-  index.items = index.items.map((item) => {
+  index.items = index.items.map(item => {
     if (!moveSet.has(item.name)) return item;
     if (item.folderId === targetId) return item;
     return {
@@ -463,10 +437,7 @@ export async function moveMediaToFolder(
 }
 
 /** Set sortOrder 0..n for names within a folder (or root when folderId ''). */
-export async function reorderMediaItems(
-  folderId: string,
-  orderedNames: string[],
-): Promise<MediaMeta[]> {
+export async function reorderMediaItems(folderId: string, orderedNames: string[]): Promise<MediaMeta[]> {
   const index = await readMediaIndex();
   const fid = folderId && isSafeFolderId(folderId) ? folderId : '';
   const nameSet = new Set(orderedNames);
@@ -476,7 +447,7 @@ export async function reorderMediaItems(
 
   // First assign order to listed names that belong to this folder (or will be moved here)
   for (const name of orderedNames) {
-    const item = index.items.find((i) => i.name === name);
+    const item = index.items.find(i => i.name === name);
     if (!item) continue;
     const next = { ...item, folderId: fid, sortOrder: order++, updatedAt: now };
     updated.push(next);
@@ -489,15 +460,15 @@ export async function reorderMediaItems(
     updated.push({ ...item, sortOrder: order++, updatedAt: now });
   }
 
-  const byName = new Map(updated.map((i) => [i.name, i]));
-  index.items = index.items.map((i) => byName.get(i.name) || i);
+  const byName = new Map(updated.map(i => [i.name, i]));
+  index.items = index.items.map(i => byName.get(i.name) || i);
   await writeMediaIndex(index);
   return updated;
 }
 
 export async function removeMediaMeta(name: string): Promise<void> {
   const index = await readMediaIndex();
-  const next = index.items.filter((i) => i.name !== name);
+  const next = index.items.filter(i => i.name !== name);
   if (next.length === index.items.length) return;
   await writeMediaIndex({ version: 2, folders: index.folders, items: next });
 }

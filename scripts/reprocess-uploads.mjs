@@ -9,11 +9,8 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
-import { createRequire } from 'module';
 
-const require = createRequire(import.meta.url);
-// Prefer compiled path if needed; use dynamic import of TS via tsx when available.
-// This script uses sharp directly with the same rules as lib/image-optimize.ts
+// Uses sharp with the same rules as lib/image-optimize.ts
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
@@ -160,7 +157,7 @@ async function main() {
   console.log(`Done. processed=${processed} skipped=${skipped} renames=${renames.length} dryRun=${dryRun}`);
 }
 
-main().catch((e) => {
+main().catch(e => {
   console.error(e);
   process.exit(1);
 });

@@ -2,13 +2,9 @@ import type { SiteData } from '@/lib/types';
 import { parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
 export type SaveResult =
-  | { ok: true; updatedAt?: string }
-  | { ok: false; error: string; conflict?: boolean; serverUpdatedAt?: string };
+  { ok: true; updatedAt?: string } | { ok: false; error: string; conflict?: boolean; serverUpdatedAt?: string };
 
-export async function saveSiteData(
-  data: SiteData,
-  opts?: { force?: boolean },
-): Promise<SaveResult> {
+export async function saveSiteData(data: SiteData, opts?: { force?: boolean }): Promise<SaveResult> {
   try {
     const payload = opts?.force
       ? { ...data, updatedAt: undefined } // omit client rev → server accepts (no conflict check when missing)

@@ -21,15 +21,7 @@ export interface OrderProductSnapshot {
 
 export interface OrderAuditEntry {
   at: string;
-  action:
-    | 'created'
-    | 'handled'
-    | 'reopened'
-    | 'note'
-    | 'status'
-    | 'callback'
-    | 'assign'
-    | 'outcome';
+  action: 'created' | 'handled' | 'reopened' | 'note' | 'status' | 'callback' | 'assign' | 'outcome';
   detail?: string;
 }
 
@@ -106,7 +98,7 @@ export async function listOrders(): Promise<Order[]> {
 export async function countOrders(options?: { unhandledOnly?: boolean }): Promise<number> {
   const orders = await listOrders();
   if (options?.unhandledOnly) {
-    return orders.filter((o) => !handledFromStatus(normalizeStatus(o.status, o.handled))).length;
+    return orders.filter(o => !handledFromStatus(normalizeStatus(o.status, o.handled))).length;
   }
   return orders.length;
 }
@@ -143,13 +135,11 @@ export async function appendOrder(input: {
   return withNormalizedOrder(order);
 }
 
-export type OrderPatch = Partial<
-  Pick<Order, 'handled' | 'note' | 'status' | 'callbackAt' | 'outcome' | 'assignee'>
->;
+export type OrderPatch = Partial<Pick<Order, 'handled' | 'note' | 'status' | 'callbackAt' | 'outcome' | 'assignee'>>;
 
 export async function updateOrder(id: string, patch: OrderPatch): Promise<Order | null> {
   const store = await readStore();
-  const idx = store.orders.findIndex((o) => o.id === id);
+  const idx = store.orders.findIndex(o => o.id === id);
   if (idx < 0) return null;
   const current = withNormalizedOrder(store.orders[idx]);
   const now = new Date().toISOString();
@@ -173,10 +163,7 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order 
   }
 
   if (patch.note !== undefined && patch.note !== current.note) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'note', detail: String(patch.note).slice(0, 200) },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'note', detail: String(patch.note).slice(0, 200) });
   }
   if (patch.callbackAt !== undefined && patch.callbackAt !== current.callbackAt) {
     audit = pushAudit(
@@ -185,20 +172,11 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order 
     );
   }
   if (patch.assignee !== undefined && patch.assignee !== current.assignee) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'assign', detail: patch.assignee || 'unassigned' },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'assign', detail: patch.assignee || 'unassigned' });
   }
-  const nextOutcome =
-    patch.outcome !== undefined && isCloseOutcome(patch.outcome)
-      ? patch.outcome
-      : current.outcome;
+  const nextOutcome = patch.outcome !== undefined && isCloseOutcome(patch.outcome) ? patch.outcome : current.outcome;
   if (patch.outcome !== undefined && patch.outcome !== current.outcome) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'outcome', detail: String(patch.outcome || '') },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'outcome', detail: String(patch.outcome || '') });
   }
 
   const closed = handledFromStatus(nextStatus);
@@ -211,11 +189,7 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order 
     outcome: closed ? nextOutcome : undefined,
     assignee: patch.assignee !== undefined ? patch.assignee || undefined : current.assignee,
     claimedAt:
-      patch.assignee !== undefined
-        ? patch.assignee
-          ? current.claimedAt || now
-          : undefined
-        : current.claimedAt,
+      patch.assignee !== undefined ? (patch.assignee ? current.claimedAt || now : undefined) : current.claimedAt,
     audit,
     handledAt: closed ? current.handledAt || now : undefined,
   };
@@ -227,7 +201,7 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order 
 export async function deleteOrder(id: string): Promise<boolean> {
   const store = await readStore();
   const before = store.orders.length;
-  store.orders = store.orders.filter((o) => o.id !== id);
+  store.orders = store.orders.filter(o => o.id !== id);
   if (store.orders.length === before) return false;
   await writeStore(store);
   return true;

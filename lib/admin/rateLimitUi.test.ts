@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  formatCountdown,
-  parseRetryAfterSeconds,
-  rateLimitMessage,
-} from './rateLimitUi';
+import { formatCountdown, parseRetryAfterSeconds, rateLimitMessage } from './rateLimitUi';
 
 describe('rateLimitUi', () => {
   it('parses Retry-After header', () => {

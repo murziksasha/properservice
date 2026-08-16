@@ -62,7 +62,11 @@ export function RichTextField({ label, value, onChange, rows = 4, hint }: Props)
         <button type='button' className='admin-btn admin-btn--secondary admin-btn--sm' onClick={() => apply('italic')}>
           <em>I</em>
         </button>
-        <button type='button' className='admin-btn admin-btn--secondary admin-btn--sm' onClick={() => apply('underline')}>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary admin-btn--sm'
+          onClick={() => apply('underline')}
+        >
           <u>U</u>
         </button>
         <button

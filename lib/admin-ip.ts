@@ -7,7 +7,7 @@ export function getAdminIpAllowlist(): string[] {
   const raw = process.env.ADMIN_IP_ALLOWLIST || process.env['ADMIN_IP_ALLOWLIST'] || '';
   return raw
     .split(',')
-    .map((s) => s.trim())
+    .map(s => s.trim())
     .filter(Boolean);
 }
 
@@ -33,5 +33,5 @@ export function isIpAllowed(ip: string, allowlist: string[] = getAdminIpAllowlis
   if (allowlist.length === 0) return true;
   if (!ip) return false;
   const n = normalizeIp(ip);
-  return allowlist.some((allowed) => normalizeIp(allowed) === n);
+  return allowlist.some(allowed => normalizeIp(allowed) === n);
 }

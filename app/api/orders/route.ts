@@ -188,8 +188,21 @@ export async function GET(request: NextRequest) {
   const format = request.nextUrl.searchParams.get('format');
   if (format === 'csv') {
     const csv = toCsv(
-      ['id', 'createdAt', 'phone', 'product', 'code', 'price', 'comment', 'status', 'handled', 'note', 'emailed', 'callbackAt'],
-      orders.map((o) => [
+      [
+        'id',
+        'createdAt',
+        'phone',
+        'product',
+        'code',
+        'price',
+        'comment',
+        'status',
+        'handled',
+        'note',
+        'emailed',
+        'callbackAt',
+      ],
+      orders.map(o => [
         o.id,
         o.createdAt,
         o.phone,
@@ -215,7 +228,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     orders,
     total: orders.length,
-    unhandled: orders.filter((o) => !o.handled).length,
+    unhandled: orders.filter(o => !o.handled).length,
   });
 }
 

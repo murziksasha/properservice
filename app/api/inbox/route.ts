@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   if (format === 'csv') {
     const csv = toCsv(
       ['kind', 'id', 'createdAt', 'phone', 'status', 'note', 'product', 'pagePath', 'emailed'],
-      items.map((i) => [
+      items.map(i => [
         i.kind,
         i.id,
         i.createdAt,
@@ -53,14 +53,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const open = items.filter((i) => i.open);
+  const open = items.filter(i => i.open);
   return NextResponse.json({
     items,
     total: items.length,
     open: open.length,
-    openLeads: open.filter((i) => i.kind === 'lead').length,
-    openOrders: open.filter((i) => i.kind === 'order').length,
-    stale: open.filter((i) => i.stale).length,
+    openLeads: open.filter(i => i.kind === 'lead').length,
+    openOrders: open.filter(i => i.kind === 'order').length,
+    stale: open.filter(i => i.stale).length,
   });
 }
 
@@ -145,8 +145,7 @@ export async function DELETE(request: NextRequest) {
     if (!body.id || (body.kind !== 'lead' && body.kind !== 'order')) {
       return NextResponse.json({ error: 'Missing kind/id' }, { status: 400 });
     }
-    const ok =
-      body.kind === 'lead' ? await deleteLead(body.id) : await deleteOrder(body.id);
+    const ok = body.kind === 'lead' ? await deleteLead(body.id) : await deleteOrder(body.id);
     if (!ok) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch {

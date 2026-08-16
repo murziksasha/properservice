@@ -36,7 +36,7 @@ export type ListUploadsOptions = {
 export async function listUploads(options?: ListUploadsOptions): Promise<MediaListItem[]> {
   const dir = uploadsDir();
   const index = await readMediaIndex();
-  const byName = new Map(index.items.map((i) => [i.name, i]));
+  const byName = new Map(index.items.map(i => [i.name, i]));
 
   let diskNames: string[] = [];
   try {
@@ -83,7 +83,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
   const folder = options?.folder ?? 'all';
   const sort: MediaSortMode = options?.sort || 'mtime';
 
-  const filtered = items.filter((item) => {
+  const filtered = items.filter(item => {
     if (purpose && item.purpose !== purpose) return false;
     if (kind && item.kind !== kind) return false;
     if (folder === 'root') {
@@ -91,7 +91,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
     } else if (folder && folder !== 'all') {
       if (item.folderId !== folder) return false;
     }
-    if (tag && !item.tags.some((t) => t.toLowerCase() === tag || t.toLowerCase().includes(tag))) {
+    if (tag && !item.tags.some(t => t.toLowerCase() === tag || t.toLowerCase().includes(tag))) {
       return false;
     }
     if (q) {
@@ -119,7 +119,7 @@ export async function listUploads(options?: ListUploadsOptions): Promise<MediaLi
 export async function folderCounts(): Promise<Record<string, number>> {
   const dir = uploadsDir();
   const index = await readMediaIndex();
-  const byName = new Map(index.items.map((i) => [i.name, i]));
+  const byName = new Map(index.items.map(i => [i.name, i]));
   const counts: Record<string, number> = { root: 0, all: 0 };
 
   let diskNames: string[] = [];
@@ -153,7 +153,7 @@ export async function listFoldersWithCounts(): Promise<
 > {
   const folders = await listMediaFolders();
   const counts = await folderCounts();
-  return folders.map((f) => ({
+  return folders.map(f => ({
     ...f,
     count: counts[f.id] || 0,
   }));

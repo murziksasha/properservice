@@ -3,11 +3,7 @@ import { ClientProfile } from '@/components/admin/ClientProfile';
 
 export const dynamic = 'force-dynamic';
 
-export default async function AdminClientsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ phone?: string }>;
-}) {
+export default async function AdminClientsPage({ searchParams }: { searchParams: Promise<{ phone?: string }> }) {
   const sp = await searchParams;
   return (
     <AdminShell>

@@ -11,7 +11,7 @@ function resolvePhones(section: ContactsSectionType, settings?: SiteSettings): P
     list.push(settings.headerPhone);
   }
   for (const p of settings.phones || []) {
-    if (list.some((x) => x.tel === p.tel)) continue;
+    if (list.some(x => x.tel === p.tel)) continue;
     list.push(p);
   }
   return list;
@@ -22,13 +22,7 @@ function resolveSocial(section: ContactsSectionType, settings?: SiteSettings): S
   return settings?.social || [];
 }
 
-export function ContactsSection({
-  section,
-  settings,
-}: {
-  section: ContactsSectionType;
-  settings?: SiteSettings;
-}) {
+export function ContactsSection({ section, settings }: { section: ContactsSectionType; settings?: SiteSettings }) {
   const phones = resolvePhones(section, settings);
   const social = resolveSocial(section, settings);
   const email = section.email || settings?.email || '';
@@ -42,14 +36,11 @@ export function ContactsSection({
             <h2 className='contacts__title'>{section.title}</h2>
             {section.inviteText ? <p className='contacts__par-bold'>{section.inviteText}</p> : null}
             {section.addressHtml ? (
-              <p
-                className='contacts__par'
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.addressHtml) }}
-              />
+              <p className='contacts__par' dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.addressHtml) }} />
             ) : null}
             {phones.length ? (
               <p className='contacts__phone'>
-                {phones.map((phone) => (
+                {phones.map(phone => (
                   <span key={phone.tel || phone.display}>
                     <a href={`tel:${phone.tel}`}>{phone.display}</a>
                     <br />
@@ -64,7 +55,7 @@ export function ContactsSection({
             ) : null}
             {social.length ? (
               <div className='contacts__social header__contact_social'>
-                {social.map((link) => (
+                {social.map(link => (
                   <a key={link.id} href={link.url} target='_blank' rel='noreferrer'>
                     <Image src={link.icon} alt={link.type} width={28} height={28} />
                   </a>

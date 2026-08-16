@@ -63,7 +63,7 @@ export async function saveSiteData(data: SiteData): Promise<SiteData> {
     if (prevRaw) {
       const prev = JSON.parse(prevRaw) as SiteData;
       const { recordPriceChange } = await import('./price-history');
-      const prevById = new Map((prev.goods || []).map((g) => [g.id, g]));
+      const prevById = new Map((prev.goods || []).map(g => [g.id, g]));
       for (const g of data.goods || []) {
         const old = prevById.get(g.id);
         if (old && old.price !== g.price) {
@@ -100,27 +100,27 @@ export async function saveSiteData(data: SiteData): Promise<SiteData> {
 
 export async function getPages(): Promise<Page[]> {
   const data = await getSiteData();
-  return data.pages.filter((page) => page.visible);
+  return data.pages.filter(page => page.visible);
 }
 
 export async function getPage(slug: string): Promise<Page | undefined> {
   const data = await getSiteData();
-  return data.pages.find((page) => page.slug === slug && page.visible);
+  return data.pages.find(page => page.slug === slug && page.visible);
 }
 
 export async function getProducts(): Promise<Product[]> {
   const data = await getSiteData();
-  return data.goods.filter((product) => product.visible);
+  return data.goods.filter(product => product.visible);
 }
 
 export async function getProduct(id: string): Promise<Product | undefined> {
   const data = await getSiteData();
-  return data.goods.find((product) => product.id === id);
+  return data.goods.find(product => product.id === id);
 }
 
 export async function saveProduct(product: Product): Promise<void> {
   const data = await getSiteData();
-  const index = data.goods.findIndex((item) => item.id === product.id);
+  const index = data.goods.findIndex(item => item.id === product.id);
 
   if (index >= 0) {
     data.goods[index] = product;
@@ -134,7 +134,7 @@ export async function saveProduct(product: Product): Promise<void> {
 export async function deleteProduct(id: string): Promise<boolean> {
   const data = await getSiteData();
   const initialLength = data.goods.length;
-  data.goods = data.goods.filter((product) => product.id !== id);
+  data.goods = data.goods.filter(product => product.id !== id);
 
   if (data.goods.length === initialLength) {
     return false;
@@ -154,7 +154,7 @@ export async function createPage(page: Omit<Page, 'id'> & { id?: string }): Prom
   // ensure unique slug
   let slug = newPage.slug;
   let suffix = 1;
-  while (data.pages.some((p) => p.slug === slug)) {
+  while (data.pages.some(p => p.slug === slug)) {
     slug = `${page.slug || 'page'}-${suffix++}`;
   }
   newPage.slug = slug;
@@ -167,11 +167,11 @@ export async function createPage(page: Omit<Page, 'id'> & { id?: string }): Prom
 export async function deletePage(id: string): Promise<boolean> {
   const data = await getSiteData();
   // protect home
-  const target = data.pages.find((p) => p.id === id);
+  const target = data.pages.find(p => p.id === id);
   if (!target || target.slug === '') return false;
 
   const before = data.pages.length;
-  data.pages = data.pages.filter((p) => p.id !== id);
+  data.pages = data.pages.filter(p => p.id !== id);
   if (data.pages.length === before) return false;
 
   await saveSiteData(data);

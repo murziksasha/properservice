@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
   const [leads, orders] = await Promise.all([listLeads(), listOrders()]);
   const all = mergeInbox(leads, orders);
   const items = historyByPhone(all, phone);
-  const open = items.filter((i) => i.open).length;
-  const ordersN = items.filter((i) => i.kind === 'order').length;
-  const leadsN = items.filter((i) => i.kind === 'lead').length;
+  const open = items.filter(i => i.open).length;
+  const ordersN = items.filter(i => i.kind === 'order').length;
+  const leadsN = items.filter(i => i.kind === 'lead').length;
 
   return NextResponse.json({
     phone,

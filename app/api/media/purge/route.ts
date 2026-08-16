@@ -3,11 +3,7 @@ import { getSession } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { deleteUpload, isSafeUploadName } from '@/lib/media';
-import {
-  formatUsageTooltip,
-  getUsageForUploadName,
-  type MediaRef,
-} from '@/lib/media-usage';
+import { formatUsageTooltip, getUsageForUploadName, type MediaRef } from '@/lib/media-usage';
 import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -48,9 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     const names = [
-      ...new Set(
-        body.names.filter((n): n is string => typeof n === 'string' && isSafeUploadName(n)),
-      ),
+      ...new Set(body.names.filter((n): n is string => typeof n === 'string' && isSafeUploadName(n))),
     ].slice(0, 40);
 
     const site = await getSiteData();

@@ -43,8 +43,7 @@ export function GalleryField({
   const [progress, setProgress] = useState('');
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const resolvedPurpose: MediaPurpose =
-    purpose || purposeFromPreset(preset ? String(preset) : undefined);
+  const resolvedPurpose: MediaPurpose = purpose || purposeFromPreset(preset ? String(preset) : undefined);
 
   function appendUrls(urls: string[]): number {
     const next = uniqueAppend(value, urls, excludeUrl);
@@ -110,7 +109,7 @@ export function GalleryField({
             multiple
             hidden
             disabled={busy}
-            onChange={async (e) => {
+            onChange={async e => {
               const list = e.target.files;
               e.target.value = '';
               await handleFiles(list);
@@ -175,9 +174,7 @@ export function GalleryField({
         <p className='admin-hint'>Ще немає додаткових фото.</p>
       )}
 
-      <span className='admin-hint'>
-        Додаткові фото крім головного. Можна завантажити або вибрати кілька одразу.
-      </span>
+      <span className='admin-hint'>Додаткові фото крім головного. Можна завантажити або вибрати кілька одразу.</span>
 
       <MediaPicker
         open={pickerOpen}
@@ -185,8 +182,8 @@ export function GalleryField({
         multiple
         purpose={resolvedPurpose}
         preset={preset}
-        onSelectMany={(items) => {
-          const added = appendUrls(items.map((i) => i.url));
+        onSelectMany={items => {
+          const added = appendUrls(items.map(i => i.url));
           if (added > 0) {
             showToast(added === 1 ? 'Фото додано' : `Додано фото: ${added}`, 'success');
           }

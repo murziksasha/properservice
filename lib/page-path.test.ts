@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  absoluteSiteUrl,
-  sanitizePagePath,
-  sanitizePageTitle,
-  truncateMeta,
-} from './page-path';
+import { absoluteSiteUrl, sanitizePagePath, sanitizePageTitle, truncateMeta } from './page-path';
 
 describe('sanitizePagePath', () => {
   it('accepts normal paths and query', () => {

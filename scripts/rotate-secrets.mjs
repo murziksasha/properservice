@@ -65,7 +65,7 @@ function setEnvKey(filePath, key, value) {
   // normalize line endings for write
   const lines = text.split(/\r?\n/);
   let found = false;
-  const out = lines.map((line) => {
+  const out = lines.map(line => {
     if (/^\s*#/.test(line) || !line.trim()) return line;
     if (new RegExp(`^\\s*${key}\\s*=`).test(line)) {
       found = true;
@@ -82,14 +82,14 @@ function setEnvKey(filePath, key, value) {
 }
 
 function questionHidden(prompt) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     });
     // mute echo
     const stdin = process.stdin;
-    const onData = (char) => {
+    const onData = char => {
       char = char + '';
       switch (char) {
         case '\n':
@@ -108,7 +108,7 @@ function questionHidden(prompt) {
       }
     };
     if (stdin.isTTY) stdin.on('data', onData);
-    rl.question(prompt, (answer) => {
+    rl.question(prompt, answer => {
       if (stdin.isTTY) stdin.removeListener('data', onData);
       rl.close();
       process.stdout.write('\n');
@@ -193,7 +193,7 @@ NEXT STEPS:
 `);
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error(err);
   process.exit(1);
 });

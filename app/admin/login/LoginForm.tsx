@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  formatCountdown,
-  parseRetryAfterFromBody,
-  rateLimitMessage,
-} from '@/lib/admin/rateLimitUi';
+import { formatCountdown, parseRetryAfterFromBody, rateLimitMessage } from '@/lib/admin/rateLimitUi';
 import { useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
@@ -47,7 +43,7 @@ export function LoginForm() {
     if (lockSeconds <= 0) return;
     setError(rateLimitMessage(lockSeconds, 'login'));
     const id = window.setTimeout(() => {
-      setLockSeconds((s) => {
+      setLockSeconds(s => {
         const next = s - 1;
         if (next <= 0) {
           setError('');
@@ -124,23 +120,12 @@ export function LoginForm() {
 
   return (
     <div className='admin-body admin-login'>
-      <form
-        onSubmit={handleSubmit}
-        className='admin-login-card admin-form'
-        aria-busy={loading}
-      >
+      <form onSubmit={handleSubmit} className='admin-login-card admin-form' aria-busy={loading}>
         <div className='admin-login-brand'>Proper Service</div>
         <h1>Вхід до адмінки</h1>
         <label htmlFor='admin-username'>
-          Логін{' '}
-          <span className='admin-login-optional'>(опційно, multi-user)</span>
-          <input
-            id='admin-username'
-            name='username'
-            type='text'
-            autoComplete='username'
-            disabled={loading || locked}
-          />
+          Логін <span className='admin-login-optional'>(опційно, multi-user)</span>
+          <input id='admin-username' name='username' type='text' autoComplete='username' disabled={loading || locked} />
         </label>
         <label htmlFor='admin-password'>
           Пароль
@@ -158,7 +143,7 @@ export function LoginForm() {
             <button
               type='button'
               className='admin-password-field__toggle'
-              onClick={() => setShowPassword((v) => !v)}
+              onClick={() => setShowPassword(v => !v)}
               aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
               aria-pressed={showPassword}
               disabled={loading || locked}
@@ -182,8 +167,7 @@ export function LoginForm() {
           />
         </label>
         <p className='admin-hint admin-login-2fa-hint'>
-          2FA: <strong>Налаштування → Безпека</strong> (QR) або{' '}
-          <code>ADMIN_TOTP_SECRET</code> у <code>.env</code>
+          2FA: <strong>Налаштування → Безпека</strong> (QR) або <code>ADMIN_TOTP_SECRET</code> у <code>.env</code>
         </p>
         {error ? (
           <p className='admin-login-error' role='alert' aria-live='assertive'>

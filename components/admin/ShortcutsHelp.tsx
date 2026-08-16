@@ -25,7 +25,7 @@ export function ShortcutsHelp() {
       }
       if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen(v => !v);
       }
       if (e.key === 'Escape' && open) {
         e.preventDefault();
@@ -48,7 +48,7 @@ export function ShortcutsHelp() {
         </div>
         <table className='admin-shortcuts-table'>
           <tbody>
-            {ROWS.map((r) => (
+            {ROWS.map(r => (
               <tr key={r.keys}>
                 <td>
                   <kbd>{r.keys}</kbd>
@@ -58,7 +58,9 @@ export function ShortcutsHelp() {
             ))}
           </tbody>
         </table>
-        <p className='admin-cmd-footer'>Натисніть <kbd>?</kbd> ще раз, щоб закрити</p>
+        <p className='admin-cmd-footer'>
+          Натисніть <kbd>?</kbd> ще раз, щоб закрити
+        </p>
       </div>
     </div>
   );

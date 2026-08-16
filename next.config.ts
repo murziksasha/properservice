@@ -8,23 +8,15 @@ import path from 'path';
  *
  * Webpack removed writable `module.warnings` (getter-only). Mutate getWarnings()/_warnings.
  */
-function isStyleModule(module: { resource?: string; userRequest?: string; identifier?: () => string }) {
-  const id = [
-    module.resource,
-    module.userRequest,
-    typeof module.identifier === 'function' ? module.identifier() : '',
-  ]
+function isStyleModule(mod: { resource?: string; userRequest?: string; identifier?: () => string }) {
+  const id = [mod.resource, mod.userRequest, typeof mod.identifier === 'function' ? mod.identifier() : '']
     .filter(Boolean)
     .join('\n');
   return /\.(s?css|sass)(\?|$|!)/i.test(id) || /globals\.scss/i.test(id);
 }
 
-function clearModuleWarnings(module: {
-  getWarnings?: () => unknown[] | undefined;
-  _warnings?: unknown[];
-}) {
-  const warnings =
-    typeof module.getWarnings === 'function' ? module.getWarnings() : module._warnings;
+function clearModuleWarnings(mod: { getWarnings?: () => unknown[] | undefined; _warnings?: unknown[] }) {
+  const warnings = typeof mod.getWarnings === 'function' ? mod.getWarnings() : mod._warnings;
   if (warnings?.length) warnings.splice(0, warnings.length);
 }
 
@@ -34,16 +26,15 @@ function clearModuleWarnings(module: {
  */
 function stripStyleModuleWarningsPlugin() {
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apply(compiler: any) {
       compiler.hooks.compilation.tap('StripStyleModuleWarnings', (compilation: any) => {
-        const scrub = (module: any) => {
-          if (isStyleModule(module)) clearModuleWarnings(module);
+        const scrub = (mod: any) => {
+          if (isStyleModule(mod)) clearModuleWarnings(mod);
         };
         compilation.hooks.succeedModule.tap('StripStyleModuleWarnings', scrub);
         // Loaders may add warnings after succeedModule — scrub again before cache write.
         compilation.hooks.finishModules.tap('StripStyleModuleWarnings', (modules: Iterable<any>) => {
-          for (const module of modules) scrub(module);
+          for (const mod of modules) scrub(mod);
         });
       });
     },
@@ -60,10 +51,7 @@ const nextConfig: NextConfig = {
     viewTransition: true,
   },
   sassOptions: {
-    includePaths: [
-      path.join(__dirname, 'src/sass'),
-      path.join(__dirname, 'src'),
-    ],
+    includePaths: [path.join(__dirname, 'src/sass'), path.join(__dirname, 'src')],
     // Legacy @import tree (src/sass + styles/*). Silence until migrated to @use.
     silenceDeprecations: ['import', 'legacy-js-api'],
     quietDeps: true,

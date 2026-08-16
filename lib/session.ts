@@ -16,7 +16,7 @@ function getSecret(): string {
 
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
 
@@ -31,13 +31,10 @@ function fromHex(hex: string): Uint8Array | null {
 
 async function getHmacKey(): Promise<CryptoKey> {
   const enc = new TextEncoder();
-  return crypto.subtle.importKey(
-    'raw',
-    enc.encode(getSecret()),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify'],
-  );
+  return crypto.subtle.importKey('raw', enc.encode(getSecret()), { name: 'HMAC', hash: 'SHA-256' }, false, [
+    'sign',
+    'verify',
+  ]);
 }
 
 async function sign(payload: string): Promise<string> {
@@ -127,8 +124,7 @@ export async function parseSession(session: string | undefined): Promise<ParsedS
 
   if (!token || !expiry || !signature) return { valid: false };
 
-  const payload =
-    parts.length === 4 ? `${token}.${expiry}.${claimsHex}` : `${token}.${expiry}`;
+  const payload = parts.length === 4 ? `${token}.${expiry}.${claimsHex}` : `${token}.${expiry}`;
   const ok = await verifySignature(payload, signature);
   if (!ok) return { valid: false };
 

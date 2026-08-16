@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const data = await getSiteData();
-  const menu = data.headerMenu.filter((item) => item.visible);
+  const menu = data.headerMenu.filter(item => item.visible);
 
   return (
     <SiteShell settings={data.settings} menu={menu}>

@@ -33,7 +33,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleDensity = useCallback(() => {
-    setCompact((prev) => {
+    setCompact(prev => {
       const next = !prev;
       try {
         localStorage.setItem(DENSITY_KEY, next ? '1' : '0');
@@ -45,7 +45,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleCollapsed = useCallback(() => {
-    setCollapsed((prev) => {
+    setCollapsed(prev => {
       const next = !prev;
       try {
         localStorage.setItem(STORAGE_KEY, next ? '1' : '0');
@@ -57,7 +57,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleMobile = useCallback(() => {
-    setMobileOpen((v) => !v);
+    setMobileOpen(v => !v);
   }, []);
 
   const closeMobile = useCallback(() => {
@@ -87,12 +87,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             {mobileOpen ? <X size={22} strokeWidth={2} aria-hidden /> : <Menu size={22} strokeWidth={2} aria-hidden />}
           </button>
           {mobileOpen ? (
-            <button
-              type='button'
-              className='admin-nav-overlay'
-              aria-label='Закрити'
-              onClick={closeMobile}
-            />
+            <button type='button' className='admin-nav-overlay' aria-label='Закрити' onClick={closeMobile} />
           ) : null}
 
           <div

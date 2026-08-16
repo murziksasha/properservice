@@ -1,24 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { requireAdminRole } from '@/lib/require-role';
-import {
-  deleteUpload,
-  folderCounts,
-  listFoldersWithCounts,
-  listUploads,
-} from '@/lib/media';
-import {
-  isMediaKind,
-  moveMediaToFolder,
-  patchMediaMeta,
-  reorderMediaItems,
-} from '@/lib/media-index';
+import { deleteUpload, folderCounts, listFoldersWithCounts, listUploads } from '@/lib/media';
+import { isMediaKind, moveMediaToFolder, patchMediaMeta, reorderMediaItems } from '@/lib/media-index';
 import { isMediaPurpose } from '@/lib/media-purpose';
-import {
-  collectSiteMediaUsages,
-  formatUsageTooltip,
-  getUsageForUploadName,
-} from '@/lib/media-usage';
+import { collectSiteMediaUsages, formatUsageTooltip, getUsageForUploadName } from '@/lib/media-usage';
 import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
@@ -37,11 +23,9 @@ export async function GET(request: NextRequest) {
   if (!g.ok) return g.response;
 
   const purposeRaw = request.nextUrl.searchParams.get('purpose') || '';
-  const purpose =
-    purposeRaw && purposeRaw !== 'all' && isMediaPurpose(purposeRaw) ? purposeRaw : undefined;
+  const purpose = purposeRaw && purposeRaw !== 'all' && isMediaPurpose(purposeRaw) ? purposeRaw : undefined;
   const kindRaw = request.nextUrl.searchParams.get('kind') || '';
-  const kind =
-    kindRaw && kindRaw !== 'all' && isMediaKind(kindRaw) ? kindRaw : undefined;
+  const kind = kindRaw && kindRaw !== 'all' && isMediaKind(kindRaw) ? kindRaw : undefined;
   const q = request.nextUrl.searchParams.get('q') || undefined;
   const tag = request.nextUrl.searchParams.get('tag') || undefined;
   const folderRaw = request.nextUrl.searchParams.get('folder');
@@ -64,7 +48,7 @@ export async function GET(request: NextRequest) {
   const usageMap = site ? collectSiteMediaUsages(site) : null;
 
   return NextResponse.json({
-    items: items.map((item) => {
+    items: items.map(item => {
       if (!usageMap) return item;
       const refs = usageMap.get(item.url)?.refs || usageMap.get(`/uploads/${item.name}`)?.refs || [];
       return {
@@ -116,8 +100,7 @@ export async function PATCH(request: NextRequest) {
 
     if (Array.isArray(body.orderedNames)) {
       const names = body.orderedNames.filter((n): n is string => typeof n === 'string');
-      const folderId =
-        typeof body.reorderFolderId === 'string' ? body.reorderFolderId : body.folderId || '';
+      const folderId = typeof body.reorderFolderId === 'string' ? body.reorderFolderId : body.folderId || '';
       const updated = await reorderMediaItems(folderId === 'root' ? '' : folderId, names);
       return NextResponse.json({ ok: true, items: updated });
     }
@@ -128,8 +111,7 @@ export async function PATCH(request: NextRequest) {
       if (names.length === 0) {
         return NextResponse.json({ error: 'Missing names' }, { status: 400 });
       }
-      const folderId =
-        body.folderId === 'root' || body.folderId === '__root' ? '' : body.folderId;
+      const folderId = body.folderId === 'root' || body.folderId === '__root' ? '' : body.folderId;
       const result = await moveMediaToFolder(names, folderId);
       return NextResponse.json({ ok: true, ...result });
     }
@@ -137,15 +119,17 @@ export async function PATCH(request: NextRequest) {
     if (!body.name || typeof body.name !== 'string') {
       return NextResponse.json({ error: 'Missing name' }, { status: 400 });
     }
-    const purpose =
-      body.purpose && isMediaPurpose(body.purpose) ? body.purpose : undefined;
+    const purpose = body.purpose && isMediaPurpose(body.purpose) ? body.purpose : undefined;
     let tags: string[] | undefined;
     if (Array.isArray(body.tags)) {
-      tags = body.tags.filter((t): t is string => typeof t === 'string').map((t) => t.trim()).filter(Boolean);
+      tags = body.tags
+        .filter((t): t is string => typeof t === 'string')
+        .map(t => t.trim())
+        .filter(Boolean);
     } else if (typeof body.tags === 'string') {
       tags = body.tags
         .split(/[,;]+/)
-        .map((t) => t.trim())
+        .map(t => t.trim())
         .filter(Boolean);
     }
     let folderId: string | undefined;
@@ -159,10 +143,7 @@ export async function PATCH(request: NextRequest) {
       focusX: typeof body.focusX === 'number' ? body.focusX : undefined,
       focusY: typeof body.focusY === 'number' ? body.focusY : undefined,
       folderId,
-      sortOrder:
-        typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder)
-          ? body.sortOrder
-          : undefined,
+      sortOrder: typeof body.sortOrder === 'number' && Number.isFinite(body.sortOrder) ? body.sortOrder : undefined,
     });
     if (!meta) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });

@@ -14,16 +14,7 @@ import {
 
 export interface LeadAuditEntry {
   at: string;
-  action:
-    | 'created'
-    | 'handled'
-    | 'reopened'
-    | 'note'
-    | 'emailed'
-    | 'status'
-    | 'callback'
-    | 'assign'
-    | 'outcome';
+  action: 'created' | 'handled' | 'reopened' | 'note' | 'emailed' | 'status' | 'callback' | 'assign' | 'outcome';
   detail?: string;
 }
 
@@ -108,7 +99,7 @@ export async function listLeads(): Promise<Lead[]> {
 export async function findOpenLeadsByPhone(phone: string): Promise<Lead[]> {
   const { phonesMatch } = await import('./phone');
   const leads = await listLeads();
-  return leads.filter((l) => {
+  return leads.filter(l => {
     const st = normalizeStatus(l.status, l.handled);
     if (st === 'done' || st === 'spam') return false;
     return phonesMatch(l.phone, phone);
@@ -118,7 +109,7 @@ export async function findOpenLeadsByPhone(phone: string): Promise<Lead[]> {
 export async function countLeads(options?: { unhandledOnly?: boolean }): Promise<number> {
   const leads = await listLeads();
   if (options?.unhandledOnly) {
-    return leads.filter((l) => !handledFromStatus(normalizeStatus(l.status, l.handled))).length;
+    return leads.filter(l => !handledFromStatus(normalizeStatus(l.status, l.handled))).length;
   }
   return leads.length;
 }
@@ -164,7 +155,7 @@ export type LeadPatch = Partial<
 
 export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | null> {
   const store = await readStore();
-  const idx = store.leads.findIndex((l) => l.id === id);
+  const idx = store.leads.findIndex(l => l.id === id);
   if (idx < 0) return null;
   const current = withNormalizedLead(store.leads[idx]);
   const now = new Date().toISOString();
@@ -195,10 +186,7 @@ export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | n
   }
 
   if (patch.note !== undefined && patch.note !== current.note) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'note', detail: String(patch.note).slice(0, 200) },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'note', detail: String(patch.note).slice(0, 200) });
   }
   if (typeof patch.emailed === 'boolean' && patch.emailed && !current.emailed) {
     audit = pushAudit({ ...current, audit }, { at: now, action: 'emailed' });
@@ -210,20 +198,11 @@ export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | n
     );
   }
   if (patch.assignee !== undefined && patch.assignee !== current.assignee) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'assign', detail: patch.assignee || 'unassigned' },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'assign', detail: patch.assignee || 'unassigned' });
   }
-  const nextOutcome =
-    patch.outcome !== undefined && isCloseOutcome(patch.outcome)
-      ? patch.outcome
-      : current.outcome;
+  const nextOutcome = patch.outcome !== undefined && isCloseOutcome(patch.outcome) ? patch.outcome : current.outcome;
   if (patch.outcome !== undefined && patch.outcome !== current.outcome) {
-    audit = pushAudit(
-      { ...current, audit },
-      { at: now, action: 'outcome', detail: String(patch.outcome || '') },
-    );
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'outcome', detail: String(patch.outcome || '') });
   }
 
   const closed = handledFromStatus(nextStatus);
@@ -237,11 +216,7 @@ export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | n
     outcome: closed ? nextOutcome : undefined,
     assignee: patch.assignee !== undefined ? patch.assignee || undefined : current.assignee,
     claimedAt:
-      patch.assignee !== undefined
-        ? patch.assignee
-          ? current.claimedAt || now
-          : undefined
-        : current.claimedAt,
+      patch.assignee !== undefined ? (patch.assignee ? current.claimedAt || now : undefined) : current.claimedAt,
     audit,
     handledAt: closed ? current.handledAt || now : undefined,
   };
@@ -253,7 +228,7 @@ export async function updateLead(id: string, patch: LeadPatch): Promise<Lead | n
 export async function deleteLead(id: string): Promise<boolean> {
   const store = await readStore();
   const before = store.leads.length;
-  store.leads = store.leads.filter((l) => l.id !== id);
+  store.leads = store.leads.filter(l => l.id !== id);
   if (store.leads.length === before) return false;
   await writeStore(store);
   return true;

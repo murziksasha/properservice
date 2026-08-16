@@ -24,11 +24,7 @@ async function loadPreviewPage(token: string): Promise<Page | null> {
   }
 }
 
-export default async function AdminLivePreviewPage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
+export default async function AdminLivePreviewPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const page = await loadPreviewPage(token);
   if (!page) notFound();
@@ -42,16 +38,13 @@ export default async function AdminLivePreviewPage({
         LIVE PREVIEW (не опубліковано) · {page.title}
       </div>
       {contentHtml ? (
-        <div
-          className='wrapper'
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(contentHtml) }}
-        />
+        <div className='wrapper' dangerouslySetInnerHTML={{ __html: sanitizeHtml(contentHtml) }} />
       ) : (
         <SectionRenderer
           sections={page.sections || []}
           settings={site.settings}
           servicesNav={site.servicesNav}
-          products={site.goods.filter((g) => g.visible)}
+          products={site.goods.filter(g => g.visible)}
           reviewsUrl={site.settings.reviewsUrl}
         />
       )}

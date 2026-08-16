@@ -35,14 +35,8 @@ export function SiteShell({ settings, menu, children }: SiteShellProps) {
       <StickyCallBar settings={settings} />
       {gincore ? (
         <>
-          <Script
-            src='https://remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0'
-            strategy='lazyOnload'
-          />
-          <Script
-            src='https://remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0'
-            strategy='lazyOnload'
-          />
+          <Script src='https://remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0' strategy='lazyOnload' />
+          <Script src='https://remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0' strategy='lazyOnload' />
         </>
       ) : null}
     </div>

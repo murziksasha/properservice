@@ -99,8 +99,8 @@ describe('normalizeMediaUrl / uploadNameFromUrl', () => {
 describe('collectSiteMediaUsages', () => {
   it('tracks products (including hidden), settings and sections', () => {
     const map = collectSiteMediaUsages(baseSite());
-    expect(map.get('/uploads/a.webp')?.refs.some((r) => r.id === 'g1')).toBe(true);
-    expect(map.get('/uploads/a.webp')?.refs.some((r) => r.id === 'g2')).toBe(true);
+    expect(map.get('/uploads/a.webp')?.refs.some(r => r.id === 'g1')).toBe(true);
+    expect(map.get('/uploads/a.webp')?.refs.some(r => r.id === 'g2')).toBe(true);
     expect(map.get('/uploads/review.mp4')?.refs[0]?.type).toBe('product');
     expect(map.get('/uploads/hero.webp')?.refs[0]?.type).toBe('section');
     expect(map.get('/uploads/social.webp')?.refs[0]?.type).toBe('social');
@@ -112,12 +112,12 @@ describe('planProductMediaPurge', () => {
   it('keeps shared uploads and allows orphans', () => {
     const site = baseSite();
     const product = site.goods[0];
-    const without = { ...site, goods: site.goods.filter((g) => g.id !== product.id) };
+    const without = { ...site, goods: site.goods.filter(g => g.id !== product.id) };
     const plan = planProductMediaPurge(product, without);
 
     expect(plan.candidates).toEqual(expect.arrayContaining(['a.webp', 'b.webp', 'review.mp4']));
     // a.webp still used by g2
-    expect(plan.retained.some((r) => r.name === 'a.webp')).toBe(true);
+    expect(plan.retained.some(r => r.name === 'a.webp')).toBe(true);
     expect(plan.deletable).toEqual(expect.arrayContaining(['b.webp', 'review.mp4']));
     expect(plan.deletable).not.toContain('a.webp');
   });

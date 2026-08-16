@@ -57,14 +57,8 @@ export default async function ShopPage({ searchParams }: PageProps) {
         </a>
       </p>
       <div className='shop-page__messengers'>
-        {data.settings.social.map((link) => (
-          <a
-            key={link.id}
-            href={link.url}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='shop-page__social'
-          >
+        {data.settings.social.map(link => (
+          <a key={link.id} href={link.url} target='_blank' rel='noopener noreferrer' className='shop-page__social'>
             {SOCIAL_LABELS[link.type] || link.type}
           </a>
         ))}

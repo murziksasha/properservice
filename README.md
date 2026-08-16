@@ -31,31 +31,31 @@ npm run dev
 
 ## Змінні середовища
 
-| Змінна | Опис |
-|--------|------|
-| `ADMIN_PASSWORD` | Пароль адмінки (**обовʼязково**) |
-| `SESSION_SECRET` | Секрет для підпису cookie-сесії (рекомендовано; інакше fallback на пароль) |
-| `ADMIN_TOTP_SECRET` | Опційний 2FA (base32); пріоритет над UI-файлом `data/admin-totp.json` |
-| `SMTP_*` / `MAIL_*` | Пошта для `/api/contact` і `/api/orders` |
-| `DATA_DIR` | Каталог для `site.json` (Docker volume) |
-| `NGINX_PORT` | Зовнішній порт nginx у Docker |
+| Змінна              | Опис                                                                       |
+| ------------------- | -------------------------------------------------------------------------- |
+| `ADMIN_PASSWORD`    | Пароль адмінки (**обовʼязково**)                                           |
+| `SESSION_SECRET`    | Секрет для підпису cookie-сесії (рекомендовано; інакше fallback на пароль) |
+| `ADMIN_TOTP_SECRET` | Опційний 2FA (base32); пріоритет над UI-файлом `data/admin-totp.json`      |
+| `SMTP_*` / `MAIL_*` | Пошта для `/api/contact` і `/api/orders`                                   |
+| `DATA_DIR`          | Каталог для `site.json` (Docker volume)                                    |
+| `NGINX_PORT`        | Зовнішній порт nginx у Docker                                              |
 
 Див. `.env.example`.
 
 ## Скрипти
 
-| Команда | Дія |
-|---------|-----|
-| `npm run dev` | Dev-сервер |
-| `npm run build` / `start` | Production build |
-| `npm run seed` | Заповнити `data/site.json` з defaults |
-| `npm run typecheck` | TypeScript |
-| `npm run lint` | ESLint |
-| `npm test` | Vitest (unit) |
-| `npm run test:smoke` / `test:e2e` | Playwright e2e smoke |
-| `npm run format` | Prettier |
-| `npm run docker:up` / `docker:down` | Prod-стек |
-| `npm run docker:dev` | Dev Docker (hot mount) |
+| Команда                             | Дія                                   |
+| ----------------------------------- | ------------------------------------- |
+| `npm run dev`                       | Dev-сервер                            |
+| `npm run build` / `start`           | Production build                      |
+| `npm run seed`                      | Заповнити `data/site.json` з defaults |
+| `npm run typecheck`                 | TypeScript                            |
+| `npm run lint`                      | ESLint                                |
+| `npm test`                          | Vitest (unit)                         |
+| `npm run test:smoke` / `test:e2e`   | Playwright e2e smoke                  |
+| `npm run format`                    | Prettier                              |
+| `npm run docker:up` / `docker:down` | Prod-стек                             |
+| `npm run docker:dev`                | Dev Docker (hot mount)                |
 
 ## Docker
 
@@ -65,6 +65,21 @@ npm run docker:up
 ```
 
 Том’и: `data/` (контент), `public/uploads/` (зображення). Деталі — [docs/deploy.md](docs/deploy.md).
+
+## CI (GitHub Actions)
+
+На кожен **pull request** (у будь-яку base-гілку) запускається workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+
+| Job              | Команда                                    |
+| ---------------- | ------------------------------------------ |
+| Format           | `npm run format:check` (Prettier)          |
+| Lint             | `npm run lint`                             |
+| Typecheck        | `npm run typecheck`                        |
+| Unit tests       | `npm test`                                 |
+| Production build | `npm run build`                            |
+| E2E smoke        | `npm run test:e2e` (Playwright / Chromium) |
+
+Підсумковий check: **CI passed** — його зручно вимагати в branch protection.
 
 ## Документація
 

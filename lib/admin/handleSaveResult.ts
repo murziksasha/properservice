@@ -11,12 +11,10 @@ export type ConflictChoice = 'force' | 'reload' | 'cancel';
 export async function resolveSaveConflict(
   data: SiteData,
   result: SaveResult,
-  confirmFn: (msg: string) => boolean = (m) => window.confirm(m),
+  confirmFn: (msg: string) => boolean = m => window.confirm(m),
 ): Promise<SaveResult | null> {
   if (result.ok || !result.conflict) return null;
-  const force = confirmFn(
-    `${result.error}\n\nOK — перезаписати сервер своїми даними.\nСкасувати — оновити сторінку.`,
-  );
+  const force = confirmFn(`${result.error}\n\nOK — перезаписати сервер своїми даними.\nСкасувати — оновити сторінку.`);
   if (!force) {
     window.location.reload();
     return null;

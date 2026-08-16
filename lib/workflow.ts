@@ -1,14 +1,6 @@
 /** Shared workflow for leads & orders (backward-compatible with `handled`). */
 
-export const WORKFLOW_STATUSES = [
-  'new',
-  'called',
-  'waiting',
-  'in_progress',
-  'done',
-  'spam',
-  'no_answer',
-] as const;
+export const WORKFLOW_STATUSES = ['new', 'called', 'waiting', 'in_progress', 'done', 'spam', 'no_answer'] as const;
 
 export type WorkflowStatus = (typeof WORKFLOW_STATUSES)[number];
 
@@ -23,15 +15,7 @@ export const WORKFLOW_LABELS: Record<WorkflowStatus, string> = {
 };
 
 /** Close outcomes — required when moving to closed-like statuses. */
-export const CLOSE_OUTCOMES = [
-  'deal',
-  'quoted',
-  'no_answer',
-  'wrong_number',
-  'spam',
-  'refused',
-  'other',
-] as const;
+export const CLOSE_OUTCOMES = ['deal', 'quoted', 'no_answer', 'wrong_number', 'spam', 'refused', 'other'] as const;
 
 export type CloseOutcome = (typeof CLOSE_OUTCOMES)[number];
 
@@ -55,13 +39,7 @@ export function statusRequiresOutcome(status: WorkflowStatus): boolean {
 }
 
 /** Statuses that still need operator attention. */
-export const OPEN_WORKFLOW_STATUSES: WorkflowStatus[] = [
-  'new',
-  'called',
-  'waiting',
-  'in_progress',
-  'no_answer',
-];
+export const OPEN_WORKFLOW_STATUSES: WorkflowStatus[] = ['new', 'called', 'waiting', 'in_progress', 'no_answer'];
 
 export function isWorkflowStatus(v: unknown): v is WorkflowStatus {
   return typeof v === 'string' && (WORKFLOW_STATUSES as readonly string[]).includes(v);
@@ -121,11 +99,7 @@ export function statusBadgeClass(status: WorkflowStatus): string {
 }
 
 /** Validate close: need outcome + non-empty note for closed statuses. */
-export function validateClosePatch(input: {
-  status?: WorkflowStatus;
-  outcome?: string;
-  note?: string;
-}): string | null {
+export function validateClosePatch(input: { status?: WorkflowStatus; outcome?: string; note?: string }): string | null {
   if (!input.status || !statusRequiresOutcome(input.status)) return null;
   if (!isCloseOutcome(input.outcome)) {
     return 'Оберіть результат закриття (outcome)';

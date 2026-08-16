@@ -110,12 +110,7 @@ export function newSection(type: SectionType | string): Section {
   }
 }
 
-export function createDefaultPage(opts: {
-  title: string;
-  slug: string;
-  email?: string;
-  mapEmbedUrl?: string;
-}): Page {
+export function createDefaultPage(opts: { title: string; slug: string; email?: string; mapEmbedUrl?: string }): Page {
   return {
     id: createId(),
     slug: opts.slug,

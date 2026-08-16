@@ -28,37 +28,26 @@ export function SectionRenderer({
   settings,
   heroImages,
 }: SectionRendererProps) {
-  const visible = sections.filter((s) => s.visible);
-  const advantages = visible.find((s) => s.type === 'advantages');
+  const visible = sections.filter(s => s.visible);
+  const advantages = visible.find(s => s.type === 'advantages');
   // Hosts that already inject advantages — avoid double-render
-  const advantagesHosted =
-    visible.some((s) => s.type === 'about-links') || visible.some((s) => s.type === 'malfunctions');
+  const advantagesHosted = visible.some(s => s.type === 'about-links') || visible.some(s => s.type === 'malfunctions');
   // Hero already shows services nav — skip standalone if hero present
-  const hasHero = visible.some((s) => s.type === 'hero');
+  const hasHero = visible.some(s => s.type === 'hero');
 
   return (
     <>
-      {visible.map((section) => {
+      {visible.map(section => {
         let node: ReactNode = null;
         switch (section.type) {
           case 'hero':
-            node = (
-              <HeroSection
-                section={section}
-                servicesNav={servicesNav}
-                heroImages={heroImages}
-              />
-            );
+            node = <HeroSection section={section} servicesNav={servicesNav} heroImages={heroImages} />;
             break;
           case 'services-nav':
             if (hasHero) return null;
             node = (
               <div className='wrapper' style={{ paddingTop: '1.5rem' }}>
-                <ServicesNav
-                  items={servicesNav}
-                  activeSlug={section.activeSlug}
-                  heroImages={heroImages}
-                />
+                <ServicesNav items={servicesNav} activeSlug={section.activeSlug} heroImages={heroImages} />
               </div>
             );
             break;
@@ -76,9 +65,7 @@ export function SectionRenderer({
             node = (
               <div className='about-link'>
                 <div className='about-link__wrapper wrapper'>
-                  {advantages && advantages.type === 'advantages' ? (
-                    <AdvantagesSection section={advantages} />
-                  ) : null}
+                  {advantages && advantages.type === 'advantages' ? <AdvantagesSection section={advantages} /> : null}
                   <MalfunctionsSection section={section} />
                 </div>
               </div>
@@ -113,10 +100,7 @@ export function SectionRenderer({
           default:
             return null;
         }
-        const vp = [
-          section.hideOnMobile ? 'ps-hide-mobile' : '',
-          section.hideOnDesktop ? 'ps-hide-desktop' : '',
-        ]
+        const vp = [section.hideOnMobile ? 'ps-hide-mobile' : '', section.hideOnDesktop ? 'ps-hide-desktop' : '']
           .filter(Boolean)
           .join(' ');
         if (!vp) {

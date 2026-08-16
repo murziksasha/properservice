@@ -57,13 +57,13 @@ export function ActivityPanel() {
   }, [load]);
 
   const kinds = useMemo(() => {
-    const s = new Set(entries.map((e) => e.kind));
+    const s = new Set(entries.map(e => e.kind));
     return Array.from(s).sort();
   }, [entries]);
 
   const visible = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return entries.filter((e) => {
+    return entries.filter(e => {
       if (kind !== 'all' && e.kind !== kind) return false;
       if (!query) return true;
       return `${e.message} ${e.actor || ''} ${e.kind}`.toLowerCase().includes(query);
@@ -73,9 +73,9 @@ export function ActivityPanel() {
   return (
     <div className='admin-card'>
       <div className='admin-row admin-row--wrap admin-mb'>
-        <select className='admin-select' value={kind} onChange={(e) => setKind(e.target.value)} aria-label='Тип'>
+        <select className='admin-select' value={kind} onChange={e => setKind(e.target.value)} aria-label='Тип'>
           <option value='all'>Усі типи</option>
-          {kinds.map((k) => (
+          {kinds.map(k => (
             <option key={k} value={k}>
               {k}
             </option>
@@ -86,7 +86,7 @@ export function ActivityPanel() {
           className='admin-field-sm admin-grow'
           placeholder='Пошук…'
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={e => setQ(e.target.value)}
         />
         <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void load()}>
           Оновити
@@ -95,12 +95,11 @@ export function ActivityPanel() {
       {loading ? <p className='admin-hint'>Завантаження…</p> : null}
       {!loading && !visible.length ? <p className='admin-hint'>Порожньо</p> : null}
       <ul className='admin-activity'>
-        {visible.map((a) => (
+        {visible.map(a => (
           <li key={a.id}>
             <span className='admin-activity__time'>{formatWhen(a.at)}</span>
             <span>
-              <code className='admin-hint'>{a.kind}</code>{' '}
-              <Link href={hrefFor(a.kind)}>{a.message}</Link>
+              <code className='admin-hint'>{a.kind}</code> <Link href={hrefFor(a.kind)}>{a.message}</Link>
               {a.actor ? ` · ${a.actor}` : ''}
             </span>
           </li>

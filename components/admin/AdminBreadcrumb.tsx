@@ -53,11 +53,7 @@ export function AdminBreadcrumb() {
           const last = i === crumbs.length - 1;
           return (
             <li key={c.href}>
-              {last ? (
-                <span aria-current='page'>{c.label}</span>
-              ) : (
-                <Link href={c.href}>{c.label}</Link>
-              )}
+              {last ? <span aria-current='page'>{c.label}</span> : <Link href={c.href}>{c.label}</Link>}
               {!last ? <span className='admin-breadcrumb__sep'>/</span> : null}
             </li>
           );

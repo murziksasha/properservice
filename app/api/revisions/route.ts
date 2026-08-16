@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing pageId' }, { status: 400 });
     }
     const site = await getSiteData();
-    const page = site.pages.find((p) => p.id === body.pageId);
+    const page = site.pages.find(p => p.id === body.pageId);
     if (!page) return NextResponse.json({ error: 'Page not found' }, { status: 404 });
     const claims = await getSessionClaims();
 
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       // Snapshot current before restore
       await savePageRevision(page, { actor: claims?.username, label: 'pre-restore' });
       const restored = { ...rev.page, id: page.id, slug: page.slug };
-      const pages = site.pages.map((p) => (p.id === page.id ? restored : p));
+      const pages = site.pages.map(p => (p.id === page.id ? restored : p));
       const saved = await saveSiteData({ ...site, pages });
       try {
         await appendActivity({

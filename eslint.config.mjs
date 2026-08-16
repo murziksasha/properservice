@@ -20,6 +20,8 @@ const config = [
       'mailer/**',
       'public/**',
       'mcps/**',
+      // pm2 CJS config (require / module.exports)
+      'ecosystem.config.cjs',
       'next-env.d.ts',
       '**/*.test.ts',
       '**/*.test.tsx',
@@ -28,10 +30,7 @@ const config = [
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'react/no-danger': 'off',
     },
   },

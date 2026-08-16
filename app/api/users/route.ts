@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getSessionClaims, verifyPassword } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
-import {
-  createAdminUser,
-  deleteAdminUser,
-  listAdminUsers,
-  updateAdminUser,
-  type AdminRole,
-} from '@/lib/admin-users';
+import { createAdminUser, deleteAdminUser, listAdminUsers, updateAdminUser, type AdminRole } from '@/lib/admin-users';
 import { appendActivity } from '@/lib/admin-activity';
 
 export const dynamic = 'force-dynamic';

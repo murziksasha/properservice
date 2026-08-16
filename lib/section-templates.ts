@@ -13,23 +13,13 @@ export const SECTION_TEMPLATES: SectionTemplate[] = [
     id: 'service-page',
     label: 'Сторінка послуги',
     description: 'Hero + несправності + callback + контакти',
-    build: () => [
-      newSection('hero'),
-      newSection('malfunctions'),
-      newSection('callback'),
-      newSection('contacts'),
-    ],
+    build: () => [newSection('hero'), newSection('malfunctions'), newSection('callback'), newSection('contacts')],
   },
   {
     id: 'landing-shop',
     label: 'Лендінг + магазин',
     description: 'Hero + переваги + сітка товарів + відгуки',
-    build: () => [
-      newSection('hero'),
-      newSection('advantages'),
-      newSection('shop-grid'),
-      newSection('feedback'),
-    ],
+    build: () => [newSection('hero'), newSection('advantages'), newSection('shop-grid'), newSection('feedback')],
   },
   {
     id: 'contacts-only',

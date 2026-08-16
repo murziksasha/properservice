@@ -37,17 +37,14 @@ export function ProductVideoField({ value, onChange, disabled }: ProductVideoFie
     <div className='admin-product-video'>
       <div className='admin-gallery-field__label'>Відео-огляд (опційно)</div>
       <div className='admin-row admin-image-actions'>
-        <label
-          className='admin-btn admin-btn--secondary'
-          style={{ cursor: locked ? 'wait' : 'pointer' }}
-        >
+        <label className='admin-btn admin-btn--secondary' style={{ cursor: locked ? 'wait' : 'pointer' }}>
           {busy ? 'Завантаження…' : 'Завантажити відео'}
           <input
             type='file'
             accept='video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov'
             hidden
             disabled={locked}
-            onChange={async (e) => {
+            onChange={async e => {
               const file = e.target.files?.[0];
               e.target.value = '';
               await handleFile(file);
@@ -91,7 +88,7 @@ export function ProductVideoField({ value, onChange, disabled }: ProductVideoFie
         onClose={() => setPickerOpen(false)}
         purpose='product'
         kind='video'
-        onSelect={(item) => {
+        onSelect={item => {
           onChange(item.url);
           showToast('Відео вибрано', 'success');
         }}

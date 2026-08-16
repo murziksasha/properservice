@@ -123,9 +123,8 @@ export function UsersPanel() {
     <div className='admin-card'>
       <h2 className='admin-h2'>Користувачі та ролі</h2>
       <p className='admin-hint'>
-        Опційно: multi-user через <code>data/admins.json</code>. Legacy вхід лише з{' '}
-        <code>ADMIN_PASSWORD</code> лишається owner. Ролі: operator (inbox), editor (контент), owner
-        (усе + backup/2FA).
+        Опційно: multi-user через <code>data/admins.json</code>. Legacy вхід лише з <code>ADMIN_PASSWORD</code>{' '}
+        лишається owner. Ролі: operator (inbox), editor (контент), owner (усе + backup/2FA).
       </p>
 
       <label className='admin-field admin-mb'>
@@ -134,7 +133,7 @@ export function UsersPanel() {
           type='password'
           className='admin-grow'
           value={ownerPassword}
-          onChange={(e) => setOwnerPassword(e.target.value)}
+          onChange={e => setOwnerPassword(e.target.value)}
           autoComplete='current-password'
         />
       </label>
@@ -146,7 +145,7 @@ export function UsersPanel() {
         <p className='admin-hint'>Порожньо — працює лише ADMIN_PASSWORD (legacy admin).</p>
       ) : (
         <ul className='admin-leads-list'>
-          {users.map((u) => (
+          {users.map(u => (
             <li key={u.id} className='admin-lead-item'>
               <div className='admin-lead-main'>
                 <strong>{u.username}</strong>
@@ -173,20 +172,16 @@ export function UsersPanel() {
           className='admin-field-sm'
           placeholder='username'
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={e => setUsername(e.target.value)}
         />
         <input
           className='admin-field-sm'
           type='password'
           placeholder='password ≥8'
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
         />
-        <select
-          className='admin-select'
-          value={role}
-          onChange={(e) => setRole(e.target.value as typeof role)}
-        >
+        <select className='admin-select' value={role} onChange={e => setRole(e.target.value as typeof role)}>
           <option value='operator'>operator</option>
           <option value='editor'>editor</option>
           <option value='owner'>owner</option>
@@ -203,12 +198,11 @@ export function UsersPanel() {
         </button>
       </div>
       <ul className='admin-leads-list'>
-        {sessions.map((s) => (
+        {sessions.map(s => (
           <li key={s.id} className='admin-lead-item'>
             <div className='admin-lead-main'>
               <strong>
-                {s.username} ({s.role})
-                {s.fingerprint === currentFp ? ' · ця сесія' : ''}
+                {s.username} ({s.role}){s.fingerprint === currentFp ? ' · ця сесія' : ''}
               </strong>
               <span className='admin-lead-meta'>
                 {s.ip || '—'} · {new Date(s.lastSeenAt).toLocaleString('uk-UA')}

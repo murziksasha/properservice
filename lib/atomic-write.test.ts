@@ -27,7 +27,7 @@ describe('atomicWrite', () => {
     await atomicWriteFile(target, 'v1', { encoding: 'utf-8' });
     await atomicWriteFile(target, 'v2', { encoding: 'utf-8' });
     expect(await fs.readFile(target, 'utf-8')).toBe('v2');
-    const leftovers = (await fs.readdir(tmpDir)).filter((n) => n.includes('.tmp'));
+    const leftovers = (await fs.readdir(tmpDir)).filter(n => n.includes('.tmp'));
     expect(leftovers).toHaveLength(0);
   });
 });

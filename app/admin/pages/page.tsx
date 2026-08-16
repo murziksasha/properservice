@@ -67,10 +67,16 @@ export default function AdminPagesList() {
       return;
     }
     const base =
-      (newSlug || newTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '')).trim() || 'new-page';
+      (
+        newSlug ||
+        newTitle
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/gi, '')
+      ).trim() || 'new-page';
     let slug = base;
     let i = 1;
-    while (site.pages.some((p) => p.slug === slug)) slug = `${base}-${i++}`;
+    while (site.pages.some(p => p.slug === slug)) slug = `${base}-${i++}`;
 
     const newPage = createDefaultPage({
       title: newTitle,
@@ -88,15 +94,12 @@ export default function AdminPagesList() {
 
   async function deletePage(id: string, slug: string) {
     if (!site || slug === '' || !confirm('Видалити сторінку?')) return;
-    await persist(
-      { ...site, pages: site.pages.filter((p) => p.id !== id) },
-      'Сторінку видалено',
-    );
+    await persist({ ...site, pages: site.pages.filter(p => p.id !== id) }, 'Сторінку видалено');
   }
 
   async function toggleVisible(page: Page) {
     if (!site) return;
-    const pages = site.pages.map((p) => (p.id === page.id ? { ...p, visible: !p.visible } : p));
+    const pages = site.pages.map(p => (p.id === page.id ? { ...p, visible: !p.visible } : p));
     await persist({ ...site, pages }, page.visible ? 'Сторінку приховано' : 'Сторінку опубліковано');
   }
 
@@ -104,7 +107,7 @@ export default function AdminPagesList() {
     if (!site) return;
     let slug = page.slug ? `${page.slug}-copy` : 'copy';
     let n = 1;
-    while (site.pages.some((p) => p.slug === slug)) slug = `${page.slug || 'page'}-copy-${n++}`;
+    while (site.pages.some(p => p.slug === slug)) slug = `${page.slug || 'page'}-copy-${n++}`;
 
     const copy: Page = {
       ...structuredClone(page),
@@ -112,7 +115,7 @@ export default function AdminPagesList() {
       slug,
       title: `${page.title || page.slug || 'Сторінка'} (копія)`,
       visible: false,
-      sections: page.sections.map((s) => ({ ...structuredClone(s), id: createId() })),
+      sections: page.sections.map(s => ({ ...structuredClone(s), id: createId() })),
     };
 
     await persist({ ...site, pages: [...site.pages, copy] }, 'Сторінку продубльовано (прихована)');
@@ -121,7 +124,7 @@ export default function AdminPagesList() {
   const filtered = useMemo(() => {
     if (!site) return [];
     const query = q.trim().toLowerCase();
-    return site.pages.filter((p) => {
+    return site.pages.filter(p => {
       if (visFilter === 'visible' && !p.visible) return false;
       if (visFilter === 'hidden' && p.visible) return false;
       if (visFilter === 'review' && !p.reviewRequested) return false;
@@ -168,14 +171,14 @@ export default function AdminPagesList() {
             className='admin-grow'
             placeholder='Назва нової сторінки'
             value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
+            onChange={e => setNewTitle(e.target.value)}
             disabled={busy}
           />
           <input
             className='admin-field-sm'
             placeholder='slug (опціонально)'
             value={newSlug}
-            onChange={(e) => setNewSlug(e.target.value)}
+            onChange={e => setNewSlug(e.target.value)}
             disabled={busy}
           />
           <button type='button' className='admin-btn' onClick={() => void addPage()} disabled={busy}>
@@ -194,21 +197,19 @@ export default function AdminPagesList() {
             className='admin-field-sm admin-grow'
             placeholder='Пошук: назва, slug…'
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={e => setQ(e.target.value)}
             aria-label='Пошук сторінок'
           />
           <select
             className='admin-select'
             value={visFilter}
-            onChange={(e) => setVisFilter(e.target.value as typeof visFilter)}
+            onChange={e => setVisFilter(e.target.value as typeof visFilter)}
             aria-label='Видимість'
           >
             <option value='all'>Усі ({site.pages.length})</option>
-            <option value='visible'>Видимі ({site.pages.filter((p) => p.visible).length})</option>
-            <option value='hidden'>Приховані ({site.pages.filter((p) => !p.visible).length})</option>
-            <option value='review'>
-              На ревʼю ({site.pages.filter((p) => p.reviewRequested).length})
-            </option>
+            <option value='visible'>Видимі ({site.pages.filter(p => p.visible).length})</option>
+            <option value='hidden'>Приховані ({site.pages.filter(p => !p.visible).length})</option>
+            <option value='review'>На ревʼю ({site.pages.filter(p => p.reviewRequested).length})</option>
           </select>
         </div>
 
@@ -218,10 +219,10 @@ export default function AdminPagesList() {
           </div>
         ) : null}
 
-        {filtered.map((page) => {
+        {filtered.map(page => {
           const publicPath = page.slug ? `/${page.slug}` : '/';
           const hints = pageSeoHints(page);
-          const warns = hints.filter((h) => h.level === 'warn');
+          const warns = hints.filter(h => h.level === 'warn');
           const hasDraft = Boolean(page.draft?.updatedAt);
           return (
             <div key={page.id} className={`admin-page-row${!page.visible ? ' is-hidden-section' : ''}`}>
@@ -254,7 +255,7 @@ export default function AdminPagesList() {
                     <span className='admin-wf-badge admin-wf-badge--called'>HTML</span>
                   ) : null}
                   {warns.length > 0 ? (
-                    <span className='admin-wf-badge admin-wf-badge--stale' title={warns.map((w) => w.message).join('\n')}>
+                    <span className='admin-wf-badge admin-wf-badge--stale' title={warns.map(w => w.message).join('\n')}>
                       SEO {warns.length}
                     </span>
                   ) : null}

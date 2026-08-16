@@ -109,16 +109,9 @@ export function ShopCatalog({
   const active = hasActiveCatalogParams({ query: debouncedQuery, sort, category });
 
   /** Grouped sections when browsing full catalog in manual order (mirrors admin groups). */
-  const showGrouped =
-    sort === 'manual' &&
-    !debouncedQuery.trim() &&
-    !category.trim() &&
-    categories.length >= 2;
+  const showGrouped = sort === 'manual' && !debouncedQuery.trim() && !category.trim() && categories.length >= 2;
 
-  const groups = useMemo(
-    () => (showGrouped ? groupProductsByCategory(filtered) : []),
-    [showGrouped, filtered],
-  );
+  const groups = useMemo(() => (showGrouped ? groupProductsByCategory(filtered) : []), [showGrouped, filtered]);
 
   function reset() {
     setQuery('');
@@ -149,7 +142,7 @@ export function ShopCatalog({
               className='shop-toolbar__input'
               placeholder='Назва, опис, категорія…'
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value)}
               autoComplete='off'
               enterKeyHint='search'
             />
@@ -160,9 +153,9 @@ export function ShopCatalog({
             <select
               className='shop-toolbar__select'
               value={sort}
-              onChange={(e) => setSort(parseProductSort(e.target.value))}
+              onChange={e => setSort(parseProductSort(e.target.value))}
             >
-              {PRODUCT_SORT_OPTIONS.map((opt) => (
+              {PRODUCT_SORT_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -173,13 +166,9 @@ export function ShopCatalog({
           {categories.length ? (
             <label className='shop-toolbar__field'>
               <span className='shop-toolbar__label'>Категорія</span>
-              <select
-                className='shop-toolbar__select'
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
+              <select className='shop-toolbar__select' value={category} onChange={e => setCategory(e.target.value)}>
                 <option value=''>Усі категорії</option>
-                {categories.map((cat) => (
+                {categories.map(cat => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>
@@ -205,7 +194,7 @@ export function ShopCatalog({
           >
             Усі
           </button>
-          {categories.map((cat) => (
+          {categories.map(cat => (
             <button
               key={cat}
               type='button'
@@ -227,7 +216,7 @@ export function ShopCatalog({
       {filtered.length ? (
         showGrouped ? (
           <div className='shop-groups'>
-            {groups.map((group) => (
+            {groups.map(group => (
               <section key={group.key} className='shop-group' aria-labelledby={`shop-group-${group.key}`}>
                 <h2 className='shop-group__title' id={`shop-group-${group.key}`}>
                   {group.label}

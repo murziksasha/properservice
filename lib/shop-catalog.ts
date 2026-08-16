@@ -119,20 +119,20 @@ export function groupProductsByCategory<T extends Product>(
     map.get(key)!.push(p);
   }
 
-  let keys = order.filter((k) => k !== UNCATEGORIZED_KEY);
+  let keys = order.filter(k => k !== UNCATEGORIZED_KEY);
   if (opts.localeSortCategories) {
     keys = [...keys].sort((a, b) => a.localeCompare(b, 'uk'));
   }
   if (map.has(UNCATEGORIZED_KEY)) keys.push(UNCATEGORIZED_KEY);
 
-  return keys.map((key) => {
+  return keys.map(key => {
     const list = map.get(key) || [];
     return {
       key,
       label: key === UNCATEGORIZED_KEY ? DEFAULT_CATEGORY : key,
       products: list,
       total: list.length,
-      visibleCount: list.filter((x) => x.visible).length,
+      visibleCount: list.filter(x => x.visible).length,
     };
   });
 }
@@ -152,7 +152,7 @@ export function renameCategoryInGoods<T extends Product>(goods: T[], from: strin
   if (fromIsDefault && toNorm === undefined) return goods;
   if (!fromIsDefault && fromTrim === (toNorm || '')) return goods;
 
-  return goods.map((g) => {
+  return goods.map(g => {
     const cat = (g.category || '').trim();
     const matches = fromIsDefault
       ? isDefaultCategory(g)
@@ -215,7 +215,7 @@ export function filterAndSortProducts(
 ): Product[] {
   const { query = '', sort = 'manual', visibility = 'all', category } = opts;
   const filtered = products.filter(
-    (p) => matchesVisibility(p, visibility) && matchesCategory(p, category) && matchesProductQuery(p, query),
+    p => matchesVisibility(p, visibility) && matchesCategory(p, category) && matchesProductQuery(p, query),
   );
   return sortProducts(filtered, sort);
 }
@@ -238,10 +238,7 @@ export function parseProductSort(value: string | null | undefined): ProductSort 
  * Specific categories first (uk locale), then «Інше» last when any product lacks a specific category.
  * Set `includeDefault: false` to list only explicit named categories.
  */
-export function collectCategories(
-  products: Product[],
-  opts: { includeDefault?: boolean } = {},
-): string[] {
+export function collectCategories(products: Product[], opts: { includeDefault?: boolean } = {}): string[] {
   const includeDefault = opts.includeDefault !== false;
   const seen = new Set<string>();
   const list: string[] = [];
@@ -263,11 +260,7 @@ export function collectCategories(
   return list;
 }
 
-export function hasActiveCatalogParams(opts: {
-  query?: string;
-  sort?: ProductSort;
-  category?: string;
-}): boolean {
+export function hasActiveCatalogParams(opts: { query?: string; sort?: ProductSort; category?: string }): boolean {
   const q = normalizeQuery(opts.query || '');
   const sort = opts.sort || 'manual';
   const category = (opts.category || '').trim();

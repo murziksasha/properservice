@@ -45,8 +45,7 @@ export function middleware(request: NextRequest) {
   // Cron may call /api/backup with Bearer BACKUP_CRON_SECRET from any host — verify in route
   const backupCronHint =
     pathname.startsWith('/api/backup') &&
-    (request.headers.get('authorization')?.startsWith('Bearer ') ||
-      Boolean(request.headers.get('x-backup-secret')));
+    (request.headers.get('authorization')?.startsWith('Bearer ') || Boolean(request.headers.get('x-backup-secret')));
 
   if (allowlist.length > 0 && !backupCronHint) {
     const ip = clientIpFromHeaders(request.headers);
