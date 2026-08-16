@@ -94,7 +94,7 @@ export async function GET() {
   return NextResponse.json({ ok: true, user: claims });
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const claims = await getSessionClaims();
     const fp = await getSessionFingerprint();

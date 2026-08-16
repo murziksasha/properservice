@@ -104,7 +104,7 @@ export async function revokeAllSessions(exceptFingerprint?: string): Promise<num
   return removed;
 }
 
-export async function isFingerprintRevoked(fingerprint: string): Promise<boolean> {
+export async function isFingerprintRevoked(_fingerprint: string): Promise<boolean> {
   // If we have session tracking and this fingerprint is absent after being registered elsewhere,
   // we only revoke explicitly — so "revoked" means we keep a denylist of revoked fps.
   // Simpler: revoked if sessions store exists with entries and fingerprint not in list AND

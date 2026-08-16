@@ -46,8 +46,8 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
   const [previewSplit, setPreviewSplit] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [undoStack, setUndoStack] = useState<SiteData[]>([]);
-  const [redoStack, setRedoStack] = useState<SiteData[]>([]);
+  const [, setUndoStack] = useState<SiteData[]>([]);
+  const [, setRedoStack] = useState<SiteData[]>([]);
   const [revisions, setRevisions] = useState<Array<{ id: string; at: string; label?: string }>>([]);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [livePreviewPath, setLivePreviewPath] = useState<string | null>(null);
@@ -69,7 +69,7 @@ export function PageConstructor({ initialData, pageSlug }: { initialData: SiteDa
     if (!liveRef.current || liveRef.current.id !== page.id) {
       liveRef.current = publishedPage(page);
     }
-  }, [page?.id]);
+  }, [page]);
 
   useUnsavedGuard(dirty);
 
