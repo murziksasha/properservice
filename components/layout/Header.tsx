@@ -21,13 +21,21 @@ const SOCIAL_LABELS: Record<string, string> = {
   youtube: 'YouTube',
 };
 
+/** Keep in sync with `_header.scss` drawer / overlay transition duration */
+const MENU_CLOSE_MS = 280;
+
 export function Header({ settings, menu }: HeaderProps) {
   const pathname = usePathname();
   const isHome = pathname === '/';
+  /** Visual open state (CSS `.is-open`) */
   const [open, setOpen] = useState(false);
+  /** Overlay stays mounted while closing so exit animation can play */
+  const [overlayMounted, setOverlayMounted] = useState(false);
   const visibleMenu = menu.filter((item) => item.visible);
   const burgerRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const telHref = formatTelHref(settings.headerPhone.tel);
 
   useEffect(() => {
@@ -36,12 +44,17 @@ export function Header({ settings, menu }: HeaderProps) {
   }, [open]);
 
   useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        setOpen(false);
-        burgerRef.current?.focus();
+        closeMenu();
         return;
       }
       if (e.key !== 'Tab' || !navRef.current) return;
@@ -64,16 +77,36 @@ export function Header({ settings, menu }: HeaderProps) {
     }
 
     window.addEventListener('keydown', onKey);
-    // Focus first link in drawer
-    const firstLink = navRef.current?.querySelector<HTMLElement>('a[href], button');
-    firstLink?.focus();
+    // Prefer the close control when the drawer opens
+    closeBtnRef.current?.focus();
 
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  function openMenu() {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setOverlayMounted(true);
+    // Next frame so overlay enter animation runs from opacity 0
+    requestAnimationFrame(() => setOpen(true));
+  }
+
   function closeMenu() {
+    if (!open && !overlayMounted) return;
     setOpen(false);
-    burgerRef.current?.focus();
+    if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    closeTimerRef.current = setTimeout(() => {
+      setOverlayMounted(false);
+      closeTimerRef.current = null;
+      burgerRef.current?.focus();
+    }, MENU_CLOSE_MS);
+  }
+
+  function toggleMenu() {
+    if (open) closeMenu();
+    else openMenu();
   }
 
   return (
@@ -102,7 +135,7 @@ export function Header({ settings, menu }: HeaderProps) {
             aria-label={open ? 'Закрити меню' : 'Відкрити меню'}
             aria-expanded={open}
             aria-controls='site-nav'
-            onClick={() => setOpen((v) => !v)}
+            onClick={toggleMenu}
           >
             <span />
             <span />
@@ -112,22 +145,36 @@ export function Header({ settings, menu }: HeaderProps) {
           <nav
             ref={navRef}
             id='site-nav'
-            className={`menu${open ? ' is-open' : ''}`}
+            className={`menu${open ? ' is-open' : ''}${overlayMounted && !open ? ' is-closing' : ''}`}
             aria-modal={open || undefined}
-            role={open ? 'dialog' : undefined}
+            role={open || overlayMounted ? 'dialog' : undefined}
             aria-label='Головне меню'
+            /* Only while the mobile drawer is closing — never inert on desktop nav */
+            inert={overlayMounted && !open ? true : undefined}
           >
+            <button
+              ref={closeBtnRef}
+              type='button'
+              className='menu__close'
+              aria-label='Закрити меню'
+              onClick={closeMenu}
+            >
+              <span className='menu__close-icon' aria-hidden>
+                <span />
+                <span />
+              </span>
+            </button>
             <ul className='menu__list'>
               {!isHome ? (
                 <li>
-                  <Link href='/' className='_list-reset' onClick={() => setOpen(false)}>
+                  <Link href='/' className='_list-reset' onClick={closeMenu}>
                     На головну
                   </Link>
                 </li>
               ) : null}
               {visibleMenu.map((item) => (
                 <li key={item.id} className='_list-reset'>
-                  <Link href={item.href} className='menu__link' onClick={() => setOpen(false)}>
+                  <Link href={item.href} className='menu__link' onClick={closeMenu}>
                     {item.label}
                   </Link>
                 </li>
@@ -213,11 +260,12 @@ export function Header({ settings, menu }: HeaderProps) {
           </div>
         </div>
       </div>
-      {open ? (
+      {overlayMounted ? (
         <button
           type='button'
-          className='header__overlay'
+          className={`header__overlay${open ? ' is-open' : ' is-closing'}`}
           aria-label='Закрити меню'
+          tabIndex={open ? 0 : -1}
           onClick={closeMenu}
         />
       ) : null}

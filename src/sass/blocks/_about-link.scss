@@ -10,7 +10,11 @@
     position: relative;
     top: 4rem;
     left: 5rem;
+    width: min(16rem, calc(100% - 6rem));
     max-width: 16rem;
+    /* room for half-dot so it stays inside the section */
+    padding-left: 0.8rem;
+    box-sizing: border-box;
   }
 
   &__title {

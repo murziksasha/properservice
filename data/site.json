@@ -672,7 +672,8 @@
           "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/laptop-pc/main-bg.png",
           "imageAlt": "laptop",
-          "activeServiceSlug": "laptop-pc"
+          "activeServiceSlug": "laptop-pc",
+          "imageClass": "laptop"
         },
         {
           "id": "advantages",
@@ -824,7 +825,8 @@
           "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/vacuum-cleaner/vac-cleaner-main.jpg",
           "imageAlt": "vacuum cleaner",
-          "activeServiceSlug": "vacuum-cleaner"
+          "activeServiceSlug": "vacuum-cleaner",
+          "imageClass": "bake"
         },
         {
           "id": "advantages",
@@ -975,7 +977,8 @@
           "callbackPlaceholder": "+38 (___) ___ __ __",
           "image": "/img/bake/bake_main.jpg",
           "imageAlt": "microwave",
-          "activeServiceSlug": "bake"
+          "activeServiceSlug": "bake",
+          "imageClass": "bake"
         },
         {
           "id": "advantages",

@@ -93,7 +93,7 @@
     max-width: 63rem;
     @include flex-all-sb;
     gap: 4rem;
-    align-items: start;
+    align-items: flex-start;
     margin-bottom: 2rem;
   }
 
@@ -112,53 +112,55 @@
     left: 62rem;
     z-index: 1;
     pointer-events: none;
-    /* Reserved paint box — avoids layout hole while next hero decodes */
-    min-width: min(50rem, 42vw);
-    min-height: 28rem;
+    /* Fixed paint box — same footprint for every service hero (no free-growing portrait images) */
+    width: min(50rem, 42vw);
+    height: 42rem;
     display: flex;
     align-items: flex-start;
     justify-content: center;
 
     .ps-image {
+      display: block;
       width: 100%;
-      max-width: min(50rem, 42vw);
+      height: 100%;
+      max-width: none;
+      line-height: 0;
     }
 
     img,
     .ps-image__img {
-      z-index: -3;
-      width: 50rem;
-      max-width: min(50rem, 42vw);
-      height: auto;
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: none;
       object-fit: contain;
+      object-position: top center;
     }
 
     &.tv__set {
       left: 63rem;
+      width: min(46rem, 40vw);
+      height: 33rem;
     }
 
-    .tv__set {
-      &_main-img {
-        width: 46rem;
-        height: 29rem;
-        border-radius: 5%;
-        margin-top: 4rem;
-      }
+    /* Per-device tweaks (class may be on container and/or img via imageClass) */
+    &.bake,
+    &:has(.bake) {
+      width: min(48rem, 42vw);
+      height: 48rem;
     }
 
-    .bake {
-      width: 48rem;
-      border-radius: 5%;
-      height: auto;
-      max-height: 53rem;
+    &.laptop,
+    &:has(.laptop) {
+      width: min(48rem, 42vw);
+      height: 43rem;
+      margin-top: 0;
     }
 
+    .tv__set_main-img,
+    .bake,
     .laptop {
-      width: 48rem;
       border-radius: 5%;
-      height: auto;
-      max-height: 43rem;
-      margin-top: 4rem;
     }
   }
 }
@@ -178,13 +180,25 @@
       display: flex;
       justify-content: center;
       pointer-events: auto;
-      min-width: 0;
-      min-height: 18rem;
+      width: min(100%, 36rem);
+      height: 28rem;
+      max-width: 100%;
+
+      &.tv__set,
+      &.bake,
+      &.laptop,
+      &:has(.bake),
+      &:has(.laptop) {
+        width: min(100%, 36rem);
+        height: 28rem;
+        left: auto;
+      }
 
       img,
       .ps-image__img {
-        max-width: min(100%, 36rem);
         width: 100%;
+        height: 100%;
+        max-width: none;
       }
     }
 
@@ -247,11 +261,16 @@
 
     &__main-img {
       margin-top: 1.6rem;
-      min-height: 14rem;
+      width: 100%;
+      height: 22rem;
 
-      img,
-      .ps-image__img {
-        max-width: 100%;
+      &.tv__set,
+      &.bake,
+      &.laptop,
+      &:has(.bake),
+      &:has(.laptop) {
+        width: 100%;
+        height: 22rem;
       }
     }
   }

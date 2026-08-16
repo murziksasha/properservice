@@ -1,21 +1,37 @@
 .advantages {
-  max-height: 29rem;
-
+  /* Do not use max-height here: when items wrap, overflow painted over the
+     malfunctions title below (document flow stayed at 29rem). */
+  position: relative;
+  z-index: 2;
+  margin-bottom: 1.6rem;
 
   &__wrapper {
-    padding: 3.8rem 7.3rem 3.8rem;
+    padding: 3.2rem 4rem;
     background-color: var(--ps-card-bg, #fff);
     color: var(--ps-text, #1a1a1a);
     box-shadow: var(--ps-shadow, 2px 10px 30px 10px rgba(0, 0, 0, 0.15));
     border-radius: 10.9rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 8.2rem;
+    /* 4 equal columns — old flex + 8.2rem gap forced a wrap inside 1140px */
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: flex-start;
+    justify-items: center;
+    gap: 2.4rem 2rem;
   }
 
   &__block {
-    flex: 0 1 18rem;
+    min-width: 0;
+    width: 100%;
+    max-width: 18rem;
+  }
+
+  &__ico {
+    img {
+      display: block;
+      width: 4.8rem;
+      height: 4.8rem;
+      object-fit: contain;
+      margin-bottom: 1.2rem;
+    }
   }
 }

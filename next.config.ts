@@ -2,25 +2,48 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 /**
- * Sass still emits deprecation ModuleWarnings for legacy @import.
- * PackFileCacheStrategy cannot serialize those Warning objects → console spam.
- * Strip them from the module so the webpack pack cache stays clean.
+ * Style modules often attach ModuleWarning (Sass deprecations, autoprefixer).
+ * PackFileCacheStrategy cannot serialize Warning → "Skipped not serializable cache item".
+ * Strip those warnings from the module so the pack cache stays clean.
+ *
+ * Webpack removed writable `module.warnings` (getter-only). Mutate getWarnings()/_warnings.
  */
-function stripSassDeprecationWarningsPlugin() {
+function isStyleModule(module: { resource?: string; userRequest?: string; identifier?: () => string }) {
+  const id = [
+    module.resource,
+    module.userRequest,
+    typeof module.identifier === 'function' ? module.identifier() : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return /\.(s?css|sass)(\?|$|!)/i.test(id) || /globals\.scss/i.test(id);
+}
+
+function clearModuleWarnings(module: {
+  getWarnings?: () => unknown[] | undefined;
+  _warnings?: unknown[];
+}) {
+  const warnings =
+    typeof module.getWarnings === 'function' ? module.getWarnings() : module._warnings;
+  if (warnings?.length) warnings.splice(0, warnings.length);
+}
+
+/**
+ * Style ModuleWarnings (Sass, autoprefixer) are not pack-serializable.
+ * Clear them so PackFileCacheStrategy does not spam "No serializer registered for Warning".
+ */
+function stripStyleModuleWarningsPlugin() {
   return {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apply(compiler: any) {
-      compiler.hooks.compilation.tap('StripSassDeprecationWarnings', (compilation: any) => {
-        compilation.hooks.succeedModule.tap('StripSassDeprecationWarnings', (module: any) => {
-          const resource = String(module.resource || module.userRequest || '');
-          if (!/\.s[ac]ss(\?|$)/i.test(resource) && !/globals\.scss/i.test(resource)) return;
-          if (!module.warnings?.length) return;
-          module.warnings = module.warnings.filter((w: { message?: string } | string) => {
-            const msg = typeof w === 'string' ? w : String(w?.message ?? w);
-            return !/deprecation|@import rules are deprecated|legacy-js-api|repetitive deprecation|No serializer registered for Warning/i.test(
-              msg,
-            );
-          });
+      compiler.hooks.compilation.tap('StripStyleModuleWarnings', (compilation: any) => {
+        const scrub = (module: any) => {
+          if (isStyleModule(module)) clearModuleWarnings(module);
+        };
+        compilation.hooks.succeedModule.tap('StripStyleModuleWarnings', scrub);
+        // Loaders may add warnings after succeedModule — scrub again before cache write.
+        compilation.hooks.finishModules.tap('StripStyleModuleWarnings', (modules: Iterable<any>) => {
+          for (const module of modules) scrub(module);
         });
       });
     },
@@ -47,12 +70,14 @@ const nextConfig: NextConfig = {
   },
   webpack(config) {
     config.plugins = config.plugins || [];
-    config.plugins.push(stripSassDeprecationWarningsPlugin());
+    config.plugins.push(stripStyleModuleWarningsPlugin());
     config.ignoreWarnings = [
       ...(Array.isArray(config.ignoreWarnings) ? config.ignoreWarnings : []),
       /Sass @import rules are deprecated/i,
       /legacy-js-api/i,
       /repetitive deprecation warnings omitted/i,
+      /autoprefixer: start value has mixed support/i,
+      /No serializer registered for Warning/i,
     ];
     return config;
   },

@@ -435,3 +435,8 @@ html[data-theme='dark'] body:not(:has(.admin-body)) .menu__mobile-meta p {
 html[data-theme='dark'] body:not(:has(.admin-body)) .menu {
   border-left: 1px solid var(--ps-border);
 }
+
+html[data-theme='dark'] body:not(:has(.admin-body)) .menu__close {
+  background: var(--ps-surface-2);
+  color: var(--ps-text);
+}
