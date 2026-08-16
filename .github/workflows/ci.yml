@@ -1,5 +1,4 @@
 # Quality gates for every pull request (any base branch).
-# Branch protection: require the single check named "CI passed".
 
 name: CI
 
@@ -155,36 +154,3 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
-
-  # Single required status check for branch protection rules
-  ci:
-    name: CI passed
-    needs: [format, lint, typecheck, unit, build, e2e]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Verify all jobs succeeded
-        run: |
-          set -euo pipefail
-          results=(
-            "format=${{ needs.format.result }}"
-            "lint=${{ needs.lint.result }}"
-            "typecheck=${{ needs.typecheck.result }}"
-            "unit=${{ needs.unit.result }}"
-            "build=${{ needs.build.result }}"
-            "e2e=${{ needs.e2e.result }}"
-          )
-          failed=0
-          for entry in "${results[@]}"; do
-            name="${entry%%=*}"
-            result="${entry#*=}"
-            echo "$name: $result"
-            if [ "$result" != "success" ]; then
-              failed=1
-            fi
-          done
-          if [ "$failed" -ne 0 ]; then
-            echo "::error::One or more CI jobs failed"
-            exit 1
-          fi
-          echo "All CI jobs passed"

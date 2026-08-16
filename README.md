@@ -79,8 +79,6 @@ npm run docker:up
 | Production build | `npm run build`                            |
 | E2E smoke        | `npm run test:e2e` (Playwright / Chromium) |
 
-Підсумковий check: **CI passed** — його зручно вимагати в branch protection.
-
 ## Документація
 
 - [Архітектура](docs/architecture.md)

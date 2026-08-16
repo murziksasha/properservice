@@ -176,7 +176,8 @@ test.describe.serial('admin happy-path', () => {
 
     await page.goto('/admin/inbox');
     await expect(page.locator('h1')).toHaveText(/inbox/i);
-    await expect(page.getByText(/live|poll/i)).toBeVisible({ timeout: 10_000 });
+    // Prefer class — title is "Polling" or "Live SSE" depending on transport
+    await expect(page.locator('.admin-live-dot')).toBeVisible({ timeout: 10_000 });
 
     await page.goto('/admin/clients');
     await expect(page.locator('h1')).toHaveText(/клієнт/i);
