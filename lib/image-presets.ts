@@ -91,8 +91,7 @@ export function resolveOptimizeConstraints(input?: {
   maxHeight?: number | null;
   fit?: string | null;
 }): OptimizeConstraints {
-  const presetId =
-    input?.preset && isImagePresetId(input.preset) ? input.preset : 'default';
+  const presetId = input?.preset && isImagePresetId(input.preset) ? input.preset : 'default';
   const base = IMAGE_PRESETS[presetId];
 
   let maxWidth = base.maxWidth;

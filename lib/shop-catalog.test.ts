@@ -75,18 +75,18 @@ describe('matchesProductQuery', () => {
 
 describe('sortProducts', () => {
   it('keeps manual order', () => {
-    expect(sortProducts(sample, 'manual').map((x) => x.id)).toEqual(['1', '2', '3', '4']);
+    expect(sortProducts(sample, 'manual').map(x => x.id)).toEqual(['1', '2', '3', '4']);
   });
 
   it('sorts by price asc/desc with title tie-break', () => {
-    const asc = sortProducts(sample, 'price-asc').map((x) => x.id);
+    const asc = sortProducts(sample, 'price-asc').map(x => x.id);
     expect(asc[0]).toBe('2'); // 350 Блок
     expect(asc[1]).toBe('4'); // 350 Клавіатура (locale after Блок)
     expect(sortProducts(sample, 'price-desc')[0].price).toBe(1200);
   });
 
   it('sorts by title', () => {
-    const titles = sortProducts(sample, 'title-asc').map((x) => x.title);
+    const titles = sortProducts(sample, 'title-asc').map(x => x.title);
     expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b, 'uk')));
   });
 });
@@ -122,11 +122,7 @@ describe('parseProductSort', () => {
 
 describe('collectCategories', () => {
   it('returns unique sorted named categories', () => {
-    expect(collectCategories(sample, { includeDefault: false })).toEqual([
-      'Ноутбуки',
-      'ТВ',
-      'Телефони',
-    ]);
+    expect(collectCategories(sample, { includeDefault: false })).toEqual(['Ноутбуки', 'ТВ', 'Телефони']);
   });
 
   it('appends «Інше» last when uncategorized products exist', () => {
@@ -159,43 +155,43 @@ describe('groupProductsByCategory', () => {
       p({ id: '7', title: 'Explicit', price: 3, category: DEFAULT_CATEGORY }),
     ];
     const groups = groupProductsByCategory(withNone);
-    expect(groups.map((g) => g.key)).toEqual(['Телефони', 'ТВ', 'Ноутбуки', UNCATEGORIZED_KEY]);
-    expect(groups[0].products.map((x) => x.id)).toEqual(['1', '3']);
+    expect(groups.map(g => g.key)).toEqual(['Телефони', 'ТВ', 'Ноутбуки', UNCATEGORIZED_KEY]);
+    expect(groups[0].products.map(x => x.id)).toEqual(['1', '3']);
     expect(groups[groups.length - 1].label).toBe(DEFAULT_CATEGORY);
     expect(groups[groups.length - 1].total).toBe(3);
   });
 
   it('counts visible per group', () => {
     const groups = groupProductsByCategory(sample);
-    const tv = groups.find((g) => g.key === 'ТВ');
+    const tv = groups.find(g => g.key === 'ТВ');
     expect(tv?.total).toBe(1);
     expect(tv?.visibleCount).toBe(0);
   });
 
   it('localeSortCategories sorts named groups alphabetically', () => {
     const groups = groupProductsByCategory(sample, { localeSortCategories: true });
-    expect(groups.map((g) => g.key)).toEqual(['Ноутбуки', 'ТВ', 'Телефони']);
+    expect(groups.map(g => g.key)).toEqual(['Ноутбуки', 'ТВ', 'Телефони']);
   });
 });
 
 describe('renameCategoryInGoods', () => {
   it('renames matching category; empty to clears field', () => {
     const next = renameCategoryInGoods(sample, 'Телефони', 'Смартфони');
-    expect(next.filter((x) => x.category === 'Смартфони')).toHaveLength(2);
-    expect(next.find((x) => x.id === '2')?.category).toBe('ТВ');
+    expect(next.filter(x => x.category === 'Смартфони')).toHaveLength(2);
+    expect(next.find(x => x.id === '2')?.category).toBe('ТВ');
     const cleared = renameCategoryInGoods(sample, 'ТВ', '  ');
-    expect(cleared.find((x) => x.id === '2')?.category).toBeUndefined();
+    expect(cleared.find(x => x.id === '2')?.category).toBeUndefined();
   });
 
   it('renaming to «Інше» clears category field', () => {
     const next = renameCategoryInGoods(sample, 'ТВ', DEFAULT_CATEGORY);
-    expect(next.find((x) => x.id === '2')?.category).toBeUndefined();
+    expect(next.find(x => x.id === '2')?.category).toBeUndefined();
   });
 
   it('renames default bucket products', () => {
     const list = [...sample, p({ id: 'u', title: 'U', price: 1 })];
     const next = renameCategoryInGoods(list, DEFAULT_CATEGORY, 'Різне');
-    expect(next.find((x) => x.id === 'u')?.category).toBe('Різне');
+    expect(next.find(x => x.id === 'u')?.category).toBe('Різне');
   });
 
   it('no-op on empty from or same name', () => {
@@ -211,14 +207,8 @@ describe('matchesCategory default «Інше»', () => {
       p({ id: 'u', title: 'U', price: 1 }),
       p({ id: 'e', title: 'E', price: 1, category: DEFAULT_CATEGORY }),
     ];
-    expect(filterAndSortProducts(list, { category: UNCATEGORIZED_KEY }).map((x) => x.id)).toEqual([
-      'u',
-      'e',
-    ]);
-    expect(filterAndSortProducts(list, { category: DEFAULT_CATEGORY }).map((x) => x.id)).toEqual([
-      'u',
-      'e',
-    ]);
+    expect(filterAndSortProducts(list, { category: UNCATEGORIZED_KEY }).map(x => x.id)).toEqual(['u', 'e']);
+    expect(filterAndSortProducts(list, { category: DEFAULT_CATEGORY }).map(x => x.id)).toEqual(['u', 'e']);
   });
 });
 
@@ -228,9 +218,7 @@ describe('productCategoryKey / display / normalize', () => {
     expect(productCategoryKey(p({ id: 'a', title: 'A', price: 1, category: DEFAULT_CATEGORY }))).toBe(
       UNCATEGORIZED_KEY,
     );
-    expect(productCategoryKey(p({ id: 'a', title: 'A', price: 1, category: '  Телефони ' }))).toBe(
-      'Телефони',
-    );
+    expect(productCategoryKey(p({ id: 'a', title: 'A', price: 1, category: '  Телефони ' }))).toBe('Телефони');
   });
 
   it('displayCategory always shows a label', () => {
@@ -260,7 +248,7 @@ describe('applySortPin / sortProducts pin', () => {
       p({ id: 'd', title: 'D', price: 4, sortPin: true }),
     ];
     const sorted = sortProducts(list, 'manual');
-    expect(sorted.map((x) => x.id)).toEqual(['b', 'd', 'a', 'c']);
+    expect(sorted.map(x => x.id)).toEqual(['b', 'd', 'a', 'c']);
   });
 
   it('keeps pins on top for price sort', () => {
@@ -271,7 +259,6 @@ describe('applySortPin / sortProducts pin', () => {
     ];
     const sorted = sortProducts(list, 'price-asc');
     expect(sorted[0].id).toBe('pin');
-    expect(sorted.slice(1).map((x) => x.id)).toEqual(['cheap', 'mid']);
+    expect(sorted.slice(1).map(x => x.id)).toEqual(['cheap', 'mid']);
   });
 });
-

@@ -4,8 +4,7 @@ import { assertAdminIp } from './require-admin-ip';
 import { roleCan, type AdminRole } from './admin-roles';
 
 export type RoleGate =
-  | { ok: true; role: AdminRole | 'legacy'; username: string }
-  | { ok: false; response: NextResponse };
+  { ok: true; role: AdminRole | 'legacy'; username: string } | { ok: false; response: NextResponse };
 
 /**
  * Auth + IP + optional capability check for admin APIs.

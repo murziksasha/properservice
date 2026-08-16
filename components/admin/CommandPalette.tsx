@@ -64,7 +64,7 @@ export function CommandPalette() {
     function onKey(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen(v => !v);
       }
       if (e.key === 'Escape' && open) {
         e.preventDefault();
@@ -168,8 +168,8 @@ export function CommandPalette() {
 
   const favCmds: Cmd[] = useMemo(() => {
     return favs
-      .map((href) => {
-        const staticHit = STATIC.find((s) => s.href === href);
+      .map(href => {
+        const staticHit = STATIC.find(s => s.href === href);
         if (staticHit) {
           return {
             ...staticHit,
@@ -194,7 +194,7 @@ export function CommandPalette() {
     const all = [...favCmds, ...STATIC, ...dynamic, ...(phoneCmd ? [phoneCmd] : [])];
     // de-dupe by id
     const seen = new Set<string>();
-    const unique = all.filter((c) => {
+    const unique = all.filter(c => {
       if (seen.has(c.id)) return false;
       seen.add(c.id);
       return true;
@@ -202,10 +202,12 @@ export function CommandPalette() {
     const query = q.trim().toLowerCase();
     if (!query) {
       // Prefer favs + recents + static nav
-      return unique.filter((c) => c.group === 'Обране' || c.group === 'Нещодавні' || c.group === 'Навігація').slice(0, 16);
+      return unique
+        .filter(c => c.group === 'Обране' || c.group === 'Нещодавні' || c.group === 'Навігація')
+        .slice(0, 16);
     }
     return unique
-      .filter((c) => {
+      .filter(c => {
         const hay = `${c.label} ${c.hint || ''} ${c.keywords || ''}`.toLowerCase();
         return hay.includes(query);
       })
@@ -243,16 +245,16 @@ export function CommandPalette() {
             ref={inputRef}
             className='admin-cmd-input'
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={e => setQ(e.target.value)}
             placeholder='Пошук сторінок, товарів, медіа, розділів…'
             aria-label='Пошук'
-            onKeyDown={(e) => {
+            onKeyDown={e => {
               if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActive((i) => Math.min(items.length - 1, i + 1));
+                setActive(i => Math.min(items.length - 1, i + 1));
               } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                setActive((i) => Math.max(0, i - 1));
+                setActive(i => Math.max(0, i - 1));
               } else if (e.key === 'Enter' && items[active]) {
                 e.preventDefault();
                 go(items[active]);
@@ -289,7 +291,7 @@ export function CommandPalette() {
                       tabIndex={-1}
                       className={`admin-cmd-star${isFavorite(cmd.href) || favs.includes(cmd.href) ? ' is-on' : ''}`}
                       title='В обране'
-                      onClick={(e) => star(cmd.href!, e)}
+                      onClick={e => star(cmd.href!, e)}
                       onKeyDown={() => {}}
                     >
                       <Star size={14} />

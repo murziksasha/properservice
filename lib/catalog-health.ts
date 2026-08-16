@@ -35,7 +35,7 @@ export function scanCatalog(products: Product[]): {
       continue;
     }
     const list = productPublishIssues(p);
-    if (list.some((i) => i.includes('фото'))) visibleWithoutPhoto++;
+    if (list.some(i => i.includes('фото'))) visibleWithoutPhoto++;
     if (list.length) issues.push({ productId: p.id, title: p.title, issues: list });
   }
   return {

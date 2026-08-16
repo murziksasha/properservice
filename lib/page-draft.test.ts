@@ -106,8 +106,8 @@ describe('diffPageBodies', () => {
       }),
     );
     const lines = diffPageBodies(live, next);
-    expect(lines.some((l) => l.field === 'Назва' && l.kind === 'changed')).toBe(true);
-    expect(lines.some((l) => l.kind === 'added')).toBe(true);
+    expect(lines.some(l => l.field === 'Назва' && l.kind === 'changed')).toBe(true);
+    expect(lines.some(l => l.kind === 'added')).toBe(true);
   });
 
   it('is empty when equal', () => {

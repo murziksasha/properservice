@@ -9,9 +9,7 @@ export default async function AdminMenuPage() {
   return (
     <AdminShell>
       <h1>Меню</h1>
-      <p className='admin-hint admin-mb-lg'>
-        Пункти головного меню сайту. Перетягуйте за ⠿, Ctrl+S — зберегти.
-      </p>
+      <p className='admin-hint admin-mb-lg'>Пункти головного меню сайту. Перетягуйте за ⠿, Ctrl+S — зберегти.</p>
       <MenuEditor initialData={site} />
     </AdminShell>
   );

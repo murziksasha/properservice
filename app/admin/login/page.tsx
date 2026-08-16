@@ -3,7 +3,13 @@ import { LoginForm } from './LoginForm';
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="admin-body admin-login"><p>Завантаження...</p></div>}>
+    <Suspense
+      fallback={
+        <div className='admin-body admin-login'>
+          <p>Завантаження...</p>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );

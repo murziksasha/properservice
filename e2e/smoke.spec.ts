@@ -176,7 +176,8 @@ test.describe.serial('admin happy-path', () => {
 
     await page.goto('/admin/inbox');
     await expect(page.locator('h1')).toHaveText(/inbox/i);
-    await expect(page.getByText(/live|poll/i)).toBeVisible({ timeout: 10_000 });
+    // Prefer class — title is "Polling" or "Live SSE" depending on transport
+    await expect(page.locator('.admin-live-dot')).toBeVisible({ timeout: 10_000 });
 
     await page.goto('/admin/clients');
     await expect(page.locator('h1')).toHaveText(/клієнт/i);
@@ -195,8 +196,12 @@ test.describe.serial('admin happy-path', () => {
       expect(typeof body.configured).toBe('boolean');
     }
 
-    await page.getByRole('button', { name: /вийти/i }).click();
-    await expect(page).toHaveURL(/\/admin\/login/, { timeout: 10_000 });
+    // Logout shows window.confirm before DELETE /api/auth + hard redirect
+    page.once('dialog', dialog => dialog.accept());
+    await Promise.all([
+      page.waitForURL(/\/admin\/login/, { timeout: 15_000 }),
+      page.getByRole('button', { name: /вийти/i }).click(),
+    ]);
   });
 });
 

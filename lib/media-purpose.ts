@@ -3,15 +3,7 @@
  * though UI maps them for convenience).
  */
 
-export const MEDIA_PURPOSE_IDS = [
-  'product',
-  'hero',
-  'section',
-  'logo',
-  'feedback',
-  'og',
-  'other',
-] as const;
+export const MEDIA_PURPOSE_IDS = ['product', 'hero', 'section', 'logo', 'feedback', 'og', 'other'] as const;
 
 export type MediaPurpose = (typeof MEDIA_PURPOSE_IDS)[number];
 

@@ -36,13 +36,13 @@ export async function GET(request: NextRequest) {
         try {
           const [leads, orders] = await Promise.all([listLeads(), listOrders()]);
           const items = mergeInbox(leads, orders);
-          const open = items.filter((i) => i.open);
+          const open = items.filter(i => i.open);
           const latest = open[0];
           const sig = [
             open.length,
-            open.filter((i) => i.kind === 'lead').length,
-            open.filter((i) => i.kind === 'order').length,
-            open.filter((i) => i.stale).length,
+            open.filter(i => i.kind === 'lead').length,
+            open.filter(i => i.kind === 'order').length,
+            open.filter(i => i.stale).length,
             latest?.id || '',
             latest?.status || '',
             items[0]?.id || '',
@@ -54,9 +54,9 @@ export async function GET(request: NextRequest) {
 
           send({
             openTotal: open.length,
-            openLeads: open.filter((i) => i.kind === 'lead').length,
-            openOrders: open.filter((i) => i.kind === 'order').length,
-            stale: open.filter((i) => i.stale).length,
+            openLeads: open.filter(i => i.kind === 'lead').length,
+            openOrders: open.filter(i => i.kind === 'order').length,
+            stale: open.filter(i => i.stale).length,
             latestId: latest?.id || null,
             latestKind: latest?.kind || null,
             latestPhone: latest?.phone || null,

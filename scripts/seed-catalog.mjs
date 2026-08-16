@@ -104,9 +104,9 @@ const goods = [
 ];
 
 // Keep old hidden tests at end or drop them
-data.goods = [...goods, ...(data.goods || []).filter((g) => !g.visible)];
+data.goods = [...goods, ...(data.goods || []).filter(g => !g.visible)];
 
-const confident = (data.pages || []).find((p) => p.slug === 'confident' || p.id === 'confident');
+const confident = (data.pages || []).find(p => p.slug === 'confident' || p.id === 'confident');
 if (confident) {
   confident.contentHtml = privacyHtml;
   confident.title = 'Політика конфіденційності';

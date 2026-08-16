@@ -34,9 +34,7 @@ export function ProductGallery({ images, alt }: ProductGalleryProps) {
               key={`${src}-${i}`}
               type='button'
               role='listitem'
-              className={
-                'shop-detail__thumb-btn' + (i === active ? ' is-active' : '')
-              }
+              className={'shop-detail__thumb-btn' + (i === active ? ' is-active' : '')}
               onClick={() => setActive(i)}
               aria-label={`Фото ${i + 1}`}
               aria-current={i === active ? 'true' : undefined}

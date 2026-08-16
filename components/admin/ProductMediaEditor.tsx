@@ -3,11 +3,7 @@
 import { useState } from 'react';
 import { uploadImage } from '@/lib/admin/uploadImage';
 import { reorderItems } from '@/lib/admin/reorder';
-import {
-  PRODUCT_GALLERY_MAX,
-  productFieldsFromGallery,
-  productGalleryFromFields,
-} from '@/lib/media-usage';
+import { PRODUCT_GALLERY_MAX, productFieldsFromGallery, productGalleryFromFields } from '@/lib/media-usage';
 import type { Product } from '@/lib/types';
 import { showToast } from './AdminToast';
 import { MediaPicker } from './MediaPicker';
@@ -111,10 +107,7 @@ export function ProductMediaEditor({ product, onChange, disabled }: ProductMedia
       <div className='admin-gallery-field'>
         <div className='admin-gallery-field__label'>Фото товару</div>
         <div className='admin-row admin-image-actions'>
-          <label
-            className='admin-btn admin-btn--secondary'
-            style={{ cursor: locked ? 'wait' : 'pointer' }}
-          >
+          <label className='admin-btn admin-btn--secondary' style={{ cursor: locked ? 'wait' : 'pointer' }}>
             {busy && progress ? progress : 'Завантажити'}
             <input
               type='file'
@@ -122,7 +115,7 @@ export function ProductMediaEditor({ product, onChange, disabled }: ProductMedia
               multiple
               hidden
               disabled={locked}
-              onChange={async (e) => {
+              onChange={async e => {
                 const list = e.target.files;
                 e.target.value = '';
                 await handleFiles(list);
@@ -156,21 +149,21 @@ export function ProductMediaEditor({ product, onChange, disabled }: ProductMedia
                     (dragOverIndex === index && dragIndex !== index ? ' is-drop-target' : '')
                   }
                   draggable={!locked}
-                  onDragStart={(e) => {
+                  onDragStart={e => {
                     if (locked) return;
                     setDragIndex(index);
                     e.dataTransfer.effectAllowed = 'move';
                     e.dataTransfer.setData('text/plain', String(index));
                   }}
-                  onDragOver={(e) => {
+                  onDragOver={e => {
                     e.preventDefault();
                     if (dragIndex == null || dragIndex === index) return;
                     setDragOverIndex(index);
                   }}
                   onDragLeave={() => {
-                    setDragOverIndex((cur) => (cur === index ? null : cur));
+                    setDragOverIndex(cur => (cur === index ? null : cur));
                   }}
-                  onDrop={(e) => {
+                  onDrop={e => {
                     e.preventDefault();
                     if (dragIndex == null || dragIndex === index) {
                       setDragIndex(null);
@@ -248,14 +241,14 @@ export function ProductMediaEditor({ product, onChange, disabled }: ProductMedia
         )}
 
         <span className='admin-hint'>
-          × лише відв&apos;язує від картки. Файли з бібліотеки видаляються тільки при
-          видаленні товару (якщо більше ніде не використовуються).
+          × лише відв&apos;язує від картки. Файли з бібліотеки видаляються тільки при видаленні товару (якщо більше ніде
+          не використовуються).
         </span>
       </div>
 
       <ProductVideoField
         value={product.video || ''}
-        onChange={(video) => onChange({ video: video || undefined })}
+        onChange={video => onChange({ video: video || undefined })}
         disabled={locked}
       />
 
@@ -266,8 +259,8 @@ export function ProductMediaEditor({ product, onChange, disabled }: ProductMedia
         purpose='product'
         preset='product'
         kind='image'
-        onSelectMany={(items) => {
-          const added = appendUrls(items.map((i) => i.url));
+        onSelectMany={items => {
+          const added = appendUrls(items.map(i => i.url));
           if (added > 0) {
             showToast(added === 1 ? 'Фото додано' : `Додано фото: ${added}`, 'success');
           }

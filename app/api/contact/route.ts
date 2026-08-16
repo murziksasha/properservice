@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { appendLead, findOpenLeadsByPhone, updateLead } from '@/lib/leads';
-import {
-  absoluteSiteUrl,
-  sanitizePagePath,
-  sanitizePageTitle,
-  truncateMeta,
-} from '@/lib/page-path';
+import { absoluteSiteUrl, sanitizePagePath, sanitizePageTitle, truncateMeta } from '@/lib/page-path';
 import { notifyLead } from '@/lib/notify';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { escapeText } from '@/lib/sanitize';
@@ -80,10 +75,7 @@ export async function POST(request: NextRequest) {
     const ip = clientIp(request);
     const userAgent = truncateMeta(request.headers.get('user-agent'), 200);
     const referer = truncateMeta(request.headers.get('referer'), 300);
-    const language = truncateMeta(
-      (request.headers.get('accept-language') || '').split(',')[0],
-      40,
-    );
+    const language = truncateMeta((request.headers.get('accept-language') || '').split(',')[0], 40);
 
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpUser = process.env.SMTP_USER || '';
@@ -188,20 +180,14 @@ export async function POST(request: NextRequest) {
         <p><strong>Час:</strong> ${safeWhen}</p>
         <p><strong>ID заявки:</strong> ${safeId}</p>
         <p><strong>Джерело:</strong> ${safeSource}</p>
-        <p><strong>Сторінка:</strong> ${
-          pageUrl ? `<a href="${safePage}">${safePage}</a>` : '—'
-        }</p>
+        <p><strong>Сторінка:</strong> ${pageUrl ? `<a href="${safePage}">${safePage}</a>` : '—'}</p>
         <p><strong>Заголовок сторінки:</strong> ${safeTitle}</p>
         <p><strong>Referer:</strong> ${safeReferer}</p>
         <p><strong>IP:</strong> ${safeIp}</p>
         <p><strong>User-Agent:</strong> ${safeUa}</p>
         <p><strong>Мова браузера:</strong> ${safeLang}</p>
         <p><strong>UTM:</strong> ${escapeText(utmLine)}</p>
-        ${
-          safeAdmin
-            ? `<p><strong>Журнал:</strong> <a href="${safeAdmin}">${safeAdmin}</a></p>`
-            : ''
-        }
+        ${safeAdmin ? `<p><strong>Журнал:</strong> <a href="${safeAdmin}">${safeAdmin}</a></p>` : ''}
       `;
 
         const textLines = [

@@ -11,10 +11,7 @@ export function parseRetryAfterSeconds(res: Response, fallbackSeconds = 60): num
   return fallbackSeconds;
 }
 
-export async function parseRetryAfterFromBody(
-  res: Response,
-  fallbackSeconds = 60,
-): Promise<number> {
+export async function parseRetryAfterFromBody(res: Response, fallbackSeconds = 60): Promise<number> {
   const fromHeader = res.headers.get('Retry-After');
   if (fromHeader) {
     const asInt = parseInt(fromHeader, 10);
@@ -34,7 +31,10 @@ export async function parseRetryAfterFromBody(
 }
 
 /** Ukrainian message with optional countdown seconds. */
-export function rateLimitMessage(seconds: number, context: 'login' | 'save' | 'upload' | 'generic' = 'generic'): string {
+export function rateLimitMessage(
+  seconds: number,
+  context: 'login' | 'save' | 'upload' | 'generic' = 'generic',
+): string {
   const wait =
     seconds <= 0
       ? 'хвилину'

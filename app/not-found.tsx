@@ -4,7 +4,7 @@ import { getSiteData } from '@/lib/site-data';
 
 export default async function NotFound() {
   const data = await getSiteData();
-  const menu = data.headerMenu.filter((item) => item.visible);
+  const menu = data.headerMenu.filter(item => item.visible);
 
   return (
     <SiteShell settings={data.settings} menu={menu}>

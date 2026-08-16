@@ -1,12 +1,7 @@
 import type { Product, Section, SiteData } from './types';
 import { isSafeUploadName } from './media-name';
 
-export type MediaRefType =
-  | 'product'
-  | 'settings'
-  | 'section'
-  | 'social'
-  | 'page';
+export type MediaRefType = 'product' | 'settings' | 'section' | 'social' | 'page';
 
 export type MediaRef = {
   type: MediaRefType;
@@ -58,7 +53,7 @@ function addRef(map: Map<string, MediaUsage>, url: string | undefined | null, re
   const existing = map.get(key);
   if (existing) {
     // Dedupe identical refs
-    if (!existing.refs.some((r) => r.type === ref.type && r.id === ref.id && r.label === ref.label)) {
+    if (!existing.refs.some(r => r.type === ref.type && r.id === ref.id && r.label === ref.label)) {
       existing.refs.push(ref);
     }
     return;
@@ -165,10 +160,10 @@ export function getUsageForUploadName(site: SiteData, name: string): MediaRef[] 
 /** Short Ukrainian tooltip for blocked delete. */
 export function formatUsageTooltip(refs: MediaRef[], max = 3): string {
   if (!refs.length) return '';
-  const labels = refs.map((r) => r.label);
+  const labels = refs.map(r => r.label);
   const shown = labels.slice(0, max);
   const rest = labels.length - shown.length;
-  const list = shown.map((l) => `«${l}»`).join(', ');
+  const list = shown.map(l => `«${l}»`).join(', ');
   if (rest > 0) return `Не можна видалити: використовується в ${list} і ще ${rest}`;
   return `Не можна видалити: використовується в ${list}`;
 }

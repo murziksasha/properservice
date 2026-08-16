@@ -23,13 +23,13 @@ function firstTouchMs(createdAt: string, audit?: Array<{ at: string; action: str
   const created = Date.parse(createdAt);
   if (!Number.isFinite(created)) return null;
   const touch = audit.find(
-    (a) => a.action === 'status' || a.action === 'assign' || a.action === 'handled' || a.action === 'note',
+    a => a.action === 'status' || a.action === 'assign' || a.action === 'handled' || a.action === 'note',
   );
   // Prefer first status after created
   const after = audit
-    .filter((a) => a.action !== 'created')
-    .map((a) => Date.parse(a.at))
-    .filter((t) => Number.isFinite(t) && t >= created)
+    .filter(a => a.action !== 'created')
+    .map(a => Date.parse(a.at))
+    .filter(t => Number.isFinite(t) && t >= created)
     .sort((a, b) => a - b);
   if (!after.length && !touch) return null;
   const t = after[0] ?? Date.parse(touch!.at);
@@ -55,20 +55,20 @@ export function computeProcessMetrics(leads: Lead[], orders: Order[]): ProcessMe
     if (ms != null) touches.push(ms / 1000);
   }
 
-  const closedLeads = leads.filter((l) => {
+  const closedLeads = leads.filter(l => {
     const s = normalizeStatus(l.status, l.handled);
     return s === 'done' || s === 'spam' || s === 'no_answer';
   });
-  const closedOrders = orders.filter((o) => {
+  const closedOrders = orders.filter(o => {
     const s = normalizeStatus(o.status, o.handled);
     return s === 'done' || s === 'spam' || s === 'no_answer';
   });
   const closed = [...closedLeads, ...closedOrders];
-  const withOutcome = closed.filter((x) => Boolean((x as Lead).outcome));
+  const withOutcome = closed.filter(x => Boolean((x as Lead).outcome));
 
   const all = [
-    ...leads.map((l) => ({ ...l, kind: 'lead' as const })),
-    ...orders.map((o) => ({ ...o, kind: 'order' as const })),
+    ...leads.map(l => ({ ...l, kind: 'lead' as const })),
+    ...orders.map(o => ({ ...o, kind: 'order' as const })),
   ];
   let unassignedOpen = 0;
   let inProgress = 0;
@@ -79,8 +79,7 @@ export function computeProcessMetrics(leads: Lead[], orders: Order[]): ProcessMe
     if (s === 'spam') spam++;
     if (s === 'no_answer') noAnswer++;
     if (s === 'in_progress') inProgress++;
-    const open =
-      s === 'new' || s === 'called' || s === 'waiting' || s === 'in_progress' || s === 'no_answer';
+    const open = s === 'new' || s === 'called' || s === 'waiting' || s === 'in_progress' || s === 'no_answer';
     if (open && !x.assignee) unassignedOpen++;
   }
 
@@ -89,9 +88,7 @@ export function computeProcessMetrics(leads: Lead[], orders: Order[]): ProcessMe
     sampleLeads: leads.length,
     sampleOrders: orders.length,
     medianTimeToFirstTouchSec: median(touches),
-    avgTimeToFirstTouchSec: touches.length
-      ? touches.reduce((a, b) => a + b, 0) / touches.length
-      : null,
+    avgTimeToFirstTouchSec: touches.length ? touches.reduce((a, b) => a + b, 0) / touches.length : null,
     outcomeCoverage: totalClosed ? withOutcome.length / totalClosed : null,
     spamRate: all.length ? spam / all.length : null,
     noAnswerRate: all.length ? noAnswer / all.length : null,

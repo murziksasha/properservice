@@ -1,10 +1,9 @@
-const secret =
-  process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || 'dev-insecure-session-secret-change-me';
+const secret = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || 'dev-insecure-session-secret-change-me';
 console.log('secret_len', secret.length);
 
 function toHex(buffer) {
   return Array.from(new Uint8Array(buffer))
-    .map((b) => b.toString(16).padStart(2, '0'))
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
 

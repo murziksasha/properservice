@@ -1,14 +1,35 @@
 import type { SiteData } from './types';
 
 const ADVANTAGES = [
-  { icon: '/img/icons/descr_key.png', iconAlt: 'icon_key', textHtml: 'Використовуємо доступні комплектуючі <span>хорошої якості</span>' },
-  { icon: '/img/icons/descr_hands.png', iconAlt: 'icon_hands', textHtml: 'Не накручуємо вартість за вигадані <span>"несправності"</span>' },
-  { icon: '/img/icons/descr_advan.png', iconAlt: 'icon_advantage', textHtml: 'Працюємо навіть з <span>безнадійними</span> випадками' },
-  { icon: '/img/icons/descr_rewards.png', iconAlt: 'icon_reward', textHtml: 'Даємо гарантію на <span>всі</span> зроблені роботи' },
+  {
+    icon: '/img/icons/descr_key.png',
+    iconAlt: 'icon_key',
+    textHtml: 'Використовуємо доступні комплектуючі <span>хорошої якості</span>',
+  },
+  {
+    icon: '/img/icons/descr_hands.png',
+    iconAlt: 'icon_hands',
+    textHtml: 'Не накручуємо вартість за вигадані <span>"несправності"</span>',
+  },
+  {
+    icon: '/img/icons/descr_advan.png',
+    iconAlt: 'icon_advantage',
+    textHtml: 'Працюємо навіть з <span>безнадійними</span> випадками',
+  },
+  {
+    icon: '/img/icons/descr_rewards.png',
+    iconAlt: 'icon_reward',
+    textHtml: 'Даємо гарантію на <span>всі</span> зроблені роботи',
+  },
 ];
 
 const ABOUT_LINKS = [
-  { href: '/coffee-machines', image: '/img/about-link/coff_machine_log.png', imageAlt: 'coffee machine', label: 'Кофемашина' },
+  {
+    href: '/coffee-machines',
+    image: '/img/about-link/coff_machine_log.png',
+    imageAlt: 'coffee machine',
+    label: 'Кофемашина',
+  },
   { href: '/televizoru', image: '/img/about-link/televizor_logo.png', imageAlt: 'tv set', label: 'телевизор' },
   { href: '/laptop-pc', image: '/img/about-link/laptop-ico.png', imageAlt: 'laptop', label: 'ноутбук' },
   { href: '/bake', image: '/img/about-link/bake0.png', imageAlt: 'bake', label: 'піч' },
@@ -32,7 +53,8 @@ const CONTACTS_SECTION = {
   visible: true,
   title: 'Наші контакти:',
   inviteText: 'Будемо раді бачити Вас у нашому офісі:',
-  addressHtml: 'м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в "Снігова Королева") ПН - ПТ з 08:00 до 17:00',
+  addressHtml:
+    'м. Чорноморськ, вул. Віталія Шума 2-Б <br>(цоколь зліва від входу в "Снігова Королева") ПН - ПТ з 08:00 до 17:00',
   phones: [
     { display: '+38 099 538 56 55', tel: '+380995385655' },
     { display: '+38 063 556 70 90', tel: '+380635567090' },
@@ -41,17 +63,48 @@ const CONTACTS_SECTION = {
   social: [
     { id: 'viber', type: 'viber', url: 'viber://chat?number=+380995385655', icon: '/img/icons/viber.svg' },
     { id: 'telegram', type: 'telegram', url: 'https://t.me/+380995385655', icon: '/img/icons/telegram.svg' },
-    { id: 'instagram', type: 'instagram', url: 'http://instagram.com/_u/remont_servis_chernomorsk', icon: '/img/icons/instagram.svg' },
-    { id: 'youtube', type: 'youtube', url: 'https://www.youtube.com/channel/UCMst-3U2Yp4zqRPzGDkh0fg', icon: '/img/icons/youtube.svg' },
+    {
+      id: 'instagram',
+      type: 'instagram',
+      url: 'http://instagram.com/_u/remont_servis_chernomorsk',
+      icon: '/img/icons/instagram.svg',
+    },
+    {
+      id: 'youtube',
+      type: 'youtube',
+      url: 'https://www.youtube.com/channel/UCMst-3U2Yp4zqRPzGDkh0fg',
+      icon: '/img/icons/youtube.svg',
+    },
   ],
-  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d669.5547639817211!2d30.639834534575012!3d46.295996529895035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c7c9103c986d39%3A0x60ee4de500df2374!2z0KDQtdC80L7QvdGCINCh0LXRgNCy0LjRgQ!5e0!3m2!1sen!2sua!4v1671553101368!5m2!1sen!2sua',
+  mapEmbedUrl:
+    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d669.5547639817211!2d30.639834534575012!3d46.295996529895035!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40c7c9103c986d39%3A0x60ee4de500df2374!2z0KDQtdC80L7QvdGCINCh0LXRgNCy0LjRgQ!5e0!3m2!1sen!2sua!4v1671553101368!5m2!1sen!2sua',
 };
 
 const CALLBACK_TAIL = [
-  { id: 'callback-1', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію та діагностику!', buttonText: 'залишити заявку', placeholder: '+38 (___) ___ __ __' },
-  { id: 'feedback', type: 'feedback' as const, visible: true, images: FEEDBACK_IMAGES, moreReviewsButtonText: 'Більше відгуків' },
+  {
+    id: 'callback-1',
+    type: 'callback' as const,
+    visible: true,
+    title: 'Залишіть заявку та отримайте первинну консультацію та діагностику!',
+    buttonText: 'залишити заявку',
+    placeholder: '+38 (___) ___ __ __',
+  },
+  {
+    id: 'feedback',
+    type: 'feedback' as const,
+    visible: true,
+    images: FEEDBACK_IMAGES,
+    moreReviewsButtonText: 'Більше відгуків',
+  },
   CONTACTS_SECTION,
-  { id: 'callback-2', type: 'callback' as const, visible: true, title: 'Залишіть заявку та отримайте первинну консультацію:', buttonText: 'залишити заявку', placeholder: '+38 (___) ___ __ __' },
+  {
+    id: 'callback-2',
+    type: 'callback' as const,
+    visible: true,
+    title: 'Залишіть заявку та отримайте первинну консультацію:',
+    buttonText: 'залишити заявку',
+    placeholder: '+38 (___) ___ __ __',
+  },
 ];
 
 function servicePage(
@@ -185,7 +238,13 @@ export const defaultSiteData: SiteData = {
           subtitle: 'Виберіть, що потрібно відремонтувати:',
           items: ABOUT_LINKS,
         },
-        { id: 'shop-grid', type: 'shop-grid', visible: true, title: 'Магазин запчастин', subtitle: 'Актуальні товари та комплектуючі' },
+        {
+          id: 'shop-grid',
+          type: 'shop-grid',
+          visible: true,
+          title: 'Магазин запчастин',
+          subtitle: 'Актуальні товари та комплектуючі',
+        },
         ...CALLBACK_TAIL,
       ],
     },
@@ -195,7 +254,15 @@ export const defaultSiteData: SiteData = {
       imageAlt: 'coffee machine',
       malfunctions: {
         intro: 'Якісно допоможемо, якщо Ваша кофемашина:',
-        items: ['не варить каву', 'не робить пінку', 'не меле зерна', 'шумить, гуде і видає дивні звуки', 'постійно висить повідомлення про необхідність очищення', 'не гасне індикатор очищення від накипу', 'Також усі інші можливі неприємності'],
+        items: [
+          'не варить каву',
+          'не робить пінку',
+          'не меле зерна',
+          'шумить, гуде і видає дивні звуки',
+          'постійно висить повідомлення про необхідність очищення',
+          'не гасне індикатор очищення від накипу',
+          'Також усі інші можливі неприємності',
+        ],
         image: '/img/coffee-machines/downer_coffee_machine.png',
         imageAlt: 'coffee img',
       },
@@ -207,7 +274,14 @@ export const defaultSiteData: SiteData = {
       imageClass: 'tv__set',
       malfunctions: {
         intro: 'Якісно допоможемо, якщо Ваш телевізор:',
-        items: ['не вмикається', 'немає зображення', 'немає звуку', 'розбитий екран', 'миготить зображення', 'не ловить канали'],
+        items: [
+          'не вмикається',
+          'немає зображення',
+          'немає звуку',
+          'розбитий екран',
+          'миготить зображення',
+          'не ловить канали',
+        ],
         image: '/img/televizoru/tv_set_malfunction.png',
         imageAlt: 'tv malfunction',
         imageClass: 'malfunctions__img',
@@ -253,7 +327,16 @@ export const defaultSiteData: SiteData = {
       imageClass: 'tv__set',
       malfunctions: {
         intro: 'Якісно допоможемо, якщо Ваш телефон:',
-        items: ['не вмикається', 'розбитий дисплей', 'немає зображення', 'не заряджається', 'швидко розряджається', 'камера не працює', 'зависає', 'немає мережі'],
+        items: [
+          'не вмикається',
+          'розбитий дисплей',
+          'немає зображення',
+          'не заряджається',
+          'швидко розряджається',
+          'камера не працює',
+          'зависає',
+          'немає мережі',
+        ],
         image: '/img/phones/tablet.jpg',
         imageAlt: 'tablet',
         imageClass: 'malfunctions__img',
@@ -277,7 +360,8 @@ export const defaultSiteData: SiteData = {
       description: 'Політика конфіденційності персональних даних',
       visible: true,
       sections: [],
-      contentHtml: '<div class="wrapper" style="padding:40px 20px"><h1 class="_title">Політика конфіденційності персональних даних</h1><p class="_paragr">Використовуючи веб-сайт, Ви погоджуєтесь з умовами політики конфіденційності персональних даних.</p></div>',
+      contentHtml:
+        '<div class="wrapper" style="padding:40px 20px"><h1 class="_title">Політика конфіденційності персональних даних</h1><p class="_paragr">Використовуючи веб-сайт, Ви погоджуєтесь з умовами політики конфіденційності персональних даних.</p></div>',
     },
   ],
 };

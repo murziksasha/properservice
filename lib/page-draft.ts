@@ -165,8 +165,8 @@ export function diffPageBodies(live: PageBody, next: PageBody): PageDiffLine[] {
     });
   }
 
-  const liveById = new Map(liveSecs.map((s) => [s.id, s]));
-  const nextById = new Map(nextSecs.map((s) => [s.id, s]));
+  const liveById = new Map(liveSecs.map(s => [s.id, s]));
+  const nextById = new Map(nextSecs.map(s => [s.id, s]));
 
   for (const s of nextSecs) {
     const prev = liveById.get(s.id);
@@ -198,18 +198,16 @@ export function diffPageBodies(live: PageBody, next: PageBody): PageDiffLine[] {
   }
 
   // Order change (same ids, different order)
-  const liveOrder = liveSecs.map((s) => s.id).join(',');
-  const nextOrder = nextSecs.map((s) => s.id).join(',');
+  const liveOrder = liveSecs.map(s => s.id).join(',');
+  const nextOrder = nextSecs.map(s => s.id).join(',');
   if (liveOrder !== nextOrder && liveSecs.length === nextSecs.length) {
-    const sameSet =
-      liveSecs.length === nextSecs.length &&
-      liveSecs.every((s) => nextById.has(s.id));
+    const sameSet = liveSecs.length === nextSecs.length && liveSecs.every(s => nextById.has(s.id));
     if (sameSet) {
       lines.push({
         field: 'Порядок секцій',
         kind: 'changed',
-        live: liveSecs.map((s) => s.type).join(' → '),
-        next: nextSecs.map((s) => s.type).join(' → '),
+        live: liveSecs.map(s => s.type).join(' → '),
+        next: nextSecs.map(s => s.type).join(' → '),
       });
     }
   }

@@ -4,13 +4,7 @@ import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FeedbackSection as FeedbackSectionType } from '@/lib/types';
 
-export function FeedbackSection({
-  section,
-  reviewsUrl,
-}: {
-  section: FeedbackSectionType;
-  reviewsUrl?: string;
-}) {
+export function FeedbackSection({ section, reviewsUrl }: { section: FeedbackSectionType; reviewsUrl?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef<number | null>(null);
@@ -19,14 +13,14 @@ export function FeedbackSection({
 
   const go = useCallback(
     (dir: -1 | 1) => {
-      setIndex((i) => (i + dir + count) % count);
+      setIndex(i => (i + dir + count) % count);
     },
     [count],
   );
 
   useEffect(() => {
     if (count < 2 || paused) return;
-    const timer = setInterval(() => setIndex((i) => (i + 1) % count), 6000);
+    const timer = setInterval(() => setIndex(i => (i + 1) % count), 6000);
     return () => clearInterval(timer);
   }, [count, paused]);
 
@@ -37,7 +31,7 @@ export function FeedbackSection({
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocusCapture={() => setPaused(true)}
-        onBlurCapture={(e) => {
+        onBlurCapture={e => {
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused(false);
         }}
       >
@@ -47,7 +41,7 @@ export function FeedbackSection({
           aria-roledescription='carousel'
           aria-label='Відгуки клієнтів'
           tabIndex={0}
-          onKeyDown={(e) => {
+          onKeyDown={e => {
             if (e.key === 'ArrowLeft') {
               e.preventDefault();
               go(-1);
@@ -57,10 +51,10 @@ export function FeedbackSection({
               go(1);
             }
           }}
-          onTouchStart={(e) => {
+          onTouchStart={e => {
             touchStartX.current = e.changedTouches[0]?.clientX ?? null;
           }}
-          onTouchEnd={(e) => {
+          onTouchEnd={e => {
             const start = touchStartX.current;
             touchStartX.current = null;
             if (start == null) return;

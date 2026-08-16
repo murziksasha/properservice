@@ -9,8 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata(): Promise<Metadata> {
   const data = await getSiteData();
-  const page =
-    data.pages.find((p) => p.slug === '' && p.visible) ?? data.pages.find((p) => p.id === 'home');
+  const page = data.pages.find(p => p.slug === '' && p.visible) ?? data.pages.find(p => p.id === 'home');
   const title = page?.title || data.settings.title;
   const description = page?.description || data.settings.description;
   return {
@@ -27,8 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const data = await getSiteData();
-  const page =
-    data.pages.find((p) => p.slug === '' && p.visible) ?? data.pages.find((p) => p.id === 'home');
+  const page = data.pages.find(p => p.slug === '' && p.visible) ?? data.pages.find(p => p.id === 'home');
   const heroImages = collectHeroImages(data);
 
   if (!page) {
@@ -47,7 +45,7 @@ export default async function HomePage() {
       <SectionRenderer
         sections={page.sections}
         servicesNav={data.servicesNav}
-        products={data.goods.filter((g) => g.visible)}
+        products={data.goods.filter(g => g.visible)}
         reviewsUrl={data.settings.reviewsUrl}
         settings={data.settings}
         heroImages={heroImages}

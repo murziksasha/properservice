@@ -15,14 +15,14 @@ export function ServicesNav({
   /** href/slug → hero image URL for prefetch */
   heroImages?: Record<string, string>;
 }) {
-  const visible = items.filter((item) => item.visible);
+  const visible = items.filter(item => item.visible);
   const prefetchUrls = serviceHeroImageUrls(visible, heroImages);
   usePrefetchImages(prefetchUrls);
 
   return (
-    <nav className="services-nav" aria-label="Послуги">
-      <ul className="services-nav__list">
-        {visible.map((item) => {
+    <nav className='services-nav' aria-label='Послуги'>
+      <ul className='services-nav__list'>
+        {visible.map(item => {
           const heroUrl = heroImages[item.href] || heroImages[item.slug];
           return (
             <li
@@ -30,7 +30,7 @@ export function ServicesNav({
               className={`services-nav__item${activeSlug === item.slug ? ' services-nav__item_active' : ''}`}
             >
               <Link
-                className="_list-reset"
+                className='_list-reset'
                 href={item.href}
                 onMouseEnter={() => prefetchImageUrl(heroUrl)}
                 onFocus={() => prefetchImageUrl(heroUrl)}

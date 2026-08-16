@@ -200,8 +200,8 @@ export interface Page {
   visible: boolean;
   sections: Section[];
   contentHtml?: string;
-  titleSize?: number;   // optional rem size for main titles on this page
-  textScale?: number;   // optional multiplier for body text
+  titleSize?: number; // optional rem size for main titles on this page
+  textScale?: number; // optional multiplier for body text
   /**
    * Optional unpublished draft snapshot. Public site ignores this;
    * admin can save draft without changing live sections/title/etc.

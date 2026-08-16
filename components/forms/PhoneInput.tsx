@@ -28,7 +28,7 @@ export function PhoneInput({
     if (def.length >= digits.length) digits = def;
 
     let i = 0;
-    const formatted = PHONE_MASK.replace(/./g, (char) => {
+    const formatted = PHONE_MASK.replace(/./g, char => {
       if (/[_\d]/.test(char) && i < digits.length) return digits.charAt(i++);
       return i >= digits.length ? '' : char;
     });
@@ -50,13 +50,13 @@ export function PhoneInput({
       aria-invalid={ariaInvalid || undefined}
       aria-describedby={ariaDescribedBy}
       required={required}
-      onInput={(e) => {
+      onInput={e => {
         e.currentTarget.value = formatValue(e.currentTarget.value);
       }}
-      onFocus={(e) => {
+      onFocus={e => {
         e.currentTarget.value = formatValue(e.currentTarget.value);
       }}
-      onBlur={(e) => {
+      onBlur={e => {
         e.currentTarget.value = formatValue(e.currentTarget.value, true);
       }}
     />

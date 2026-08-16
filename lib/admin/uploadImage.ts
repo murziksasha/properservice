@@ -21,10 +21,7 @@ export type UploadImageResult = {
   kind?: 'image' | 'video';
 };
 
-export async function uploadImage(
-  file: File,
-  options?: UploadImageOptions,
-): Promise<UploadImageResult> {
+export async function uploadImage(file: File, options?: UploadImageOptions): Promise<UploadImageResult> {
   const formData = new FormData();
   formData.append('file', file);
   if (options?.preset) {
@@ -37,8 +34,7 @@ export async function uploadImage(
     formData.append('folderId', String(options.folderId));
   }
   if (options?.tags != null) {
-    const tags =
-      Array.isArray(options.tags) ? options.tags.join(',') : String(options.tags);
+    const tags = Array.isArray(options.tags) ? options.tags.join(',') : String(options.tags);
     if (tags.trim()) formData.append('tags', tags);
   }
   if (options?.maxWidth != null && Number.isFinite(options.maxWidth)) {

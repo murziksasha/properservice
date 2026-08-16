@@ -42,7 +42,7 @@ const productSchema = z.object({
   code: z
     .string()
     .optional()
-    .refine((v) => v == null || v.trim() === '' || v.trim().length >= 2, {
+    .refine(v => v == null || v.trim() === '' || v.trim().length >= 2, {
       message: 'Product code must be at least 2 characters when set',
     }),
   inStock: z.boolean().optional(),
@@ -131,14 +131,12 @@ export const siteDataSchema = z.object({
 
 export type SiteDataValidated = z.infer<typeof siteDataSchema>;
 
-export function parseSiteData(input: unknown):
-  | { success: true; data: SiteData }
-  | { success: false; error: string } {
+export function parseSiteData(input: unknown): { success: true; data: SiteData } | { success: false; error: string } {
   const result = siteDataSchema.safeParse(input);
   if (!result.success) {
     const msg = result.error.issues
       .slice(0, 5)
-      .map((i) => `${i.path.join('.') || 'root'}: ${i.message}`)
+      .map(i => `${i.path.join('.') || 'root'}: ${i.message}`)
       .join('; ');
     return { success: false, error: msg || 'Invalid site data' };
   }

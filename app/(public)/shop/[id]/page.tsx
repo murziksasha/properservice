@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps) {
       title,
       description,
       type: 'website',
-      images: images.slice(0, 4).map((url) => ({ url })),
+      images: images.slice(0, 4).map(url => ({ url })),
     },
     twitter: {
       card: 'summary_large_image',
@@ -41,19 +41,15 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const [data, product, allProducts] = await Promise.all([
-    getSiteData(),
-    getProduct(id),
-    getProducts(),
-  ]);
+  const [data, product, allProducts] = await Promise.all([getSiteData(), getProduct(id), getProducts()]);
 
   if (!product || !product.visible) {
     notFound();
   }
 
-  const viber = data.settings.social.find((s) => s.type === 'viber');
-  const telegram = data.settings.social.find((s) => s.type === 'telegram');
-  const gallery = [product.image, ...(product.images || []).filter((u) => u && u !== product.image)];
+  const viber = data.settings.social.find(s => s.type === 'viber');
+  const telegram = data.settings.social.find(s => s.type === 'telegram');
+  const gallery = [product.image, ...(product.images || []).filter(u => u && u !== product.image)];
   const related = getRelatedProducts(allProducts, product, 4);
 
   return (
@@ -88,13 +84,7 @@ export default async function ProductPage({ params }: PageProps) {
           {product.video ? (
             <div className='shop-detail__video'>
               <h2 className='shop-detail__video-title'>Огляд</h2>
-              <video
-                className='shop-detail__video-el'
-                src={product.video}
-                controls
-                playsInline
-                preload='metadata'
-              />
+              <video className='shop-detail__video-el' src={product.video} controls playsInline preload='metadata' />
             </div>
           ) : null}
           <div className='shop-detail__actions'>
@@ -120,7 +110,7 @@ export default async function ProductPage({ params }: PageProps) {
         <section className='shop-related' aria-label='Схожі товари'>
           <h2 className='_title shop-related__title'>Схожі товари</h2>
           <div className='shop-grid'>
-            {related.map((p) => (
+            {related.map(p => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

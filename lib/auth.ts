@@ -8,12 +8,7 @@ import {
   SESSION_MAX_AGE_SECONDS,
   type SessionClaims,
 } from './session';
-import {
-  getAdminUserByUsername,
-  hasMultiUserMode,
-  verifyPasswordHash,
-  type AdminRole,
-} from './admin-users';
+import { getAdminUserByUsername, hasMultiUserMode, verifyPasswordHash, type AdminRole } from './admin-users';
 import { isSessionAllowed } from './admin-sessions';
 
 function safeCompare(a: string, b: string): boolean {
@@ -44,17 +39,12 @@ function cookieSecureEnabled(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
-export type LoginResult =
-  | { ok: true; claims: SessionClaims }
-  | { ok: false; error: string };
+export type LoginResult = { ok: true; claims: SessionClaims } | { ok: false; error: string };
 
 /**
  * Authenticate: multi-user (username+password against admins.json) OR legacy ADMIN_PASSWORD.
  */
-export async function authenticateLogin(input: {
-  password: string;
-  username?: string;
-}): Promise<LoginResult> {
+export async function authenticateLogin(input: { password: string; username?: string }): Promise<LoginResult> {
   const multi = await hasMultiUserMode();
   const username = (input.username || '').trim();
 

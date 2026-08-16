@@ -11,10 +11,7 @@ export const runtime = 'nodejs';
  * Serve uploaded files from the durable UPLOADS_DIR even when Next standalone
  * static `public/` is a stale snapshot (no PM2 restart required).
  */
-export async function GET(
-  _request: NextRequest,
-  context: { params: Promise<{ name: string }> },
-) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ name: string }> }) {
   const { name: raw } = await context.params;
   const name = decodeURIComponent(raw || '');
 

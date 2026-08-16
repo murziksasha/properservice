@@ -40,18 +40,8 @@ export function phonesMatch(a: string, b: string): boolean {
   const da = phoneDigits(a);
   const db = phoneDigits(b);
   if (!da || !db) return false;
-  const ca =
-    da.length === 10 && da.startsWith('0')
-      ? `38${da}`
-      : da.length === 9
-        ? `380${da}`
-        : da;
-  const cb =
-    db.length === 10 && db.startsWith('0')
-      ? `38${db}`
-      : db.length === 9
-        ? `380${db}`
-        : db;
+  const ca = da.length === 10 && da.startsWith('0') ? `38${da}` : da.length === 9 ? `380${da}` : da;
+  const cb = db.length === 10 && db.startsWith('0') ? `38${db}` : db.length === 9 ? `380${db}` : db;
   return ca === cb;
 }
 

@@ -49,9 +49,6 @@ export async function POST() {
     return NextResponse.json({ ok: true, to: mailTo });
   } catch (err) {
     console.error('[smtp-test]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'SMTP send failed' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'SMTP send failed' }, { status: 500 });
   }
 }

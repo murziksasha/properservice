@@ -34,9 +34,9 @@ describe('callback-schedule', () => {
       ],
       day,
     );
-    const s10 = slots.find((s) => s.hour === 10);
-    const s14 = slots.find((s) => s.hour === 14);
-    expect(s10?.items.map((i) => i.id)).toEqual(['1']);
-    expect(s14?.items.map((i) => i.id)).toEqual(['2']);
+    const s10 = slots.find(s => s.hour === 10);
+    const s14 = slots.find(s => s.hour === 14);
+    expect(s10?.items.map(i => i.id)).toEqual(['1']);
+    expect(s14?.items.map(i => i.id)).toEqual(['2']);
   });
 });

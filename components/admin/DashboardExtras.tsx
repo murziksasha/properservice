@@ -101,7 +101,7 @@ export function DashboardExtras() {
   }
   if (!stats) return null;
 
-  const maxDay = Math.max(1, ...stats.byDay.map((d) => d.leads + d.orders));
+  const maxDay = Math.max(1, ...stats.byDay.map(d => d.leads + d.orders));
 
   async function sendDigest(kind: 'morning' | 'evening') {
     try {
@@ -142,11 +142,7 @@ export function DashboardExtras() {
           <button type='button' className='admin-btn' onClick={() => void sendDigest('morning')}>
             ☀️ Ранковий digest → TG
           </button>
-          <button
-            type='button'
-            className='admin-btn admin-btn--secondary'
-            onClick={() => void sendDigest('evening')}
-          >
+          <button type='button' className='admin-btn admin-btn--secondary' onClick={() => void sendDigest('evening')}>
             🌙 Handoff digest → TG
           </button>
           <Link className='admin-btn admin-btn--secondary' href='/admin/ops'>
@@ -160,22 +156,14 @@ export function DashboardExtras() {
           <h2 className='admin-h2'>Метрики процесу</h2>
           <ul className='admin-checklist'>
             <li>
-              Медіана first-touch:{' '}
-              <strong>{stats.process.medianTimeToFirstTouchLabel || '—'}</strong>
+              Медіана first-touch: <strong>{stats.process.medianTimeToFirstTouchLabel || '—'}</strong>
             </li>
             <li>Середній first-touch: {stats.process.avgTimeToFirstTouchLabel || '—'}</li>
             <li>
               Outcome coverage:{' '}
-              {stats.process.outcomeCoverage != null
-                ? `${Math.round(stats.process.outcomeCoverage * 100)}%`
-                : '—'}
+              {stats.process.outcomeCoverage != null ? `${Math.round(stats.process.outcomeCoverage * 100)}%` : '—'}
             </li>
-            <li>
-              Spam rate:{' '}
-              {stats.process.spamRate != null
-                ? `${Math.round(stats.process.spamRate * 100)}%`
-                : '—'}
-            </li>
+            <li>Spam rate: {stats.process.spamRate != null ? `${Math.round(stats.process.spamRate * 100)}%` : '—'}</li>
             <li>Без assignee (open): {stats.process.unassignedOpen ?? 0}</li>
             <li>В роботі: {stats.process.inProgress ?? 0}</li>
           </ul>
@@ -186,7 +174,7 @@ export function DashboardExtras() {
         <div className='admin-card'>
           <h2 className='admin-h2'>Каталог · проблеми ({stats.catalog.issueCount})</h2>
           <ul className='admin-checklist'>
-            {stats.catalog.issues.slice(0, 8).map((i) => (
+            {stats.catalog.issues.slice(0, 8).map(i => (
               <li key={i.productId}>
                 <Link href={`/admin/goods?edit=${i.productId}`}>{i.title}</Link>: {i.issues.join(', ')}
               </li>
@@ -202,7 +190,7 @@ export function DashboardExtras() {
         <div className='admin-card'>
           <h2 className='admin-h2'>Календар publishAt</h2>
           <ul className='admin-checklist'>
-            {stats.scheduled.map((p) => (
+            {stats.scheduled.map(p => (
               <li key={p.id}>
                 <Link href={`/admin/pages/${p.slug || 'home'}`}>{p.title}</Link>
                 {' · '}
@@ -226,7 +214,7 @@ export function DashboardExtras() {
           </div>
           {(() => {
             const { slots, overdue } = buildDayTimeline(
-              (stats.callbacks || []).map((c) => ({
+              (stats.callbacks || []).map(c => ({
                 id: c.id,
                 kind: c.kind,
                 phone: c.phone,
@@ -239,16 +227,15 @@ export function DashboardExtras() {
               <>
                 {overdue.length > 0 ? (
                   <p className='admin-hint' style={{ color: '#9f1239' }}>
-                    Прострочено: {overdue.length} —{' '}
-                    <Link href='/admin/inbox?filter=callback'>Inbox</Link>
+                    Прострочено: {overdue.length} — <Link href='/admin/inbox?filter=callback'>Inbox</Link>
                   </p>
                 ) : null}
                 <div className='admin-timeline'>
-                  {slots.map((s) => (
+                  {slots.map(s => (
                     <div key={s.hour} className={`admin-timeline__slot${s.items.length ? ' has-items' : ''}`}>
                       <span className='admin-timeline__hour'>{s.label}</span>
                       <div className='admin-timeline__items'>
-                        {s.items.map((it) => (
+                        {s.items.map(it => (
                           <Link
                             key={it.id}
                             className='admin-timeline__chip'
@@ -284,7 +271,7 @@ export function DashboardExtras() {
           <p className='admin-hint'>Немає відкритих звернень — гарна робота.</p>
         ) : (
           <ul className='admin-leads-list'>
-            {stats.queue.map((item) => (
+            {stats.queue.map(item => (
               <li key={`${item.kind}:${item.id}`} className='admin-lead-item'>
                 <div className='admin-lead-main'>
                   <span className={statusBadgeClass(item.status)}>{WORKFLOW_LABELS[item.status]}</span>
@@ -315,7 +302,7 @@ export function DashboardExtras() {
       <div className='admin-card'>
         <h2 className='admin-h2'>Динаміка (30 днів)</h2>
         <div className='admin-spark' aria-hidden>
-          {stats.byDay.map((d) => {
+          {stats.byDay.map(d => {
             const total = d.leads + d.orders;
             const h = Math.max(2, Math.round((total / maxDay) * 48));
             return (
@@ -339,7 +326,7 @@ export function DashboardExtras() {
             <p className='admin-hint'>Ще немає даних</p>
           ) : (
             <ul className='admin-checklist'>
-              {stats.topPages.map((p) => (
+              {stats.topPages.map(p => (
                 <li key={p.path}>
                   <code>{p.path}</code> — {p.count}
                 </li>
@@ -353,7 +340,7 @@ export function DashboardExtras() {
             <p className='admin-hint'>Ще немає даних</p>
           ) : (
             <ul className='admin-checklist'>
-              {stats.topUtm.map((u) => (
+              {stats.topUtm.map(u => (
                 <li key={u.source}>
                   {u.source} — {u.count}
                 </li>
@@ -367,7 +354,7 @@ export function DashboardExtras() {
             <p className='admin-hint'>Ще немає замовлень</p>
           ) : (
             <ul className='admin-checklist'>
-              {stats.topProducts.map((p) => (
+              {stats.topProducts.map(p => (
                 <li key={p.productId}>
                   <Link href={`/admin/goods?edit=${p.productId}`}>{p.title}</Link> — {p.count}
                 </li>
@@ -383,7 +370,7 @@ export function DashboardExtras() {
           <p className='admin-hint'>Поки порожньо — зʼявиться після дій в адмінці</p>
         ) : (
           <ul className='admin-activity'>
-            {stats.activity.map((a) => {
+            {stats.activity.map(a => {
               const href =
                 a.kind === 'lead_status'
                   ? '/admin/inbox'
@@ -433,7 +420,7 @@ export function OnboardingChecklist({
     { ok: smtpConfigured, label: 'SMTP для листів', href: '/admin/settings' },
     { ok: totpHint, label: '2FA (рекомендовано)', href: '/admin/settings' },
   ];
-  const done = items.filter((i) => i.ok).length;
+  const done = items.filter(i => i.ok).length;
   if (done === items.length) return null;
 
   return (
@@ -442,7 +429,7 @@ export function OnboardingChecklist({
         Онбординг {done}/{items.length}
       </h2>
       <ul className='admin-checklist'>
-        {items.map((i) => (
+        {items.map(i => (
           <li key={i.label} className={i.ok ? 'is-ok' : 'is-warn'}>
             {i.ok ? '✓' : '!'}{' '}
             {i.ok ? (

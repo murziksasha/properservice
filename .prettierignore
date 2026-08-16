@@ -1,0 +1,26 @@
+# Dependencies & build
+node_modules
+.next
+out
+dist
+build
+coverage
+playwright-report
+test-results
+
+# Lockfiles (machine-generated)
+package-lock.json
+
+# Legacy / vendored
+mailer
+
+# Runtime & assets
+public/uploads
+public/img
+data/backups
+logs
+*.pem
+
+# Tooling caches
+tsconfig.tsbuildinfo
+next-env.d.ts

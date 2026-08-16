@@ -15,6 +15,6 @@ describe('section-factory', () => {
     const page = createDefaultPage({ title: 'Test', slug: 'test', email: 'a@b.c' });
     expect(page.slug).toBe('test');
     expect(page.sections.length).toBeGreaterThan(2);
-    expect(page.sections.some((s) => s.type === 'hero')).toBe(true);
+    expect(page.sections.some(s => s.type === 'hero')).toBe(true);
   });
 });

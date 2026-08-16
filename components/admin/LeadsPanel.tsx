@@ -125,7 +125,7 @@ export function LeadsPanel() {
   }
 
   const visible = useMemo(() => {
-    return leads.filter((l) => {
+    return leads.filter(l => {
       const st = normalizeStatus(l.status, l.handled);
       if (filter === 'open' && l.handled) return false;
       if (filter === 'done' && !l.handled) return false;
@@ -136,7 +136,7 @@ export function LeadsPanel() {
     });
   }, [leads, filter, timeFilter, phoneQ, statusFilter]);
 
-  const openCount = leads.filter((l) => !l.handled).length;
+  const openCount = leads.filter(l => !l.handled).length;
 
   return (
     <div className='admin-card'>
@@ -159,11 +159,11 @@ export function LeadsPanel() {
             <select
               className='admin-select'
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
+              onChange={e => setStatusFilter(e.target.value as WorkflowStatus | 'all')}
               aria-label='Workflow'
             >
               <option value='all'>Усі статуси</option>
-              {WORKFLOW_STATUSES.map((s) => (
+              {WORKFLOW_STATUSES.map(s => (
                 <option key={s} value={s}>
                   {WORKFLOW_LABELS[s]}
                 </option>
@@ -184,7 +184,7 @@ export function LeadsPanel() {
       ) : null}
 
       <ul className='admin-leads-list'>
-        {visible.map((lead) => {
+        {visible.map(lead => {
           const noteVal = noteDraft[lead.id] ?? lead.note ?? '';
           const busy = busyId === lead.id;
           const status = normalizeStatus(lead.status, lead.handled);
@@ -213,8 +213,12 @@ export function LeadsPanel() {
                   <span className='admin-lead-meta'>Передзвінок: {formatWhen(lead.callbackAt)}</span>
                 ) : null}
                 {lead.audit && lead.audit.length > 0 ? (
-                  <span className='admin-lead-meta' title={lead.audit.map((a) => `${a.action} ${a.at}`).join('\n')}>
-                    Історія: {lead.audit.slice(-3).map((a) => a.action).join(' → ')}
+                  <span className='admin-lead-meta' title={lead.audit.map(a => `${a.action} ${a.at}`).join('\n')}>
+                    Історія:{' '}
+                    {lead.audit
+                      .slice(-3)
+                      .map(a => a.action)
+                      .join(' → ')}
                   </span>
                 ) : null}
                 <label className='admin-field' style={{ marginTop: 6 }}>
@@ -223,11 +227,11 @@ export function LeadsPanel() {
                     className='admin-select'
                     value={status}
                     disabled={busy}
-                    onChange={(e) =>
+                    onChange={e =>
                       void patchLead(lead.id, { status: e.target.value as WorkflowStatus }, 'Статус оновлено')
                     }
                   >
-                    {WORKFLOW_STATUSES.map((s) => (
+                    {WORKFLOW_STATUSES.map(s => (
                       <option key={s} value={s}>
                         {WORKFLOW_LABELS[s]}
                       </option>
@@ -241,7 +245,7 @@ export function LeadsPanel() {
                     style={{ display: 'block', width: '100%', marginTop: 4 }}
                     value={noteVal}
                     disabled={busy}
-                    onChange={(e) => setNoteDraft((d) => ({ ...d, [lead.id]: e.target.value }))}
+                    onChange={e => setNoteDraft(d => ({ ...d, [lead.id]: e.target.value }))}
                     onBlur={() => {
                       const next = (noteDraft[lead.id] ?? lead.note ?? '').trim();
                       const prev = (lead.note || '').trim();

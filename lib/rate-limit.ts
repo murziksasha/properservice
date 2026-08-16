@@ -32,7 +32,7 @@ export function rateLimit(key: string, options: RateLimitOptions): RateLimitResu
     buckets.set(key, bucket);
   }
 
-  bucket.timestamps = bucket.timestamps.filter((t) => t > windowStart);
+  bucket.timestamps = bucket.timestamps.filter(t => t > windowStart);
 
   if (bucket.timestamps.length >= options.limit) {
     const oldest = bucket.timestamps[0] ?? now;

@@ -16,25 +16,28 @@ export function HeroSection({
   heroImages?: Record<string, string>;
 }) {
   return (
-    <div className="services">
-      <div className="wrapper services__wrapper">
-        <ServicesNav
-          items={servicesNav}
-          activeSlug={section.activeServiceSlug}
-          heroImages={heroImages}
-        />
-        <aside className="services__aside">
-          <div className="services__top">
-            <h1 className="services__title _title" dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }} />
-            <div className="services__about">
-              {section.aboutLines.map((line) => (
-                <p key={line} className="services__about-info _paragr" dangerouslySetInnerHTML={{ __html: sanitizeHtml(line) }} />
+    <div className='services'>
+      <div className='wrapper services__wrapper'>
+        <ServicesNav items={servicesNav} activeSlug={section.activeServiceSlug} heroImages={heroImages} />
+        <aside className='services__aside'>
+          <div className='services__top'>
+            <h1
+              className='services__title _title'
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.titleHtml) }}
+            />
+            <div className='services__about'>
+              {section.aboutLines.map(line => (
+                <p
+                  key={line}
+                  className='services__about-info _paragr'
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(line) }}
+                />
               ))}
             </div>
           </div>
-          <div className="services__callback _callback">
+          <div className='services__callback _callback'>
             <p
-              className="_callback__title _paragr"
+              className='_callback__title _paragr'
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.callbackTitleHtml ?? section.callbackTitle) }}
             />
             <CallbackForm
@@ -50,9 +53,9 @@ export function HeroSection({
               width={500}
               height={500}
               className={section.imageClass}
-              sizes="(max-width: 900px) 90vw, 500px"
+              sizes='(max-width: 900px) 90vw, 500px'
               priority
-              viewTransitionName="service-hero"
+              viewTransitionName='service-hero'
             />
           </div>
         </aside>

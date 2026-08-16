@@ -54,11 +54,7 @@ export function isQuietNow(prefs: NotifyPrefs, now = new Date()): boolean {
   return h >= quietStart || h < quietEnd;
 }
 
-export function shouldNotify(
-  prefs: NotifyPrefs,
-  kind?: string | null,
-  now = new Date(),
-): boolean {
+export function shouldNotify(prefs: NotifyPrefs, kind?: string | null, now = new Date()): boolean {
   if (isQuietNow(prefs, now)) return false;
   if (prefs.ordersOnly && kind === 'lead') return false;
   return true;

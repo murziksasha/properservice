@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  formatTelHref,
-  isValidUaPhone,
-  normalizePhoneCanonical,
-  phoneDigits,
-  phonesMatch,
-} from './phone';
+import { formatTelHref, isValidUaPhone, normalizePhoneCanonical, phoneDigits, phonesMatch } from './phone';
 
 describe('phone', () => {
   it('extracts digits', () => {

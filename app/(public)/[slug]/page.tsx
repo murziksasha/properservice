@@ -13,15 +13,13 @@ interface PageProps {
 
 export async function generateStaticParams() {
   const data = await getSiteData();
-  return data.pages
-    .filter((page) => page.slug && page.visible)
-    .map((page) => ({ slug: page.slug }));
+  return data.pages.filter(page => page.slug && page.visible).map(page => ({ slug: page.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   const data = await getSiteData();
-  const page = data.pages.find((p) => p.slug === slug && p.visible);
+  const page = data.pages.find(p => p.slug === slug && p.visible);
   if (!page) return { title: 'Не знайдено' };
   const description = page.description || data.settings.description;
   return {
@@ -38,7 +36,7 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function SlugPage({ params }: PageProps) {
   const { slug } = await params;
   const data = await getSiteData();
-  const page = data.pages.find((p) => p.slug === slug && p.visible);
+  const page = data.pages.find(p => p.slug === slug && p.visible);
 
   if (!page) {
     notFound();
@@ -51,10 +49,7 @@ export default async function SlugPage({ params }: PageProps) {
       <PageFrame titleSize={page.titleSize} textScale={page.textScale}>
         <article className='content-page wrapper'>
           <h1 className='content-page__title _title'>{page.title}</h1>
-          <div
-            className='content-page__body'
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }}
-          />
+          <div className='content-page__body' dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.contentHtml) }} />
         </article>
       </PageFrame>
     );
@@ -65,7 +60,7 @@ export default async function SlugPage({ params }: PageProps) {
       <SectionRenderer
         sections={page.sections}
         servicesNav={data.servicesNav}
-        products={data.goods.filter((g) => g.visible)}
+        products={data.goods.filter(g => g.visible)}
         reviewsUrl={data.settings.reviewsUrl}
         settings={data.settings}
         heroImages={heroImages}

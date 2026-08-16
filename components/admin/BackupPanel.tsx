@@ -112,11 +112,7 @@ export function BackupPanel() {
   }
 
   async function importJson(file: File) {
-    if (
-      !confirm(
-        'Імпорт замінить УВЕСЬ поточний контент (сторінки, меню, товари, налаштування). Продовжити?',
-      )
-    ) {
+    if (!confirm('Імпорт замінить УВЕСЬ поточний контент (сторінки, меню, товари, налаштування). Продовжити?')) {
       return;
     }
     setBusy(true);
@@ -145,20 +141,24 @@ export function BackupPanel() {
     <div className='admin-card admin-form'>
       <h2 className='admin-h2'>Backup (site.json)</h2>
       <p className='admin-hint admin-mb'>
-        Autosave → <code>data/backups/</code> (ліміт BACKUP_KEEP, atomic write). Restore спочатку робить
-        pre-restore snapshot.
+        Autosave → <code>data/backups/</code> (ліміт BACKUP_KEEP, atomic write). Restore спочатку робить pre-restore
+        snapshot.
       </p>
       <p className='admin-hint admin-mb admin-offsite-hint'>
-        <strong>Off-site:</strong> snapshots на цьому ноутбуці не захищають від крадіжки/поломки диска.
-        Раз на тиждень (або Task Scheduler): скопіюйте <code>data/</code> і{' '}
-        <code>public/uploads/</code> на інший диск, SMB, OneDrive або{' '}
-        <code>rclone sync</code>. Деталі — <code>docs/deploy.md</code>.
+        <strong>Off-site:</strong> snapshots на цьому ноутбуці не захищають від крадіжки/поломки диска. Раз на тиждень
+        (або Task Scheduler): скопіюйте <code>data/</code> і <code>public/uploads/</code> на інший диск, SMB, OneDrive
+        або <code>rclone sync</code>. Деталі — <code>docs/deploy.md</code>.
       </p>
       <div className='admin-row admin-row--wrap admin-mb'>
         <button type='button' className='admin-btn' disabled={busy} onClick={() => void exportJson()}>
           {busy ? '…' : '⬇ Експорт JSON'}
         </button>
-        <button type='button' className='admin-btn admin-btn--secondary' disabled={busy} onClick={() => void snapshotNow()}>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          disabled={busy}
+          onClick={() => void snapshotNow()}
+        >
           💾 Snapshot
         </button>
         <label className='admin-btn admin-btn--secondary admin-file-btn'>
@@ -168,21 +168,26 @@ export function BackupPanel() {
             accept='application/json,.json'
             hidden
             disabled={busy}
-            onChange={(e) => {
+            onChange={e => {
               const f = e.target.files?.[0];
               e.target.value = '';
               if (f) void importJson(f);
             }}
           />
         </label>
-        <button type='button' className='admin-btn admin-btn--secondary' disabled={busy} onClick={() => void loadList()}>
+        <button
+          type='button'
+          className='admin-btn admin-btn--secondary'
+          disabled={busy}
+          onClick={() => void loadList()}
+        >
           Оновити список
         </button>
       </div>
 
       {backups.length ? (
         <ul className='admin-backup-list'>
-          {backups.slice(0, 15).map((b) => (
+          {backups.slice(0, 15).map(b => (
             <li key={b.name} className='admin-backup-item'>
               <div>
                 <a href={`/api/backup?file=${encodeURIComponent(b.name)}`} download={b.name}>

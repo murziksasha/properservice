@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import QRCode from 'qrcode';
 import { getSession, verifyPassword } from '@/lib/auth';
-import {
-  deleteAdminTotpSecret,
-  readAdminTotpRecord,
-  writeAdminTotpSecret,
-} from '@/lib/admin-totp';
+import { deleteAdminTotpSecret, readAdminTotpRecord, writeAdminTotpSecret } from '@/lib/admin-totp';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import {
@@ -88,17 +84,13 @@ export async function POST(request: NextRequest) {
     if (status.managedByEnv) {
       return NextResponse.json(
         {
-          error:
-            '2FA already managed by ADMIN_TOTP_SECRET in .env — remove it to use admin UI setup',
+          error: '2FA already managed by ADMIN_TOTP_SECRET in .env — remove it to use admin UI setup',
         },
         { status: 400 },
       );
     }
     if (status.enabled && status.source === 'file') {
-      return NextResponse.json(
-        { error: '2FA already enabled — disable it first to reconfigure' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: '2FA already enabled — disable it first to reconfigure' }, { status: 400 });
     }
 
     const secret = generateTotpSecret();
@@ -128,10 +120,7 @@ export async function POST(request: NextRequest) {
   if (action === 'confirm') {
     const status = await getTotpStatus();
     if (status.managedByEnv) {
-      return NextResponse.json(
-        { error: '2FA is managed by ADMIN_TOTP_SECRET in .env' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: '2FA is managed by ADMIN_TOTP_SECRET in .env' }, { status: 400 });
     }
     if (status.enabled && status.source === 'file') {
       return NextResponse.json({ error: '2FA already enabled' }, { status: 400 });
@@ -162,8 +151,7 @@ export async function POST(request: NextRequest) {
     if (status.managedByEnv) {
       return NextResponse.json(
         {
-          error:
-            '2FA is set via ADMIN_TOTP_SECRET in .env — remove the variable and restart to disable',
+          error: '2FA is set via ADMIN_TOTP_SECRET in .env — remove the variable and restart to disable',
         },
         { status: 400 },
       );

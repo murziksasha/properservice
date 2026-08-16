@@ -10,10 +10,7 @@ interface LocalBusinessJsonLdProps {
  * Schema.org LocalBusiness for local SEO (Google Maps / rich results).
  */
 export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdProps) {
-  const phones = [
-    settings.headerPhone?.tel,
-    ...(settings.phones || []).map((p) => p.tel),
-  ].filter(Boolean);
+  const phones = [settings.headerPhone?.tel, ...(settings.phones || []).map(p => p.tel)].filter(Boolean);
 
   const uniquePhones = [...new Set(phones)];
 
@@ -29,17 +26,13 @@ export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdPr
     '@type': 'LocalBusiness',
     name: settings.title || 'Proper Service',
     description: settings.description,
-    image: settings.logo
-      ? siteUrl
-        ? new URL(settings.logo, siteUrl).toString()
-        : settings.logo
-      : undefined,
+    image: settings.logo ? (siteUrl ? new URL(settings.logo, siteUrl).toString() : settings.logo) : undefined,
     url: siteUrl || undefined,
     telephone: uniquePhones.length === 1 ? uniquePhones[0] : uniquePhones[0] || undefined,
     ...(uniquePhones.length > 1
       ? {
           // Multiple lines as contact points
-          contactPoint: uniquePhones.map((tel) => ({
+          contactPoint: uniquePhones.map(tel => ({
             '@type': 'ContactPoint',
             telephone: tel,
             contactType: 'customer service',
@@ -62,10 +55,5 @@ export function LocalBusinessJsonLd({ settings, siteUrl }: LocalBusinessJsonLdPr
 
   const clean = JSON.parse(JSON.stringify(data)) as Record<string, unknown>;
 
-  return (
-    <script
-      type='application/ld+json'
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(clean) }}
-    />
-  );
+  return <script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(clean) }} />;
 }

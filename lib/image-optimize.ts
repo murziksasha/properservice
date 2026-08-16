@@ -1,9 +1,5 @@
 import sharp from 'sharp';
-import {
-  DEFAULT_MAX_EDGE,
-  resolveOptimizeConstraints,
-  type OptimizeConstraints,
-} from './image-presets';
+import { DEFAULT_MAX_EDGE, resolveOptimizeConstraints, type OptimizeConstraints } from './image-presets';
 
 const WEBP_QUALITY = 82;
 const PNG_MAX_EDGE_KEEP = 2400;
@@ -136,8 +132,7 @@ export async function optimizeImageUpload(
     };
   } catch (err) {
     console.error('[image-optimize] sharp failed, using original', err);
-    const fallbackExt =
-      ext === '.png' ? '.png' : ext === '.webp' ? '.webp' : ext === '.gif' ? '.gif' : '.jpg';
+    const fallbackExt = ext === '.png' ? '.png' : ext === '.webp' ? '.webp' : ext === '.gif' ? '.gif' : '.jpg';
     const contentType =
       fallbackExt === '.png'
         ? 'image/png'

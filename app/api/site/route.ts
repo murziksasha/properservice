@@ -5,14 +5,7 @@ import type { SiteData } from '@/lib/types';
 import { parseSiteData } from '@/lib/validation';
 import { requireAdminRole } from '@/lib/require-role';
 
-const PATCH_SECTIONS = [
-  'goods',
-  'settings',
-  'headerMenu',
-  'servicesNav',
-  'pages',
-  'shopLink',
-] as const;
+const PATCH_SECTIONS = ['goods', 'settings', 'headerMenu', 'servicesNav', 'pages', 'shopLink'] as const;
 type PatchSection = (typeof PATCH_SECTIONS)[number];
 
 export async function GET() {
@@ -105,18 +98,11 @@ export async function PATCH(request: NextRequest) {
     };
     const section = body.section as PatchSection;
     if (!PATCH_SECTIONS.includes(section) || body.data === undefined) {
-      return NextResponse.json(
-        { error: `section must be one of: ${PATCH_SECTIONS.join(', ')}` },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: `section must be one of: ${PATCH_SECTIONS.join(', ')}` }, { status: 400 });
     }
 
     const current = await getSiteData();
-    if (
-      body.expectedUpdatedAt &&
-      current.updatedAt &&
-      body.expectedUpdatedAt !== current.updatedAt
-    ) {
+    if (body.expectedUpdatedAt && current.updatedAt && body.expectedUpdatedAt !== current.updatedAt) {
       return NextResponse.json(
         {
           error: 'Дані змінені іншим сеансом. Оновіть сторінку та повторіть.',

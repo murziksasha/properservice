@@ -19,11 +19,11 @@ export function pageSeoHints(page: Page): SeoHint[] {
     hints.push({ level: 'info', message: 'HTML-режим: секції на сайті ігноруються' });
     return hints;
   }
-  const visible = (page.sections || []).filter((s) => s.visible);
+  const visible = (page.sections || []).filter(s => s.visible);
   if (!visible.length) {
     hints.push({ level: 'warn', message: 'Немає видимих секцій' });
   }
-  const hasHero = visible.some((s) => s.type === 'hero');
+  const hasHero = visible.some(s => s.type === 'hero');
   if (!hasHero && visible.length) {
     hints.push({ level: 'info', message: 'Немає hero-секції (H1 часто з hero)' });
   }

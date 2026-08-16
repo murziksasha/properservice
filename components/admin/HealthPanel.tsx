@@ -85,9 +85,7 @@ export function HealthPanel() {
         </li>
         <li className={health.backups.count > 0 ? 'is-ok' : 'is-warn'}>
           {health.backups.count > 0 ? '✓' : '!'} Backups: {health.backups.count}
-          {health.backups.last
-            ? ` · останній ${new Date(health.backups.last).toLocaleString('uk-UA')}`
-            : ''}
+          {health.backups.last ? ` · останній ${new Date(health.backups.last).toLocaleString('uk-UA')}` : ''}
         </li>
         <li className={health.autoBackup ? 'is-ok' : 'is-info'}>
           AUTO_BACKUP {health.autoBackup ? 'увімкнено' : 'вимкнено'}
@@ -98,11 +96,7 @@ export function HealthPanel() {
         <li className={health.leads.unhandled > 0 ? 'is-warn' : 'is-ok'}>
           Заявки: {health.leads.unhandled} нових / {health.leads.total} усього
         </li>
-        <li
-          className={
-            (health.orders?.unhandled ?? 0) > 0 ? 'is-warn' : 'is-ok'
-          }
-        >
+        <li className={(health.orders?.unhandled ?? 0) > 0 ? 'is-warn' : 'is-ok'}>
           Замовлення: {health.orders?.unhandled ?? 0} нових / {health.orders?.total ?? 0} усього
         </li>
       </ul>

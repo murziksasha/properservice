@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, getSessionClaims, getSessionFingerprint, verifyPassword } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
-import {
-  listSessions,
-  markFingerprintRevoked,
-  revokeAllSessions,
-  revokeSession,
-} from '@/lib/admin-sessions';
+import { listSessions, markFingerprintRevoked, revokeAllSessions, revokeSession } from '@/lib/admin-sessions';
 import { appendActivity } from '@/lib/admin-activity';
 
 export const dynamic = 'force-dynamic';
@@ -69,7 +64,7 @@ export async function DELETE(request: NextRequest) {
     }
     if (!body.id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     const sessions = await listSessions();
-    const target = sessions.find((s) => s.id === body.id);
+    const target = sessions.find(s => s.id === body.id);
     if (target) await markFingerprintRevoked(target.fingerprint);
     const ok = await revokeSession(body.id);
     if (!ok && !target) return NextResponse.json({ error: 'Not found' }, { status: 404 });

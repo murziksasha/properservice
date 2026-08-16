@@ -110,7 +110,7 @@ export function AdminNav({
       </div>
 
       <div className='admin-nav-links'>
-        {LINKS.filter((link) => canNav(link.href)).map((link) => {
+        {LINKS.filter(link => canNav(link.href)).map(link => {
           const Icon = link.icon;
           const active = isActive(link.href, link.exact);
           const n = badgeFor(link.badge);
@@ -166,9 +166,7 @@ export function AdminNav({
           className='admin-nav-site'
           title='Ctrl+K'
           onClick={() => {
-            window.dispatchEvent(
-              new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }),
-            );
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
           }}
         >
           <span className='admin-nav-icon' aria-hidden style={{ fontSize: 14, width: 20, textAlign: 'center' }}>
@@ -205,11 +203,7 @@ export function AdminNav({
           className='admin-nav-logout'
           title='Вийти'
           onClick={async () => {
-            if (
-              !window.confirm(
-                'Вийти з адмінки? Незбережені зміни в інших вкладках можуть втратитися.',
-              )
-            ) {
+            if (!window.confirm('Вийти з адмінки? Незбережені зміни в інших вкладках можуть втратитися.')) {
               return;
             }
             await fetch('/api/auth', { method: 'DELETE' });

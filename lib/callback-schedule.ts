@@ -81,7 +81,7 @@ export function buildDayTimeline(
       continue;
     }
     const hour = new Date(t).getHours();
-    const slot = slots.find((s) => s.hour === hour) || slots[slots.length - 1];
+    const slot = slots.find(s => s.hour === hour) || slots[slots.length - 1];
     if (hour < workStart || hour > workEnd) {
       outside.push(it);
       continue;
@@ -101,7 +101,7 @@ export function buildDayTimeline(
     const t = parseCallbackAt(it.callbackAt);
     if (t == null) continue;
     if (t >= startMs && t < now && t <= endMs) {
-      if (!overdue.some((o) => o.id === it.id)) overdue.push(it);
+      if (!overdue.some(o => o.id === it.id)) overdue.push(it);
     }
   }
 

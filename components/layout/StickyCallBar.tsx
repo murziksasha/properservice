@@ -13,8 +13,8 @@ export function StickyCallBar({ settings }: StickyCallBarProps) {
   if (!phone?.tel || !phone.display) return null;
 
   const telHref = formatTelHref(phone.tel);
-  const viber = settings.social?.find((s) => s.type === 'viber');
-  const telegram = settings.social?.find((s) => s.type === 'telegram');
+  const viber = settings.social?.find(s => s.type === 'viber');
+  const telegram = settings.social?.find(s => s.type === 'telegram');
 
   return (
     <div className='sticky-call' role='region' aria-label='Швидкий дзвінок'>

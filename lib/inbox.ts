@@ -1,12 +1,6 @@
 import type { Lead } from './leads';
 import type { Order } from './orders';
-import {
-  isOpenStatus,
-  isStaleOpen,
-  isVeryStaleOpen,
-  normalizeStatus,
-  type WorkflowStatus,
-} from './workflow';
+import { isOpenStatus, isStaleOpen, isVeryStaleOpen, normalizeStatus, type WorkflowStatus } from './workflow';
 
 export type InboxKind = 'lead' | 'order';
 
@@ -119,7 +113,7 @@ export function upcomingCallbacks(items: InboxItem[], limit = 20): InboxItem[] {
   const now = Date.now();
   const windowStart = now - 2 * 60 * 60 * 1000;
   return items
-    .filter((i) => {
+    .filter(i => {
       if (!i.callbackAt || !i.open) return false;
       const t = Date.parse(i.callbackAt);
       return Number.isFinite(t) && t >= windowStart;
@@ -131,7 +125,7 @@ export function upcomingCallbacks(items: InboxItem[], limit = 20): InboxItem[] {
 export function historyByPhone(items: InboxItem[], phone: string): InboxItem[] {
   const digits = phone.replace(/\D/g, '');
   if (!digits) return [];
-  return items.filter((i) => i.phone.replace(/\D/g, '') === digits);
+  return items.filter(i => i.phone.replace(/\D/g, '') === digits);
 }
 
 export type DayBucket = { date: string; leads: number; orders: number };

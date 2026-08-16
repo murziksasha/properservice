@@ -9,8 +9,7 @@ export function EmergencyOpsPanel() {
       <h2 className='admin-h2'>Якщо форми не доходять / сайт «мовчить»</h2>
       <ol className='admin-checklist'>
         <li>
-          <strong>1. Health</strong> —{' '}
-          <Link href='/admin'>Dashboard → Live health</Link>
+          <strong>1. Health</strong> — <Link href='/admin'>Dashboard → Live health</Link>
         </li>
         <li>
           <strong>2. Тест SMTP</strong> — кнопка на Dashboard (або нижче)
@@ -43,10 +42,7 @@ export function EmergencyOpsPanel() {
                 try {
                   const res = await fetch('/api/ops-alerts', { method: 'POST' });
                   const j = (await res.json().catch(() => ({}))) as { sent?: string[] };
-                  showToast(
-                    j.sent?.length ? `Sent: ${j.sent.join(', ')}` : 'Немає алертів / throttle',
-                    'success',
-                  );
+                  showToast(j.sent?.length ? `Sent: ${j.sent.join(', ')}` : 'Немає алертів / throttle', 'success');
                 } catch {
                   showToast('Мережа', 'error');
                 }
@@ -57,15 +53,13 @@ export function EmergencyOpsPanel() {
           </div>
         </li>
         <li>
-          <strong>4. Backup</strong> —{' '}
-          <Link href='/admin/settings'>Налаштування → Backup</Link>: snapshot / export JSON
+          <strong>4. Backup</strong> — <Link href='/admin/settings'>Налаштування → Backup</Link>: snapshot / export JSON
         </li>
         <li>
           <strong>5. Restore</strong> — лише owner, після pre-restore snapshot
         </li>
         <li>
-          <strong>6. Журнали</strong> — заявки/замовлення в{' '}
-          <Link href='/admin/inbox'>Inbox</Link> навіть без SMTP
+          <strong>6. Журнали</strong> — заявки/замовлення в <Link href='/admin/inbox'>Inbox</Link> навіть без SMTP
         </li>
       </ol>
 

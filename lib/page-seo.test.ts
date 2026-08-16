@@ -17,12 +17,12 @@ function page(partial: Partial<Page>): Page {
 describe('pageSeoHints', () => {
   it('warns on empty title and description', () => {
     const hints = pageSeoHints(page({ title: '', description: '' }));
-    expect(hints.some((h) => h.message.includes('назва'))).toBe(true);
-    expect(hints.some((h) => h.message.includes('description'))).toBe(true);
+    expect(hints.some(h => h.message.includes('назва'))).toBe(true);
+    expect(hints.some(h => h.message.includes('description'))).toBe(true);
   });
 
   it('notes HTML mode', () => {
     const hints = pageSeoHints(page({ contentHtml: '<p>hi</p>' }));
-    expect(hints.some((h) => h.message.includes('HTML'))).toBe(true);
+    expect(hints.some(h => h.message.includes('HTML'))).toBe(true);
   });
 });

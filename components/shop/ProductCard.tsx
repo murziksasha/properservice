@@ -24,7 +24,9 @@ export function ProductCard({ product }: { product: Product }) {
             height={180}
             sizes='(max-width: 600px) 50vw, 240px'
           />
-          {badgeLabel ? <span className={`shop-card__badge shop-card__badge--${badge || 'custom'}`}>{badgeLabel}</span> : null}
+          {badgeLabel ? (
+            <span className={`shop-card__badge shop-card__badge--${badge || 'custom'}`}>{badgeLabel}</span>
+          ) : null}
           {outOfStock ? <span className='shop-card__oos'>Немає в наявності</span> : null}
         </div>
         <h3 className='shop-card__title'>{product.title}</h3>

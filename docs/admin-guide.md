@@ -231,6 +231,7 @@
 Покроковий roadmap: [admin-improvement-plan.md](./admin-improvement-plan.md).
 
 ### Нові розділи
+
 - **Клієнти** `/admin/clients?phone=` — картка за номером
 - **Активність** `/admin/activity` — audit log
 - **Ops** `/admin/ops` — аварійний runbook + SOP лідів

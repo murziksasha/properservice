@@ -82,7 +82,7 @@ Shared helpers: `lib/admin/saveSite.ts`, `lib/admin/uploadImage.ts`, `lib/sectio
 
 ## Contact flow
 
-`CallbackForm` → `POST /api/contact` → honeypot `website` → validate UA phone (`380`+9 або `0`+9) → rate-limit → **append lead** (`data/leads.json`, `emailed: false`) → nodemailer (optional) → mark `emailed: true` on success  
+`CallbackForm` → `POST /api/contact` → honeypot `website` → validate UA phone (`380`+9 або `0`+9) → rate-limit → **append lead** (`data/leads.json`, `emailed: false`) → nodemailer (optional) → mark `emailed: true` on success
 
 Заявки завжди в журналі адмінки `/admin/leads` навіть без SMTP.  
 Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend його не викликає.
@@ -98,16 +98,16 @@ Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend й
 
 Сервер додає в лист на `MAIL_TO` (HTML + text):
 
-| Поле | Джерело |
-|------|---------|
-| Телефон (`tel:`) | body |
-| Час | server `uk-UA` |
-| ID заявки | `lead.id` (рядок журналу) |
-| Джерело | `callback` |
-| Сторінка | `pagePath` + `SITE_URL` якщо задано |
-| Заголовок сторінки | `pageTitle` |
-| Referer / IP / User-Agent / мова | request headers |
-| Посилання на журнал | `SITE_URL/admin/leads` (якщо `SITE_URL`) |
+| Поле                             | Джерело                                  |
+| -------------------------------- | ---------------------------------------- |
+| Телефон (`tel:`)                 | body                                     |
+| Час                              | server `uk-UA`                           |
+| ID заявки                        | `lead.id` (рядок журналу)                |
+| Джерело                          | `callback`                               |
+| Сторінка                         | `pagePath` + `SITE_URL` якщо задано      |
+| Заголовок сторінки               | `pageTitle`                              |
+| Referer / IP / User-Agent / мова | request headers                          |
+| Посилання на журнал              | `SITE_URL/admin/leads` (якщо `SITE_URL`) |
 
 У `leads.json` зберігається `pagePath` (без IP/UA). Subject: `Новий дзвінок з сайту · {phone}`.  
 Санітизація path: `lib/page-path.ts`.
@@ -197,13 +197,13 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 - Optional form fields: `preset` (`default` | `product` | `logo` | `hero` | `og`), `maxWidth`, `maxHeight` (clamped 64…4096)
 - Presets in `lib/image-presets.ts`:
 
-  | preset | max | use |
-  |--------|-----|-----|
-  | `default` | 1920×1920 inside | general |
-  | `product` | 1200×900 inside | shop cards |
-  | `logo` | 512×512 inside | logo / favicon / icons |
-  | `hero` | 1920×1080 inside | hero / banners |
-  | `og` | 1200×630 inside | social share |
+  | preset    | max              | use                    |
+  | --------- | ---------------- | ---------------------- |
+  | `default` | 1920×1920 inside | general                |
+  | `product` | 1200×900 inside  | shop cards             |
+  | `logo`    | 512×512 inside   | logo / favicon / icons |
+  | `hero`    | 1920×1080 inside | hero / banners         |
+  | `og`      | 1200×630 inside  | social share           |
 
 - Client: `lib/admin/uploadImage.ts` + unified `ImageField` (`preset` prop)
 - Library: `GET/DELETE /api/media` + `/admin/media` (preset selector on upload)
@@ -219,13 +219,13 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 
 In-memory sliding window (`lib/rate-limit.ts`), single-instance:
 
-| Endpoint | Limit | UI |
-|----------|-------|-----|
-| `POST /api/auth` | 10 / хв | LoginForm countdown + disabled submit |
-| `POST /api/contact` | 8 / хв | CallbackForm message |
-| `POST /api/orders` | 8 / хв | OrderForm message |
-| `PUT /api/site` | 30 / хв | `saveSiteData` error string / toast |
-| `POST /api/upload` | 20 / хв | `uploadImage` error string |
+| Endpoint            | Limit   | UI                                    |
+| ------------------- | ------- | ------------------------------------- |
+| `POST /api/auth`    | 10 / хв | LoginForm countdown + disabled submit |
+| `POST /api/contact` | 8 / хв  | CallbackForm message                  |
+| `POST /api/orders`  | 8 / хв  | OrderForm message                     |
+| `PUT /api/site`     | 30 / хв | `saveSiteData` error string / toast   |
+| `POST /api/upload`  | 20 / хв | `uploadImage` error string            |
 
 429 body: `{ error, retryAfter }` + header `Retry-After`. Client helpers: `lib/admin/rateLimitUi.ts`.
 

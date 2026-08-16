@@ -10,15 +10,7 @@ export function roleCan(role: AdminRole | 'legacy', action: string): boolean {
     return !['users', 'security_owner', 'restore_backup'].includes(action);
   }
   // operator: inbox / journals / dashboard only (no content/media/settings)
-  const operatorOk = new Set([
-    'inbox',
-    'leads',
-    'orders',
-    'dashboard_view',
-    'activity',
-    'stats',
-    'clients',
-  ]);
+  const operatorOk = new Set(['inbox', 'leads', 'orders', 'dashboard_view', 'activity', 'stats', 'clients']);
   return operatorOk.has(action);
 }
 
@@ -36,5 +28,5 @@ export function navAllowedForRole(role: AdminRole | 'legacy', href: string): boo
     '/admin/ops',
   ];
   if (href === '/admin') return true;
-  return allowed.some((p) => p !== '/admin' && (href === p || href.startsWith(`${p}/`)));
+  return allowed.some(p => p !== '/admin' && (href === p || href.startsWith(`${p}/`)));
 }

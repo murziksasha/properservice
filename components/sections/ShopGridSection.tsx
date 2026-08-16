@@ -2,13 +2,7 @@ import Link from 'next/link';
 import type { ShopGridSection as ShopGridSectionType, Product } from '@/lib/types';
 import { ProductGrid } from '@/components/shop/ProductGrid';
 
-export function ShopGridSection({
-  section,
-  products,
-}: {
-  section: ShopGridSectionType;
-  products: Product[];
-}) {
+export function ShopGridSection({ section, products }: { section: ShopGridSectionType; products: Product[] }) {
   return (
     <section className='shop-section wrapper' id='shop'>
       {section.title ? <h2 className='shop-section__title _title'>{section.title}</h2> : null}

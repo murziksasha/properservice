@@ -11,8 +11,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminDashboard() {
   const site = await getSiteData();
-  const visiblePages = site.pages.filter((p) => p.visible).length;
-  const visibleGoods = site.goods.filter((g) => g.visible).length;
+  const visiblePages = site.pages.filter(p => p.visible).length;
+  const visibleGoods = site.goods.filter(g => g.visible).length;
   const cookieSecure = process.env.COOKIE_SECURE;
   const smtpConfigured = Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
   const strongPassword =
@@ -43,8 +43,7 @@ export default async function AdminDashboard() {
     <AdminShell>
       <h1>Dashboard</h1>
       <p className='admin-hint admin-mb-lg'>
-        Операційний центр: черга звернень, контент, здоровʼя системи. Швидкий пошук —{' '}
-        <kbd>Ctrl+K</kbd>.
+        Операційний центр: черга звернень, контент, здоровʼя системи. Швидкий пошук — <kbd>Ctrl+K</kbd>.
       </p>
 
       <div className='admin-stats'>
@@ -146,9 +145,7 @@ export default async function AdminDashboard() {
           </li>
           <li className={smtpConfigured ? 'is-ok' : 'is-warn'}>
             {smtpConfigured ? '✓' : '!'} SMTP
-            {!smtpConfigured
-              ? ' — email вимкнено; заявки/замовлення все одно в журналах'
-              : ''}
+            {!smtpConfigured ? ' — email вимкнено; заявки/замовлення все одно в журналах' : ''}
           </li>
           <li className={totp ? 'is-ok' : 'is-info'}>
             {totp ? '✓ 2FA TOTP увімкнено' : '2FA вимкнено — увімкніть у Налаштуваннях'}

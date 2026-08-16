@@ -52,7 +52,7 @@ export async function registerSession(input: {
   const store = await readStore();
   const now = new Date().toISOString();
   // Replace existing same fingerprint
-  store.sessions = store.sessions.filter((s) => s.fingerprint !== input.fingerprint);
+  store.sessions = store.sessions.filter(s => s.fingerprint !== input.fingerprint);
   const rec: SessionRecord = {
     id: createId(),
     fingerprint: input.fingerprint,
@@ -73,7 +73,7 @@ export async function registerSession(input: {
 
 export async function touchSession(fingerprint: string): Promise<void> {
   const store = await readStore();
-  const idx = store.sessions.findIndex((s) => s.fingerprint === fingerprint);
+  const idx = store.sessions.findIndex(s => s.fingerprint === fingerprint);
   if (idx < 0) return;
   store.sessions[idx] = { ...store.sessions[idx], lastSeenAt: new Date().toISOString() };
   await writeStore(store);
@@ -87,7 +87,7 @@ export async function listSessions(): Promise<SessionRecord[]> {
 export async function revokeSession(id: string): Promise<boolean> {
   const store = await readStore();
   const before = store.sessions.length;
-  store.sessions = store.sessions.filter((s) => s.id !== id);
+  store.sessions = store.sessions.filter(s => s.id !== id);
   if (store.sessions.length === before) return false;
   await writeStore(store);
   return true;
@@ -95,9 +95,7 @@ export async function revokeSession(id: string): Promise<boolean> {
 
 export async function revokeAllSessions(exceptFingerprint?: string): Promise<number> {
   const store = await readStore();
-  const kept = exceptFingerprint
-    ? store.sessions.filter((s) => s.fingerprint === exceptFingerprint)
-    : [];
+  const kept = exceptFingerprint ? store.sessions.filter(s => s.fingerprint === exceptFingerprint) : [];
   const removed = store.sessions.length - kept.length;
   store.sessions = kept;
   await writeStore(store);
@@ -119,7 +117,7 @@ export async function markFingerprintRevoked(fingerprint: string): Promise<void>
   const revoked = new Set(store.revoked || []);
   revoked.add(fingerprint);
   store.revoked = Array.from(revoked).slice(-200);
-  store.sessions = store.sessions.filter((s) => s.fingerprint !== fingerprint);
+  store.sessions = store.sessions.filter(s => s.fingerprint !== fingerprint);
   await writeStore(store as SessionsStore);
 }
 

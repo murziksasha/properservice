@@ -18,7 +18,7 @@ export function TextSizeToggle({ className = '' }: { className?: string }) {
       aria-label='Розмір тексту на сайті'
       title='Розмір тексту'
     >
-      {OPTIONS.map((opt) => (
+      {OPTIONS.map(opt => (
         <button
           key={opt.value}
           type='button'

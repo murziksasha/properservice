@@ -7,17 +7,17 @@ import { computeProcessMetrics, formatDurationSec } from './process-metrics';
 
 export function buildMorningDigest(leads: Lead[], orders: Order[]): string {
   const inbox = mergeInbox(leads, orders);
-  const open = inbox.filter((i) => i.open);
-  const stale = open.filter((i) => i.stale);
-  const very = open.filter((i) => i.veryStale);
+  const open = inbox.filter(i => i.open);
+  const stale = open.filter(i => i.stale);
+  const very = open.filter(i => i.veryStale);
   const callbacks = upcomingCallbacks(inbox, 20);
-  const overdueCb = callbacks.filter((c) => isOverdueCallback(c.callbackAt));
-  const unassigned = open.filter((i) => !i.assignee);
+  const overdueCb = callbacks.filter(c => isOverdueCallback(c.callbackAt));
+  const unassigned = open.filter(i => !i.assignee);
   const metrics = computeProcessMetrics(leads, orders);
 
   return [
     '☀️ Ранковий огляд Proper Service',
-    `Відкрито: ${open.length} (ліди ${open.filter((i) => i.kind === 'lead').length}, замовлення ${open.filter((i) => i.kind === 'order').length})`,
+    `Відкрито: ${open.length} (ліди ${open.filter(i => i.kind === 'lead').length}, замовлення ${open.filter(i => i.kind === 'order').length})`,
     `SLA: ${stale.length} >1год · ${very.length} >24год`,
     `Передзвінки: ${callbacks.length} (прострочено ${overdueCb.length})`,
     `Без відповідального: ${unassigned.length}`,
@@ -28,9 +28,9 @@ export function buildMorningDigest(leads: Lead[], orders: Order[]): string {
 
 export function buildEveningDigest(leads: Lead[], orders: Order[]): string {
   const inbox = mergeInbox(leads, orders);
-  const open = inbox.filter((i) => i.open);
+  const open = inbox.filter(i => i.open);
   const callbacks = upcomingCallbacks(inbox, 30);
-  const tomorrow = callbacks.filter((c) => {
+  const tomorrow = callbacks.filter(c => {
     if (!c.callbackAt) return false;
     const d = new Date(c.callbackAt);
     const now = new Date();
@@ -39,7 +39,7 @@ export function buildEveningDigest(leads: Lead[], orders: Order[]): string {
     return d.toDateString() === tmr.toDateString() || d.toDateString() === now.toDateString();
   });
   const metrics = computeProcessMetrics(leads, orders);
-  const doneToday = [...leads, ...orders].filter((x) => {
+  const doneToday = [...leads, ...orders].filter(x => {
     const s = normalizeStatus(x.status, x.handled);
     if (s !== 'done' && s !== 'spam') return false;
     const at = x.handledAt || '';
@@ -59,9 +59,9 @@ export function buildEveningDigest(leads: Lead[], orders: Order[]): string {
 
 export function buildSlaReminder(leads: Lead[], orders: Order[]): string | null {
   const inbox = mergeInbox(leads, orders);
-  const open = inbox.filter((i) => i.open);
-  const staleNew = open.filter((i) => i.status === 'new' && i.stale);
-  const very = open.filter((i) => i.veryStale);
+  const open = inbox.filter(i => i.open);
+  const staleNew = open.filter(i => i.status === 'new' && i.stale);
+  const very = open.filter(i => i.veryStale);
   if (!staleNew.length && !very.length) return null;
   return [
     '⏰ SLA нагадування',

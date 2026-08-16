@@ -57,6 +57,6 @@ export async function recordPriceChange(input: {
 export async function listPriceHistory(productId?: string, limit = 50): Promise<PricePoint[]> {
   const store = await readStore();
   let list = store.entries;
-  if (productId) list = list.filter((e) => e.productId === productId);
+  if (productId) list = list.filter(e => e.productId === productId);
   return list.slice(0, Math.max(1, Math.min(limit, 200)));
 }

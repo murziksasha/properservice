@@ -13,7 +13,7 @@ export default async function AdminPageEditor({ params }: Props) {
   const { slug } = await params;
   const site = await getSiteData();
   const pageSlug = slug === 'home' ? '' : slug;
-  const page = site.pages.find((p) => p.slug === pageSlug);
+  const page = site.pages.find(p => p.slug === pageSlug);
 
   if (!page) notFound();
 

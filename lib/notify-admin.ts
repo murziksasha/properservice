@@ -32,7 +32,7 @@ export async function notifyOneOrder(order: Order, note?: string): Promise<boole
 }
 
 export function formatBulkSummaryLine(targets: NotifyTarget[]): string {
-  const leads = targets.filter((t) => t.kind === 'lead').length;
-  const orders = targets.filter((t) => t.kind === 'order').length;
+  const leads = targets.filter(t => t.kind === 'lead').length;
+  const orders = targets.filter(t => t.kind === 'order').length;
   return `Telegram bulk: ${targets.length} (заявки ${leads}, замовлення ${orders})`;
 }
