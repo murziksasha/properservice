@@ -1,7 +1,8 @@
-import Script from 'next/script';
 import type { MenuItem, SiteSettings } from '@/lib/types';
 import { LocalBusinessJsonLd } from '@/components/seo/LocalBusinessJsonLd';
+import { CookieBanner } from './CookieBanner';
 import { Footer } from './Footer';
+import { GincoreWidgets } from './GincoreWidgets';
 import { Header } from './Header';
 import { PageUp } from './PageUp';
 import { StickyCallBar } from './StickyCallBar';
@@ -19,6 +20,8 @@ interface SiteShellProps {
 export function SiteShell({ settings, menu, children }: SiteShellProps) {
   const siteUrl = process.env.SITE_URL?.replace(/\/$/, '') || undefined;
   const gincore = process.env.GINCORE_WIDGETS !== 'false';
+  const policyUrl = settings.privacyPolicyUrl || '/confident';
+  const policyText = settings.privacyPolicyText || 'політики конфіденційності';
 
   return (
     <div className='container' id='up'>
@@ -33,12 +36,8 @@ export function SiteShell({ settings, menu, children }: SiteShellProps) {
       <PageUp />
       <Footer settings={settings} />
       <StickyCallBar settings={settings} />
-      {gincore ? (
-        <>
-          <Script src='https://remontservice.gincore.net/widget.php?ajax=&w=state&jquery=0' strategy='lazyOnload' />
-          <Script src='https://remontservice.gincore.net/widget.php?ajax=&w=feedback&jquery=0' strategy='lazyOnload' />
-        </>
-      ) : null}
+      <CookieBanner privacyHref={policyUrl} privacyLabel={policyText} />
+      {gincore ? <GincoreWidgets /> : null}
     </div>
   );
 }

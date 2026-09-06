@@ -10,7 +10,7 @@
 - Каталог товарів `/shop` — пошук, сортування, фільтр категорій, код товару
 - Замовлення з сторінки товару → `data/orders.json` + email на `MAIL_TO` (SMTP)
 - Форма зворотного дзвінка → `data/leads.json` + email (SMTP / nodemailer) з службовими метаданими (сторінка, IP, UA, ID заявки)
-- Мобільний sticky-call, honeypot на contact/orders, optimistic concurrency / partial PATCH `site.json`
+- Мобільний sticky-call, cookie-банер (відповідь на пристрої), honeypot на contact/orders, optimistic concurrency / partial PATCH `site.json`
 - Telegram notify, UTM у лідах, CSV export, 2FA TOTP (опційно: QR у **Налаштування** або `ADMIN_TOTP_SECRET`), FAQ JSON-LD, галерея/схожі товари
 - Адмінка `/admin`: Inbox (workflow статуси + SLA), Dashboard-аналітика, меню/сторінки/товари/медіа, command palette (Ctrl+K), bulk/CSV товарів, ревізії сторінок, multi-user (опційно), 2FA
 - Збереження контенту в `data/site.json` (atomic write, без окремої БД)

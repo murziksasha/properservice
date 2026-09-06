@@ -64,7 +64,9 @@ body:has(.admin-body) {
 body:not(:has(.admin-body)) {
   background: var(--ps-bg);
   color: var(--ps-text);
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
 }
 
 /* Main chrome + content: never leave light surfaces with dark-theme text tokens */
@@ -111,8 +113,33 @@ body:not(:has(.admin-body)) .footer {
   color: var(--ps-text);
 }
 
-body:not(:has(.admin-body)) .footer a {
+body:not(:has(.admin-body)) .footer a,
+body:not(:has(.admin-body)) .cookie-settings {
   color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .cookie-banner {
+  background: var(--ps-surface);
+  color: var(--ps-text);
+  border-top-color: var(--ps-brand);
+  box-shadow: var(--ps-shadow);
+}
+
+body:not(:has(.admin-body)) .cookie-banner__title {
+  color: var(--ps-text);
+}
+
+body:not(:has(.admin-body)) .cookie-banner__text {
+  color: var(--ps-muted);
+}
+
+body:not(:has(.admin-body)) .cookie-banner__text a {
+  color: var(--ps-brand);
+}
+
+body:not(:has(.admin-body)) .cookie-banner__btn--ghost {
+  color: var(--ps-text);
+  border-color: var(--ps-brand);
 }
 
 body:not(:has(.admin-body)) .shop-page,
@@ -349,7 +376,11 @@ body:not(:has(.admin-body)) ._list-reset {
   background: var(--ps-surface);
   color: var(--ps-text);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
 
   &:hover {
     border-color: var(--ps-brand);
@@ -393,7 +424,9 @@ body:not(:has(.admin-body)) ._list-reset {
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 
   &[data-size='sm'] {
     font-size: 1.15rem;

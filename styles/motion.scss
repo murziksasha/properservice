@@ -74,7 +74,9 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .shop-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition:
+      transform 0.25s ease,
+      box-shadow 0.25s ease;
   }
 
   .shop-card:hover {
@@ -91,7 +93,11 @@
   }
 
   .shop-chip {
-    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      color 0.2s ease,
+      transform 0.15s ease;
   }
 
   .shop-chip:active {
@@ -112,14 +118,23 @@
 
   .about-link__item,
   .about-link a {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .pageup {
-    transition: opacity 0.25s ease, transform 0.25s ease, bottom 0.2s ease;
+    transition:
+      opacity 0.25s ease,
+      transform 0.25s ease,
+      bottom 0.2s ease;
   }
 
   .sticky-call {
+    animation: ps-slide-up 0.35s ease both;
+  }
+
+  .cookie-banner {
     animation: ps-slide-up 0.35s ease both;
   }
 
@@ -171,6 +186,7 @@
   ._btn,
   .pageup,
   .sticky-call,
+  .cookie-banner,
   .shop-group,
   .ps-image__img {
     transition: none !important;

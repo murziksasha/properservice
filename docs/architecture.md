@@ -210,10 +210,27 @@ Leads (callback) and orders (shop) are **separate** files and admin sections.
 - Files under `public/uploads/`
 - Response may include `width`, `height`, `optimized`, `preset`
 
+## Cookie consent (public)
+
+Bottom-sticky banner on the public chrome (`CookieBanner` in `SiteShell`). Not shown in `/admin`.
+
+- Question: необхідні cookie vs optional third-party (Gincore widgets)
+- Equal-weight actions: **Прийняти** / **Лише необхідні**
+- Link to CMS privacy page (`settings.privacyPolicyUrl`, default `/confident`)
+- Answer is **per device / origin**: `localStorage` key `ps-cookie-consent` (canonical) + first-party cookie with the same name (`Path=/`, `SameSite=Lax`, `Max-Age` 12 months, `Secure` only on HTTPS)
+- Payload: `{ v, choice: "accepted" | "rejected", at }` — bump `COOKIE_CONSENT_VERSION` in `lib/cookie-consent.ts` to re-prompt after a policy change
+- Footer **Налаштування cookie** re-opens the banner (`ps-cookie-consent-open`)
+- Gincore scripts load only after `accepted` (`GincoreWidgets`); `GINCORE_WIDGETS=false` still disables them entirely
+- Necessary first-party prefs (theme, text size, consent itself, admin session) are not gated
+- Layout: `html[data-cookie-banner='1']` lifts `.pageup` and adds bottom padding; on mobile the bar sits above `StickyCallBar`
+
+Helpers + tests: `lib/cookie-consent.ts`.
+
 ## SEO extras
 
 - `LocalBusiness` JSON-LD in `SiteShell`
 - Mobile sticky call bar (`StickyCallBar`)
+- Cookie consent bar (`CookieBanner`)
 
 ## Rate limits
 
@@ -240,4 +257,4 @@ In-memory sliding window (`lib/rate-limit.ts`), single-instance:
 ## E2E smoke
 
 Playwright: `e2e/smoke.spec.ts`, config `playwright.config.ts`.  
-`npm run test:smoke` — public pages, health, SEO, PWA assets, admin login, auth 429.
+`npm run test:smoke` — public pages, health, SEO, PWA assets, cookie banner, admin login, auth 429.
