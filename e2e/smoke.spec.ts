@@ -117,6 +117,42 @@ test.describe('public smoke', () => {
     }
   });
 
+  test('cookie banner is sticky, remembers accept on this device', async ({ page }) => {
+    await page.goto('/');
+    const banner = page.getByRole('region', { name: 'Файли cookie' });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Прийняти' })).toBeVisible();
+    await expect(banner.getByRole('button', { name: 'Лише необхідні' })).toBeVisible();
+    await expect(banner).toHaveCSS('position', 'fixed');
+    await expect(banner).toHaveCSS('bottom', '0px');
+
+    await banner.getByRole('button', { name: 'Прийняти' }).click();
+    await expect(banner).toHaveCount(0);
+
+    const stored = await page.evaluate(() => localStorage.getItem('ps-cookie-consent'));
+    expect(stored).toContain('"choice":"accepted"');
+
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Файли cookie' })).toHaveCount(0);
+  });
+
+  test('cookie banner remembers reject and can be reopened from footer', async ({ page }) => {
+    await page.goto('/');
+    const banner = page.getByRole('region', { name: 'Файли cookie' });
+    await expect(banner).toBeVisible();
+    await banner.getByRole('button', { name: 'Лише необхідні' }).click();
+    await expect(banner).toHaveCount(0);
+
+    const stored = await page.evaluate(() => localStorage.getItem('ps-cookie-consent'));
+    expect(stored).toContain('"choice":"rejected"');
+
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Файли cookie' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Налаштування cookie' }).click();
+    await expect(page.getByRole('region', { name: 'Файли cookie' })).toBeVisible();
+  });
+
   test('privacy page loads', async ({ page }) => {
     await page.goto('/confident');
     await expect(page.locator('body')).toBeVisible();
@@ -139,6 +175,7 @@ test.describe('public smoke', () => {
 test.describe('admin smoke', () => {
   test('login page loads', async ({ page }) => {
     await page.goto('/admin/login');
+    await expect(page.locator('.cookie-banner')).toHaveCount(0);
     await expect(page.getByRole('heading', { name: /вхід/i })).toBeVisible();
     await expect(page.locator('#admin-password')).toBeVisible();
     await expect(page.getByRole('button', { name: /увійти/i })).toBeVisible();

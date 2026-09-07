@@ -50,6 +50,135 @@
   border: 0;
 }
 
+/* Public cookie consent — sticky to the bottom of the viewport */
+.cookie-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 96;
+  padding: 1.6rem 1.6rem calc(1.6rem + env(safe-area-inset-bottom, 0px));
+  background: var(--ps-surface, #fff);
+  color: var(--ps-text, #1a1a1a);
+  border-top: 3px solid var(--ps-brand, #02a653);
+  box-shadow: 0 -8px 28px rgba(15, 23, 42, 0.14);
+  --cookie-banner-h: 13rem;
+}
+
+.cookie-banner__inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.6rem 2.4rem;
+}
+
+.cookie-banner__copy {
+  flex: 1 1 36rem;
+  min-width: 0;
+}
+
+.cookie-banner__title {
+  margin: 0 0 0.6rem;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--ps-text, #1a1a1a);
+}
+
+.cookie-banner__text {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.45;
+  color: var(--ps-muted, #555);
+}
+
+.cookie-banner__text a {
+  color: var(--ps-brand, #02a653);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-brand, #02a653);
+    outline-offset: 2px;
+  }
+}
+
+.cookie-banner__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  flex: 0 1 auto;
+}
+
+.cookie-banner__btn {
+  min-width: 16rem;
+  height: 4.4rem;
+  font-size: 1.5rem;
+  border-radius: 24.5px;
+}
+
+.cookie-banner__btn--ghost {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2rem;
+  background: transparent;
+  color: var(--ps-text, #1a1a1a);
+  border: 2px solid var(--ps-brand, #02a653);
+  box-shadow: none;
+  font-weight: 800;
+  line-height: 130%;
+
+  @media (hover: hover) {
+    &:hover {
+      background: var(--ps-brand-soft, #e8f7ef);
+      color: var(--ps-text, #1a1a1a);
+    }
+  }
+
+  &:active {
+    background: var(--ps-brand-soft, #e8f7ef);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-brand, #02a653);
+    outline-offset: 3px;
+  }
+}
+
+.cookie-settings {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+
+  &:focus-visible {
+    outline: 2px solid var(--ps-brand, #02a653);
+    outline-offset: 2px;
+  }
+}
+
+html[data-cookie-banner='1'] .container {
+  padding-bottom: calc(var(--cookie-banner-h, 13rem) + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-cookie-banner='1'] .pageup {
+  bottom: calc(var(--cookie-banner-h, 13rem) + 1.6rem);
+}
+
+body.nav-open .cookie-banner {
+  display: none;
+}
+
 /* Mobile sticky call bar */
 .sticky-call {
   display: none;
@@ -141,6 +270,20 @@
     }
   }
 
+  .cookie-banner {
+    --cookie-banner-h: 22rem;
+    padding: 1.4rem 1.2rem 1.4rem;
+  }
+
+  .cookie-banner__actions {
+    width: 100%;
+  }
+
+  .cookie-banner__btn {
+    flex: 1 1 14rem;
+    min-width: 0;
+  }
+
   .container {
     padding-bottom: calc(var(--sticky-call-h, 7.2rem) + env(safe-area-inset-bottom, 0px));
   }
@@ -149,6 +292,20 @@
     bottom: calc(var(--sticky-call-h, 7.2rem) + 1.2rem + env(safe-area-inset-bottom, 0px));
     z-index: 95;
     right: 1.2rem;
+  }
+
+  html[data-cookie-banner='1'] .cookie-banner {
+    bottom: var(--sticky-call-h, 7.2rem);
+  }
+
+  html[data-cookie-banner='1'] .container {
+    padding-bottom: calc(
+      var(--sticky-call-h, 7.2rem) + var(--cookie-banner-h, 22rem) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  html[data-cookie-banner='1'] .pageup {
+    bottom: calc(var(--sticky-call-h, 7.2rem) + var(--cookie-banner-h, 22rem) + 1.2rem);
   }
 }
 
@@ -212,8 +369,20 @@
     }
   }
 }
- 
-.ps-hide-mobile{display:contents}  
-@media (max-width:767px){.ps-hide-mobile{display:none !important}}  
-.ps-hide-desktop{display:contents}  
-@media (min-width:768px){.ps-hide-desktop{display:none !important}}  
+
+.ps-hide-mobile {
+  display: contents;
+}
+@media (max-width: 767px) {
+  .ps-hide-mobile {
+    display: none !important;
+  }
+}
+.ps-hide-desktop {
+  display: contents;
+}
+@media (min-width: 768px) {
+  .ps-hide-desktop {
+    display: none !important;
+  }
+}

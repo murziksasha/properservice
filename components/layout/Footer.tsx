@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { SiteSettings } from '@/lib/types';
+import { CookieSettingsButton } from './CookieSettingsButton';
 
 export function Footer({ settings }: { settings: SiteSettings }) {
   const year = new Date().getFullYear();
@@ -30,6 +31,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
           ) : (
             <Link href={policyUrl}>{settings.privacyPolicyText}</Link>
           )}
+          . <CookieSettingsButton />
         </div>
         <div className='copy'>{copyright}</div>
       </div>
