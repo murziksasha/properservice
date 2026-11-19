@@ -9,6 +9,9 @@ const SESSION_MAX_AGE_MS = 60 * 60 * 24 * 7 * 1000; // 7 days
 function getSecret(): string {
   const secret = process.env['SESSION_SECRET'] || process.env['ADMIN_PASSWORD'];
   if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('[session] SESSION_SECRET or ADMIN_PASSWORD must be configured in production');
+    }
     return 'dev-insecure-session-secret-change-me';
   }
   return secret;

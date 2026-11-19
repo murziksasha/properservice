@@ -36,9 +36,10 @@ function escapeHtml(text: string): string {
 }
 
 function isSafeUrl(url: string): boolean {
-  const trimmed = url.trim().toLowerCase();
-  if (!trimmed) return false;
-  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+  // Strip control characters, invisible whitespace, and null bytes before checking
+  const sanitized = url.replace(/[\x00-\x20\x7F-\x9F\u2000-\u200D\uFEFF]/g, '').toLowerCase();
+  if (!sanitized) return false;
+  if (sanitized.startsWith('javascript:') || sanitized.startsWith('data:') || sanitized.startsWith('vbscript:')) {
     return false;
   }
   return true;
@@ -58,7 +59,9 @@ export function sanitizeHtml(dirty: string | undefined | null): string {
 
   let html = String(dirty);
 
-  // Remove script/style blocks entirely
+  // Remove script/style/iframe blocks entirely
+  html = html.replace(/<!--[\s\S]*?-->/g, '');
+  html = html.replace(/<!\[CDATA\[[\s\S]*?\]\]>/gi, '');
   html = html.replace(/<\s*(script|style|iframe|object|embed|form)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, '');
   html = html.replace(/<\s*(script|style|iframe|object|embed|form)[^>]*\/?\s*>/gi, '');
 

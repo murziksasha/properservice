@@ -17,25 +17,36 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const { slug } = await params;
-  const data = await getSiteData();
-  const page = data.pages.find(p => p.slug === slug && p.visible);
-  if (!page) return { title: 'Не знайдено' };
-  const description = page.description || data.settings.description;
-  return {
-    title: page.title,
-    description,
-    openGraph: {
+  try {
+    const { slug } = await params;
+    const data = await getSiteData();
+    const page = data.pages.find(p => p.slug === slug && p.visible);
+    if (!page) return { title: 'Не знайдено' };
+    const description = page.description || data.settings.description;
+    return {
       title: page.title,
       description,
-      type: 'website',
-    },
-  };
+      openGraph: {
+        title: page.title,
+        description,
+        type: 'website',
+      },
+    };
+  } catch (err) {
+    console.error('[generateMetadata] error for slug:', err);
+    return { title: 'Proper Service' };
+  }
 }
 
 export default async function SlugPage({ params }: PageProps) {
   const { slug } = await params;
-  const data = await getSiteData();
+  let data;
+  try {
+    data = await getSiteData();
+  } catch (err) {
+    console.error(`[SlugPage] getSiteData failed for slug="${slug}":`, err);
+    throw err;
+  }
   const page = data.pages.find(p => p.slug === slug && p.visible);
 
   if (!page) {
