@@ -22,6 +22,7 @@ export default defineConfig({
         url: `${baseURL}/api/health`,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
+        stderr: 'pipe',
         env: {
           ...process.env,
           ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'e2e-test-password',
