@@ -1,5 +1,5 @@
 /* Proper Service — lightweight offline shell (no build step). */
-const CACHE = 'ps-shell-v4';
+const CACHE = 'ps-shell-v5';
 const PRECACHE = ['/offline.html', '/manifest.webmanifest', '/img/icons/logo.png', '/img/icons/favicon.ico'];
 
 self.addEventListener('install', event => {
@@ -25,6 +25,20 @@ function isAdminOrApi(url) {
   return p.startsWith('/admin') || p.startsWith('/api');
 }
 
+function isCacheable(res) {
+  return Boolean(res && res.ok && res.type === 'basic');
+}
+
+async function isOurNextHtml(res) {
+  if (!res) return false;
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.toLowerCase().includes('text/html')) return false;
+  const text = await res.clone().text();
+  if (text.includes('<base href="https://static.keenetic.net')) return false;
+  if (/<title>\s*Error\s*<\/title>/i.test(text)) return false;
+  return text.includes('/_next/');
+}
+
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -44,9 +58,9 @@ self.addEventListener('fetch', event => {
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          if (res.ok) {
+        .then(async res => {
+          if (isCacheable(res) && (await isOurNextHtml(res))) {
+            const copy = res.clone();
             caches
               .open(CACHE)
               .then(cache => cache.put(req, copy))
@@ -56,7 +70,7 @@ self.addEventListener('fetch', event => {
         })
         .catch(async () => {
           const cached = await caches.match(req);
-          if (cached) return cached;
+          if (cached && (await isOurNextHtml(cached))) return cached;
           const offline = await caches.match('/offline.html');
           return offline || new Response('Offline', { status: 503, statusText: 'Offline' });
         }),
@@ -89,7 +103,7 @@ self.addEventListener('fetch', event => {
       caches.match(req).then(cached => {
         if (cached) return cached;
         return fetch(req).then(res => {
-          if (res.ok) {
+          if (isCacheable(res)) {
             const copy = res.clone();
             caches
               .open(CACHE)
