@@ -23,30 +23,30 @@ Do not start Docker, pm2, or a production build unless the task is deploy or run
 
 ## Layout
 
-| Path | What belongs here |
-| --- | --- |
-| `app/(public)/` | Public routes. Home is slug `''`. Other CMS pages are `[slug]`. Shop is `/shop` and `/shop/[id]`. |
-| `app/admin/` | Admin UI. Editors are client components under `components/admin/`. |
-| `app/api/` | Route handlers. Admin APIs check the session in Node, not only in middleware. |
-| `components/sections/` | One component per CMS section. Wired by `SectionRenderer`. |
-| `components/shop/`, `components/forms/`, `components/layout/` | Catalog, callback/order forms, public chrome. |
-| `lib/` | Domain logic, Zod validation, file IO. Unit tests sit next to the module: `lib/foo.test.ts`. |
-| `lib/types.ts` | `SiteData` and the `Section` union. Change the type, the Zod schema, and the renderer together. |
-| `lib/site-data.ts` | Read/write `data/site.json`. All content writes go through this (atomic write). |
-| `styles/` and `src/sass/` | Global, theme, shop, motion, and admin Sass. Public entry is `styles/globals.scss`. |
-| `data/` | Runtime JSON. Content is `site.json`. Journals are separate files. |
-| `e2e/` | Playwright. Excluded from `tsconfig.json`. |
-| `mailer/` | Legacy PHP. The site does not call it. Leave it alone unless the task is that mailer. |
+| Path                                                          | What belongs here                                                                                 |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `app/(public)/`                                               | Public routes. Home is slug `''`. Other CMS pages are `[slug]`. Shop is `/shop` and `/shop/[id]`. |
+| `app/admin/`                                                  | Admin UI. Editors are client components under `components/admin/`.                                |
+| `app/api/`                                                    | Route handlers. Admin APIs check the session in Node, not only in middleware.                     |
+| `components/sections/`                                        | One component per CMS section. Wired by `SectionRenderer`.                                        |
+| `components/shop/`, `components/forms/`, `components/layout/` | Catalog, callback/order forms, public chrome.                                                     |
+| `lib/`                                                        | Domain logic, Zod validation, file IO. Unit tests sit next to the module: `lib/foo.test.ts`.      |
+| `lib/types.ts`                                                | `SiteData` and the `Section` union. Change the type, the Zod schema, and the renderer together.   |
+| `lib/site-data.ts`                                            | Read/write `data/site.json`. All content writes go through this (atomic write).                   |
+| `styles/` and `src/sass/`                                     | Global, theme, shop, motion, and admin Sass. Public entry is `styles/globals.scss`.               |
+| `data/`                                                       | Runtime JSON. Content is `site.json`. Journals are separate files.                                |
+| `e2e/`                                                        | Playwright. Excluded from `tsconfig.json`.                                                        |
+| `mailer/`                                                     | Legacy PHP. The site does not call it. Leave it alone unless the task is that mailer.             |
 
 Import app code with the `@/` alias (`@/lib/...`, `@/components/...`).
 
 ## Content and journals
 
-- All page content is one `SiteData` document in `data/site.json` (`DATA_DIR` overrides the directory).
+- All page content is one `SiteData` document in `data/site.json` (`DATA_DIR` overrides the directory). `data/site.example.json` serves as the tracked seed template.
 - `PUT /api/site` replaces the document and returns **409** when `updatedAt` does not match. `PATCH /api/site` updates one section (`goods`, `settings`, `headerMenu`, `servicesNav`, `pages`, `shopLink`) with the same lock.
 - Writes use `lib/atomic-write.ts` (temp file + rename). Do not replace that with a bare `writeFile` of JSON.
 - Leads (`data/leads.json`, callback) and orders (`data/orders.json`, shop) are separate from `site.json` and from each other. Cap is about 500 rows.
-- `data/leads.json`, `data/orders.json`, `data/admin-totp.json`, `data/media-index.json`, and `data/backups/` are gitignored. Do not commit them. Do not hand-edit `data/site.json` to ship a feature.
+- Runtime data stores (`data/*.json`, including `site.json`, `leads.json`, `orders.json`, `admin-totp.json`, `media-index.json`, `admin-activity.json`, `admin-sessions.json`) and `data/backups/` are gitignored. Only `data/site.example.json` is committed. Do not commit live data.
 - Public HTML from the CMS must pass `sanitizeHtml()` before `dangerouslySetInnerHTML`.
 
 ## Auth and public forms

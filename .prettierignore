@@ -18,6 +18,8 @@ mailer
 public/uploads
 public/img
 data/backups
+data/*.json
+!data/site.example.json
 logs
 *.pem
 

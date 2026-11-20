@@ -19,13 +19,11 @@
 /public/uploads/*
 !/public/uploads/.gitkeep
 
-# data overrides (optional local edits)
-/data/site.json.bak
+# runtime data stores (never commit live site data or journals)
+/data/*.json
+!/data/site.example.json
 /data/backups/
-/data/leads.json
-/data/orders.json
-/data/admin-totp.json
-/data/media-index.json
+/data/*.bak
 
 # misc
 .DS_Store

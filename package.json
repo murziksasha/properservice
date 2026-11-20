@@ -19,6 +19,7 @@
     "pm2:restart": "pm2 restart properservice",
     "pm2:logs": "pm2 logs properservice",
     "seed": "tsx scripts/seed.ts",
+    "seed:force": "tsx scripts/seed.ts --force",
     "backup": "tsx scripts/backup.ts",
     "uploads:reprocess": "node scripts/reprocess-uploads.mjs",
     "uploads:reprocess:dry": "node scripts/reprocess-uploads.mjs --dry-run",

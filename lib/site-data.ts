@@ -25,10 +25,18 @@ export async function getSiteData(): Promise<SiteData> {
     raw = await fs.readFile(filePath, 'utf-8');
   } catch (err: unknown) {
     if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
-      const { defaultSiteData } = await import('./default-site-data');
+      let initialData: SiteData;
+      try {
+        const examplePath = path.join(process.cwd(), 'data', 'site.example.json');
+        const exampleRaw = await fs.readFile(examplePath, 'utf-8');
+        initialData = JSON.parse(exampleRaw) as SiteData;
+      } catch {
+        const { defaultSiteData } = await import('./default-site-data');
+        initialData = defaultSiteData;
+      }
       await ensureDataDir(filePath);
-      await atomicWriteJson(filePath, defaultSiteData);
-      return defaultSiteData;
+      await atomicWriteJson(filePath, initialData);
+      return initialData;
     }
     console.error(`[site-data] failed to read ${filePath}:`, err);
     throw err;
