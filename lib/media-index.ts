@@ -146,8 +146,18 @@ function normalizeItem(raw: Partial<MediaMeta> & { name?: string }): MediaMeta |
 
 export async function readMediaIndex(): Promise<MediaIndex> {
   const filePath = getIndexPath();
+  let raw: string;
   try {
-    const raw = await fs.readFile(filePath, 'utf-8');
+    raw = await fs.readFile(filePath, 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return emptyIndex();
+    }
+    console.error(`[media-index] failed to read ${filePath}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as Partial<MediaIndex> & { version?: number };
     const items: MediaMeta[] = [];
     if (Array.isArray(parsed.items)) {
@@ -172,8 +182,9 @@ export async function readMediaIndex(): Promise<MediaIndex> {
       }
     }
     return { version: 2, folders, items };
-  } catch {
-    return emptyIndex();
+  } catch (err) {
+    console.error(`[media-index] corrupt media-index.json at ${filePath}:`, err);
+    throw err;
   }
 }
 

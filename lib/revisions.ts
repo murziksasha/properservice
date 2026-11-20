@@ -63,11 +63,25 @@ export async function getPageRevision(pageId: string, revId: string): Promise<Pa
   const safeRev = revId.replace(/[^a-zA-Z0-9_.-]/g, '');
   if (!safeRev) return null;
   const file = path.join(pageRevDir(pageId), `${safeRev}.json`);
+  let raw: string;
   try {
-    const raw = await fs.readFile(file, 'utf-8');
-    return JSON.parse(raw) as PageRevision;
-  } catch {
-    return null;
+    raw = await fs.readFile(file, 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return null;
+    }
+    console.error(`[revisions] failed to read ${file}:`, err);
+    throw err;
+  }
+  try {
+    const parsed = JSON.parse(raw) as PageRevision;
+    if (!parsed || !parsed.id || !parsed.page) {
+      throw new Error(`Invalid revision format in ${file}`);
+    }
+    return parsed;
+  } catch (err) {
+    console.error(`[revisions] corrupt revision file at ${file}:`, err);
+    throw err;
   }
 }
 

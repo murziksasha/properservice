@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { readNotifyPrefs, shouldNotify, type NotifyPrefs } from '@/lib/admin-notify-prefs';
+import { loadNotifyPrefs, shouldNotify, type NotifyPrefs } from '@/lib/admin-notify-prefs';
 
 type Counts = {
   openLeads: number;
@@ -109,7 +109,7 @@ export function AdminCountsProvider({ children }: { children: React.ReactNode })
   // Title badge + desktop notifications (respect prefs)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const prefs: NotifyPrefs = readNotifyPrefs();
+    const prefs: NotifyPrefs = loadNotifyPrefs();
     const base = 'Admin | Proper Service';
     if (prefs.titleBadge && counts.openTotal > 0) {
       document.title = `(${counts.openTotal}) ${base}`;

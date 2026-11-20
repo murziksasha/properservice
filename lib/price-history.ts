@@ -22,13 +22,26 @@ export function priceHistoryPath(): string {
 }
 
 async function readStore(): Promise<Store> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(priceHistoryPath(), 'utf-8');
+    raw = await fs.readFile(priceHistoryPath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return { entries: [] };
+    }
+    console.error(`[price-history] failed to read ${priceHistoryPath()}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as Store;
-    if (!parsed || !Array.isArray(parsed.entries)) return { entries: [] };
+    if (!parsed || !Array.isArray(parsed.entries)) {
+      throw new Error(`Invalid price history store format in ${priceHistoryPath()}`);
+    }
     return parsed;
-  } catch {
-    return { entries: [] };
+  } catch (err) {
+    console.error(`[price-history] corrupt price-history.json at ${priceHistoryPath()}:`, err);
+    throw err;
   }
 }
 
@@ -43,7 +56,13 @@ export async function recordPriceChange(input: {
   prevPrice?: number;
 }): Promise<void> {
   if (typeof input.prevPrice === 'number' && input.prevPrice === input.price) return;
-  const store = await readStore();
+  let store: Store;
+  try {
+    store = await readStore();
+  } catch (err) {
+    console.error('[price-history] skipping recordPriceChange due to corrupt or unreadable store:', err);
+    return;
+  }
   store.entries.unshift({
     at: new Date().toISOString(),
     productId: input.productId,
@@ -51,7 +70,11 @@ export async function recordPriceChange(input: {
     title: input.title,
   });
   if (store.entries.length > MAX) store.entries = store.entries.slice(0, MAX);
-  await writeStore(store);
+  try {
+    await writeStore(store);
+  } catch (err) {
+    console.error('[price-history] failed to write store:', err);
+  }
 }
 
 export async function listPriceHistory(productId?: string, limit = 50): Promise<PricePoint[]> {

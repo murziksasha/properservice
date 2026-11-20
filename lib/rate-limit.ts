@@ -57,7 +57,13 @@ export function resetRateLimits(): void {
 }
 
 export function clientKey(request: Request, prefix: string): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const ip = forwarded?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown';
-  return `${prefix}:${ip}`;
+  const isTrustedProxy = process.env.TRUSTED_PROXY === 'true';
+  if (isTrustedProxy) {
+    const realIp = request.headers.get('x-real-ip')?.trim();
+    if (realIp) {
+      return `${prefix}:${realIp}`;
+    }
+    return `${prefix}:proxy-missing`;
+  }
+  return `${prefix}:direct`;
 }

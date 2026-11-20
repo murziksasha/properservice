@@ -24,21 +24,28 @@ const KEY = 'admin-notify-prefs-v1';
 
 export function readNotifyPrefs(): NotifyPrefs {
   if (typeof window === 'undefined') return { ...DEFAULT_NOTIFY_PREFS };
+  const raw = window.localStorage.getItem(KEY);
+  if (!raw) return { ...DEFAULT_NOTIFY_PREFS };
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...DEFAULT_NOTIFY_PREFS };
     return { ...DEFAULT_NOTIFY_PREFS, ...(JSON.parse(raw) as Partial<NotifyPrefs>) };
-  } catch {
+  } catch (err) {
+    console.error(`[admin-notify-prefs] corrupt notify prefs in localStorage:`, err);
+    throw err;
+  }
+}
+
+export function loadNotifyPrefs(): NotifyPrefs {
+  try {
+    return readNotifyPrefs();
+  } catch (err) {
+    console.error('[admin-notify-prefs] fallback to default notify prefs:', err);
     return { ...DEFAULT_NOTIFY_PREFS };
   }
 }
 
 export function writeNotifyPrefs(prefs: NotifyPrefs): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(prefs));
-  } catch {
-    /* ignore */
-  }
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(KEY, JSON.stringify(prefs));
 }
 
 export function isQuietNow(prefs: NotifyPrefs, now = new Date()): boolean {

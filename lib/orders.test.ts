@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Order } from './orders';
 
 describe('orders store', () => {
   let tmpDir: string;
@@ -57,5 +58,66 @@ describe('orders store', () => {
     });
     expect(o.comment).toBeUndefined();
     expect(o.emailed).toBe(true);
+  });
+
+  it('refuses write and preserves corrupt orders.json', async () => {
+    const { appendOrder, ordersFilePath } = await import('./orders');
+    const corrupt = 'corrupt orders data';
+    await fs.writeFile(ordersFilePath(), corrupt, 'utf-8');
+
+    await expect(
+      appendOrder({
+        phone: '+380501112233',
+        emailed: false,
+        product: { id: 'p1', title: 'Test', price: 100 },
+      }),
+    ).rejects.toThrow();
+
+    const after = await fs.readFile(ordersFilePath(), 'utf-8');
+    expect(after).toBe(corrupt);
+  });
+
+  it('drops only closed rows when cap is exceeded', async () => {
+    const { appendOrder, listOrders, ordersFilePath } = await import('./orders');
+    const { atomicWriteJson } = await import('./atomic-write');
+
+    const storeOrders: Order[] = [
+      {
+        id: 'closed-order-1',
+        createdAt: new Date().toISOString(),
+        phone: '+380509999999',
+        quantity: 1,
+        product: { id: 'p0', title: 'Old', price: 10 },
+        source: 'shop',
+        emailed: false,
+        handled: true,
+        status: 'done',
+      },
+    ];
+    for (let i = 0; i < 500; i++) {
+      storeOrders.unshift({
+        id: `open-order-${i}`,
+        createdAt: new Date().toISOString(),
+        phone: `+38050100${String(i).padStart(4, '0')}`,
+        quantity: 1,
+        product: { id: `p-${i}`, title: `Prod ${i}`, price: 10 },
+        source: 'shop',
+        emailed: false,
+        handled: false,
+        status: 'new',
+      });
+    }
+    await atomicWriteJson(ordersFilePath(), { orders: storeOrders });
+
+    const newest = await appendOrder({
+      phone: '+380500000000',
+      emailed: false,
+      product: { id: 'p-new', title: 'New', price: 50 },
+    });
+    const list = await listOrders();
+    expect(list.length).toBe(501);
+    expect(list.some(o => o.id === 'closed-order-1')).toBe(false);
+    expect(list.some(o => o.id === 'open-order-0')).toBe(true);
+    expect(list.some(o => o.id === newest.id)).toBe(true);
   });
 });

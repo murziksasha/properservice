@@ -11,11 +11,12 @@ docker compose up -d --build
 
 Сервіси (`docker-compose.yml`):
 
-| Service      | Role                                  |
-| ------------ | ------------------------------------- |
-| `next-app`   | Next.js standalone (`node server.js`) |
-| `nginx`      | reverse proxy, static `/uploads`      |
-| `php-mailer` | legacy PHP (optional)                 |
+| Service    | Role                                  |
+| ---------- | ------------------------------------- |
+| `next-app` | Next.js standalone (`node server.js`) |
+| `nginx`    | reverse proxy, static `/uploads`      |
+
+> Контейнер `php-mailer` вимкнено (не стартує), а будь-які запити до `/mailer/` повертають 404 у nginx.
 
 ### Volumes
 

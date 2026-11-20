@@ -29,6 +29,18 @@ describe('site-data helpers', () => {
     expect(raw).toContain('settings');
   }, 15_000);
 
+  it('throws and preserves corrupt site.json without overwriting', async () => {
+    const siteFile = path.join(tmpDir, 'site.json');
+    const corruptContent = '{ "settings": { "title": "Incomplete...';
+    await fs.writeFile(siteFile, corruptContent, 'utf-8');
+
+    const { getSiteData } = await import('./site-data');
+    await expect(getSiteData()).rejects.toThrow();
+
+    const contentAfter = await fs.readFile(siteFile, 'utf-8');
+    expect(contentAfter).toBe(corruptContent);
+  });
+
   it('createPage ensures unique slug and protect home delete', async () => {
     const { getSiteData, createPage, deletePage, saveSiteData } = await import('./site-data');
     const data = await getSiteData();

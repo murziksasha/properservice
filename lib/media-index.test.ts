@@ -114,4 +114,15 @@ describe('media-index folders', () => {
     index = await readMediaIndex();
     expect(index.items.find(i => i.name === 'b.webp')?.folderId).toBe('');
   });
+
+  it('битий media-index.json викидає помилку і не перезбирається з нуля', async () => {
+    const corruptPath = path.join(tmpDir, 'media-index.json');
+    const corruptData = '{"version": 2, "items": [INVALID';
+    await fs.writeFile(corruptPath, corruptData, 'utf-8');
+
+    await expect(readMediaIndex()).rejects.toThrow();
+
+    const after = await fs.readFile(corruptPath, 'utf-8');
+    expect(after).toBe(corruptData);
+  });
 });

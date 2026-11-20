@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, getSessionClaims, getSessionFingerprint, verifyPassword } from '@/lib/auth';
+import { getSession, getSessionClaims, getSessionFingerprint, verifyOwnerStepUp } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { listSessions, markFingerprintRevoked, revokeAllSessions, revokeSession } from '@/lib/admin-sessions';
 import { appendActivity } from '@/lib/admin-activity';
@@ -45,7 +45,7 @@ export async function DELETE(request: NextRequest) {
       all?: boolean;
       ownerPassword?: string;
     };
-    if (!verifyPassword(body.ownerPassword || '')) {
+    if (!(await verifyOwnerStepUp(body.ownerPassword || '', claims?.username))) {
       return NextResponse.json({ error: 'Потрібен пароль власника' }, { status: 403 });
     }
     if (body.all) {

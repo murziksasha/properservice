@@ -1,25 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, getSessionClaims } from '@/lib/auth';
-import { assertAdminIp } from '@/lib/require-admin-ip';
+import { getSessionClaims } from '@/lib/auth';
+import { requireAdminRole } from '@/lib/require-role';
 import { getPageRevision, listPageRevisions, savePageRevision } from '@/lib/revisions';
 import { getSiteData, saveSiteData } from '@/lib/site-data';
 import { appendActivity } from '@/lib/admin-activity';
 
 export const dynamic = 'force-dynamic';
 
-async function guard() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return { ok: false as const, response: NextResponse.json({ error: ipGate.error }, { status: ipGate.status }) };
-  }
-  if (!(await getSession())) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-  return { ok: true as const };
-}
-
 export async function GET(request: NextRequest) {
-  const g = await guard();
+  const g = await requireAdminRole('content');
   if (!g.ok) return g.response;
 
   const pageId = request.nextUrl.searchParams.get('pageId') || '';
@@ -38,7 +27,7 @@ export async function GET(request: NextRequest) {
 
 /** Snapshot current published page, or restore a revision. */
 export async function POST(request: NextRequest) {
-  const g = await guard();
+  const g = await requireAdminRole('content');
   if (!g.ok) return g.response;
 
   try {
