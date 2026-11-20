@@ -11,11 +11,12 @@ docker compose up -d --build
 
 Сервіси (`docker-compose.yml`):
 
-| Service      | Role                                  |
-| ------------ | ------------------------------------- |
-| `next-app`   | Next.js standalone (`node server.js`) |
-| `nginx`      | reverse proxy, static `/uploads`      |
-| `php-mailer` | legacy PHP (optional)                 |
+| Service    | Role                                  |
+| ---------- | ------------------------------------- |
+| `next-app` | Next.js standalone (`node server.js`) |
+| `nginx`    | reverse proxy, static `/uploads`      |
+
+> Контейнер `php-mailer` вимкнено (не стартує), а будь-які запити до `/mailer/` повертають 404 у nginx.
 
 ### Volumes
 
@@ -496,13 +497,15 @@ Dev-машина **не** запускает prod-pm2. На хост код по
 ```powershell
 cd C:\apps\properservice
 
-# если git:
+# если git (при первом обновлении после отвязки site.json отслеживание снимается автоматически):
 git pull
 
 npm install
 npm run build
 npm run pm2:restart
 ```
+
+> **Важно:** `data/site.json` и все файлы журналов теперь исключены из Git (`.gitignore`). Ваши товары, цены и CRM-данные защищены от перезаписи при `git pull`. В репозитории хранится только шаблон `data/site.example.json`. `npm run seed` безопасно пропускает инициализацию, если `site.json` уже существует (перезапись только через `npm run seed:force`).
 
 Почему `build` вручную: авто-сборка в скриптах срабатывает **только если нет** `.next\BUILD_ID`.  
 Если сборка уже была, после `git pull` без `npm run build` будет крутиться **старый** код.

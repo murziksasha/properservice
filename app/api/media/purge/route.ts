@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
-import { assertAdminIp } from '@/lib/require-admin-ip';
+import { requireAdminRole } from '@/lib/require-role';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { deleteUpload, isSafeUploadName } from '@/lib/media';
 import { formatUsageTooltip, getUsageForUploadName, type MediaRef } from '@/lib/media-usage';
@@ -8,24 +7,12 @@ import { getSiteData } from '@/lib/site-data';
 
 export const dynamic = 'force-dynamic';
 
-async function guard() {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return { ok: false as const, response: NextResponse.json({ error: ipGate.error }, { status: ipGate.status }) };
-  }
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return { ok: false as const, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-  return { ok: true as const };
-}
-
 /**
  * Delete uploads only when they are no longer referenced in site.json.
  * Always re-reads site data server-side (safe after product hard-delete save).
  */
 export async function POST(request: NextRequest) {
-  const g = await guard();
+  const g = await requireAdminRole('media');
   if (!g.ok) return g.response;
 
   const rl = rateLimit(clientKey(request, 'media-purge'), { limit: 20, windowMs: 60_000 });

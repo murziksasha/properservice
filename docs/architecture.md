@@ -85,7 +85,7 @@ Shared helpers: `lib/admin/saveSite.ts`, `lib/admin/uploadImage.ts`, `lib/sectio
 `CallbackForm` → `POST /api/contact` → honeypot `website` → validate UA phone (`380`+9 або `0`+9) → rate-limit → **append lead** (`data/leads.json`, `emailed: false`) → nodemailer (optional) → mark `emailed: true` on success
 
 Заявки завжди в журналі адмінки `/admin/leads` навіть без SMTP.  
-Legacy `mailer/smart.php` лишається в Docker/nginx, але frontend його не викликає.
+Legacy `mailer/smart.php` не використовується: контейнер `php-mailer` вимкнено (не стартує), а nginx на `/mailer/` одразу повертає 404.
 
 Маска/placeholder телефону: `+38 (___) ___ __ __` (`lib/phone.ts` → `PHONE_PLACEHOLDER`).
 

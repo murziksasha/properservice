@@ -32,6 +32,20 @@ export function verifyPassword(password: string): boolean {
   return safeCompare(password, adminPassword);
 }
 
+/** Verify password for step-up actions: matches owner's scrypt hash when users exist, or ADMIN_PASSWORD in single-user mode. */
+export async function verifyOwnerStepUp(password: string, username?: string): Promise<boolean> {
+  const multi = await hasMultiUserMode();
+  if (!multi) {
+    return verifyPassword(password);
+  }
+  if (!username) return false;
+  const user = await getAdminUserByUsername(username);
+  if (user && user.role === 'owner' && verifyPasswordHash(password, user.passwordHash)) {
+    return true;
+  }
+  return false;
+}
+
 /** Secure cookies only over HTTPS. Over plain HTTP (local Docker) set COOKIE_SECURE=false. */
 function cookieSecureEnabled(): boolean {
   if (process.env.COOKIE_SECURE === 'true') return true;
@@ -48,7 +62,10 @@ export async function authenticateLogin(input: { password: string; username?: st
   const multi = await hasMultiUserMode();
   const username = (input.username || '').trim();
 
-  if (multi && username) {
+  if (multi) {
+    if (!username) {
+      return { ok: false, error: 'Invalid credentials' };
+    }
     const user = await getAdminUserByUsername(username);
     if (!user || !verifyPasswordHash(input.password, user.passwordHash)) {
       return { ok: false, error: 'Invalid credentials' };
@@ -56,23 +73,11 @@ export async function authenticateLogin(input: { password: string; username?: st
     return { ok: true, claims: { username: user.username, role: user.role } };
   }
 
-  // Legacy single password (also works when multi-user exists if no username provided)
-  if (!username && verifyPassword(input.password)) {
-    return { ok: true, claims: { username: 'admin', role: multi ? 'owner' : 'legacy' } };
-  }
-
-  // Try username as optional even without multi mode using env password only for "admin"
-  if (username && username.toLowerCase() === 'admin' && verifyPassword(input.password)) {
-    return { ok: true, claims: { username: 'admin', role: 'owner' } };
-  }
-
-  // Multi-user without username: reject if only multi users exist
-  if (multi && !username) {
-    // Still allow legacy ADMIN_PASSWORD as owner override
+  // Single-user mode (hasMultiUserMode() === false): login via ADMIN_PASSWORD
+  if (!username || username.toLowerCase() === 'admin') {
     if (verifyPassword(input.password)) {
-      return { ok: true, claims: { username: 'admin', role: 'owner' } };
+      return { ok: true, claims: { username: 'admin', role: 'legacy' } };
     }
-    return { ok: false, error: 'Invalid credentials' };
   }
 
   return { ok: false, error: 'Invalid password' };
@@ -109,6 +114,8 @@ export async function getSession(): Promise<boolean> {
   if (!(await isValidSession(value))) return false;
   const parsed = await parseSession(value);
   if (parsed.fingerprint && !(await isSessionAllowed(parsed.fingerprint))) return false;
+  const claims = parsed.claims || { username: 'admin', role: 'legacy' };
+  if ((await hasMultiUserMode()) && claims.role === 'legacy') return false;
   return true;
 }
 
@@ -118,7 +125,9 @@ export async function getSessionClaims(): Promise<SessionClaims | null> {
   const parsed = await parseSession(value);
   if (!parsed.valid) return null;
   if (parsed.fingerprint && !(await isSessionAllowed(parsed.fingerprint))) return null;
-  return parsed.claims || { username: 'admin', role: 'legacy' };
+  const claims = parsed.claims || { username: 'admin', role: 'legacy' };
+  if ((await hasMultiUserMode()) && claims.role === 'legacy') return null;
+  return claims;
 }
 
 export async function getSessionFingerprint(): Promise<string | null> {

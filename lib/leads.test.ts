@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { Lead } from './leads';
 
 describe('leads store', () => {
   let tmpDir: string;
@@ -47,5 +48,58 @@ describe('leads store', () => {
 
     expect(await deleteLead(a.id)).toBe(true);
     expect(await listLeads()).toHaveLength(0);
+  });
+
+  it('refuses write and preserves corrupt leads.json', async () => {
+    const { appendLead, leadsFilePath } = await import('./leads');
+    const corrupt = 'not valid json at all';
+    await fs.writeFile(leadsFilePath(), corrupt, 'utf-8');
+
+    await expect(
+      appendLead({
+        phone: '+380501112233',
+        emailed: false,
+      }),
+    ).rejects.toThrow();
+
+    const after = await fs.readFile(leadsFilePath(), 'utf-8');
+    expect(after).toBe(corrupt);
+  });
+
+  it('drops only closed rows when cap is exceeded', async () => {
+    const { appendLead, listLeads } = await import('./leads');
+    const { atomicWriteJson } = await import('./atomic-write');
+    const { leadsFilePath } = await import('./leads');
+
+    const storeLeads: Lead[] = [
+      {
+        id: 'closed-1',
+        phone: '+380509999999',
+        createdAt: new Date().toISOString(),
+        source: 'callback',
+        emailed: false,
+        handled: true,
+        status: 'done',
+      },
+    ];
+    for (let i = 0; i < 500; i++) {
+      storeLeads.unshift({
+        id: `open-${i}`,
+        phone: `+38050100${String(i).padStart(4, '0')}`,
+        createdAt: new Date().toISOString(),
+        source: 'callback',
+        emailed: false,
+        handled: false,
+        status: 'new',
+      });
+    }
+    await atomicWriteJson(leadsFilePath(), { leads: storeLeads });
+
+    const newest = await appendLead({ phone: '+380500000000', emailed: false });
+    const list = await listLeads();
+    expect(list.length).toBe(501);
+    expect(list.some(l => l.id === 'closed-1')).toBe(false);
+    expect(list.some(l => l.id === 'open-0')).toBe(true);
+    expect(list.some(l => l.id === newest.id)).toBe(true);
   });
 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession, getSessionClaims, verifyPassword } from '@/lib/auth';
+import { getSession, getSessionClaims, verifyOwnerStepUp } from '@/lib/auth';
 import { assertAdminIp } from '@/lib/require-admin-ip';
 import { createAdminUser, deleteAdminUser, listAdminUsers, updateAdminUser, type AdminRole } from '@/lib/admin-users';
 import { appendActivity } from '@/lib/admin-activity';
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       ownerPassword?: string;
     };
     // Step-up: re-enter owner password
-    if (!verifyPassword(body.ownerPassword || '')) {
+    if (!(await verifyOwnerStepUp(body.ownerPassword || '', g.claims?.username))) {
       return NextResponse.json({ error: 'Потрібен пароль власника' }, { status: 403 });
     }
     const role = body.role === 'editor' || body.role === 'operator' || body.role === 'owner' ? body.role : 'operator';
@@ -79,7 +79,7 @@ export async function PATCH(request: NextRequest) {
       password?: string;
       ownerPassword?: string;
     };
-    if (!verifyPassword(body.ownerPassword || '')) {
+    if (!(await verifyOwnerStepUp(body.ownerPassword || '', g.claims?.username))) {
       return NextResponse.json({ error: 'Потрібен пароль власника' }, { status: 403 });
     }
     if (!body.id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
@@ -100,7 +100,7 @@ export async function DELETE(request: NextRequest) {
   if (!g.ok) return g.response;
   try {
     const body = (await request.json()) as { id?: string; ownerPassword?: string };
-    if (!verifyPassword(body.ownerPassword || '')) {
+    if (!(await verifyOwnerStepUp(body.ownerPassword || '', g.claims?.username))) {
       return NextResponse.json({ error: 'Потрібен пароль власника' }, { status: 403 });
     }
     if (!body.id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });

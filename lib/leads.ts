@@ -5,6 +5,7 @@ import { createId } from './id';
 import type { UtmParams } from './utm';
 import {
   handledFromStatus,
+  isClosedStatus,
   isCloseOutcome,
   isWorkflowStatus,
   normalizeStatus,
@@ -62,13 +63,26 @@ export function leadsFilePath(): string {
 }
 
 async function readStore(): Promise<LeadsStore> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(leadsFilePath(), 'utf-8');
+    raw = await fs.readFile(leadsFilePath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return { leads: [] };
+    }
+    console.error(`[leads] failed to read ${leadsFilePath()}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as LeadsStore;
-    if (!parsed || !Array.isArray(parsed.leads)) return { leads: [] };
+    if (!parsed || !Array.isArray(parsed.leads)) {
+      throw new Error(`Invalid leads store format in ${leadsFilePath()}`);
+    }
     return parsed;
-  } catch {
-    return { leads: [] };
+  } catch (err) {
+    console.error(`[leads] corrupt leads.json at ${leadsFilePath()}:`, err);
+    throw err;
   }
 }
 
@@ -142,8 +156,21 @@ export async function appendLead(input: {
     audit: [{ at: now, action: 'created' }],
   };
   store.leads.unshift(lead);
-  if (store.leads.length > MAX_LEADS) {
-    store.leads = store.leads.slice(0, MAX_LEADS);
+  while (store.leads.length > MAX_LEADS) {
+    let removeIdx = -1;
+    for (let i = store.leads.length - 1; i >= 0; i--) {
+      const l = store.leads[i];
+      const status = normalizeStatus(l.status, l.handled);
+      if (isClosedStatus(status)) {
+        removeIdx = i;
+        break;
+      }
+    }
+    if (removeIdx >= 0) {
+      store.leads.splice(removeIdx, 1);
+    } else {
+      break;
+    }
   }
   await writeStore(store);
   return withNormalizedLead(lead);

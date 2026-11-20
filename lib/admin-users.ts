@@ -49,13 +49,26 @@ export function verifyPasswordHash(password: string, stored: string): boolean {
 }
 
 async function readStore(): Promise<UsersStore> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(adminsFilePath(), 'utf-8');
+    raw = await fs.readFile(adminsFilePath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return { users: [] };
+    }
+    console.error(`[admin-users] failed to read ${adminsFilePath()}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as UsersStore;
-    if (!parsed || !Array.isArray(parsed.users)) return { users: [] };
+    if (!parsed || !Array.isArray(parsed.users)) {
+      throw new Error(`Invalid users store format in ${adminsFilePath()}`);
+    }
     return parsed;
-  } catch {
-    return { users: [] };
+  } catch (err) {
+    console.error(`[admin-users] corrupt admins.json at ${adminsFilePath()}:`, err);
+    throw err;
   }
 }
 

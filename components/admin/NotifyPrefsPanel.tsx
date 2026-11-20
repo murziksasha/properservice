@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DEFAULT_NOTIFY_PREFS, readNotifyPrefs, writeNotifyPrefs, type NotifyPrefs } from '@/lib/admin-notify-prefs';
+import { DEFAULT_NOTIFY_PREFS, loadNotifyPrefs, writeNotifyPrefs, type NotifyPrefs } from '@/lib/admin-notify-prefs';
 import { showToast } from './AdminToast';
 import { requestNotifyPermission } from './AdminCountsContext';
 
@@ -9,7 +9,7 @@ export function NotifyPrefsPanel() {
   const [prefs, setPrefs] = useState<NotifyPrefs>(DEFAULT_NOTIFY_PREFS);
 
   useEffect(() => {
-    setPrefs(readNotifyPrefs());
+    setPrefs(loadNotifyPrefs());
   }, []);
 
   function update(patch: Partial<NotifyPrefs>) {

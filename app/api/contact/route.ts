@@ -81,13 +81,14 @@ export async function POST(request: NextRequest) {
     const smtpUser = process.env.SMTP_USER || '';
     const smtpPass = process.env.SMTP_PASS || '';
     const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
-    const mailTo = process.env.MAIL_TO || 'remontmailshop@gmail.com';
+    const mailTo = (process.env.MAIL_TO || '').trim();
     const mailFrom = process.env.MAIL_FROM || smtpUser || 'no-reply@example.com';
     const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
 
     // Dedup: if open lead exists for same phone, append note instead of new row
     let lead;
     let deduped = false;
+    let leadSaveError: unknown = null;
     try {
       const openSame = await findOpenLeadsByPhone(phone);
       if (openSame.length > 0) {
@@ -116,6 +117,12 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       console.error('[leads] failed to persist', err);
       lead = null;
+      leadSaveError = err;
+    }
+
+    if (!lead) {
+      console.error('[leads] failed to persist lead to journal', leadSaveError);
+      return NextResponse.json({ error: 'Failed to save lead' }, { status: 500 });
     }
 
     // Fire-and-await Telegram (non-blocking for failure)
@@ -154,8 +161,8 @@ export async function POST(request: NextRequest) {
 
     let emailed = false;
 
-    if (!smtpUser || !smtpPass) {
-      console.log('[CONTACT] Phone submission (no SMTP creds configured):', phone, {
+    if (!smtpUser || !smtpPass || !mailTo) {
+      console.log('[CONTACT] Phone submission (no SMTP creds or MAIL_TO configured):', phone, {
         leadId: lead?.id,
         pagePath,
         ip,
@@ -228,18 +235,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Completely lost the request (no journal, no mail)
-    if (!lead && !emailed) {
-      return NextResponse.json({ error: 'Failed to save lead' }, { status: 500 });
-    }
-
     return NextResponse.json({
       ok: true,
       emailed,
       telegram,
       deduped,
-      leadId: lead?.id,
-      dev: !smtpUser || !smtpPass,
+      leadId: lead.id,
+      dev: !smtpUser || !smtpPass || !mailTo,
     });
   } catch (err) {
     console.error('Contact error:', err);

@@ -20,37 +20,58 @@ async function ensureDataDir(filePath: string): Promise<void> {
 
 export async function getSiteData(): Promise<SiteData> {
   const filePath = getDataFilePath();
+  let raw: string;
   try {
-    const raw = await fs.readFile(filePath, 'utf-8');
-    let data = JSON.parse(raw) as SiteData;
-    // Apply due scheduled publishes (best-effort write-back)
-    try {
-      const { applyScheduledPublishes } = await import('./scheduled-publish');
-      const { site: next, published } = applyScheduledPublishes(data);
-      if (published.length) {
-        data = await saveSiteData(next);
-        try {
-          const { appendActivity } = await import('./admin-activity');
-          await appendActivity({
-            kind: 'site_save',
-            message: `Scheduled publish: ${published.length} page(s)`,
-          });
-        } catch {
-          /* ignore */
-        }
-      } else {
-        data = next;
+    raw = await fs.readFile(filePath, 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      let initialData: SiteData;
+      try {
+        const examplePath = path.join(process.cwd(), 'data', 'site.example.json');
+        const exampleRaw = await fs.readFile(examplePath, 'utf-8');
+        initialData = JSON.parse(exampleRaw) as SiteData;
+      } catch {
+        const { defaultSiteData } = await import('./default-site-data');
+        initialData = defaultSiteData;
       }
-    } catch {
-      /* ignore schedule errors */
+      await ensureDataDir(filePath);
+      await atomicWriteJson(filePath, initialData);
+      return initialData;
     }
-    return data;
-  } catch {
-    const { defaultSiteData } = await import('./default-site-data');
-    await ensureDataDir(filePath);
-    await atomicWriteJson(filePath, defaultSiteData);
-    return defaultSiteData;
+    console.error(`[site-data] failed to read ${filePath}:`, err);
+    throw err;
   }
+
+  let data: SiteData;
+  try {
+    data = JSON.parse(raw) as SiteData;
+  } catch (err) {
+    console.error(`[site-data] corrupt site.json at ${filePath}:`, err);
+    throw err;
+  }
+
+  // Apply due scheduled publishes (best-effort write-back)
+  try {
+    const { applyScheduledPublishes } = await import('./scheduled-publish');
+    const { site: next, published } = applyScheduledPublishes(data);
+    if (published.length) {
+      data = await saveSiteData(next);
+      try {
+        const { appendActivity } = await import('./admin-activity');
+        await appendActivity({
+          kind: 'site_save',
+          message: `Scheduled publish: ${published.length} page(s)`,
+        });
+      } catch {
+        /* ignore */
+      }
+    } else {
+      data = next;
+    }
+  } catch {
+    /* ignore schedule errors */
+  }
+  return data;
 }
 
 export async function saveSiteData(data: SiteData): Promise<SiteData> {

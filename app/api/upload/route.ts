@@ -1,13 +1,12 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
 import { createId } from '@/lib/id';
 import { optimizeImageUpload } from '@/lib/image-optimize';
 import { isImagePresetId } from '@/lib/image-presets';
 import { upsertMediaMeta, type MediaKind } from '@/lib/media-index';
 import { isMediaPurpose, purposeFromPreset } from '@/lib/media-purpose';
-import { assertAdminIp } from '@/lib/require-admin-ip';
+import { requireAdminRole } from '@/lib/require-role';
 import { clientKey, rateLimit } from '@/lib/rate-limit';
 import { atomicWriteFile } from '@/lib/atomic-write';
 import { uploadsDir } from '@/lib/uploads-path';
@@ -60,15 +59,8 @@ function detectVideoExt(buffer: Buffer, declaredExt: string): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const ipGate = await assertAdminIp();
-  if (!ipGate.ok) {
-    return NextResponse.json({ error: ipGate.error }, { status: ipGate.status });
-  }
-
-  const isAuthenticated = await getSession();
-  if (!isAuthenticated) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const g = await requireAdminRole('media');
+  if (!g.ok) return g.response;
 
   const rl = rateLimit(clientKey(request, 'upload'), { limit: 20, windowMs: 60_000 });
   if (!rl.allowed) {

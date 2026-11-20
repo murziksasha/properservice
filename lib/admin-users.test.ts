@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { navAllowedForRole, roleCan } from './admin-roles';
 
 describe('roleCan', () => {
@@ -31,5 +34,39 @@ describe('navAllowedForRole', () => {
     expect(navAllowedForRole('operator', '/admin/inbox')).toBe(true);
     expect(navAllowedForRole('operator', '/admin/goods')).toBe(false);
     expect(navAllowedForRole('editor', '/admin/goods')).toBe(true);
+  });
+});
+
+describe('admin-users store', () => {
+  let tmpDir: string;
+  let prev: string | undefined;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ps-admins-'));
+    prev = process.env.DATA_DIR;
+    process.env.DATA_DIR = tmpDir;
+  });
+
+  afterEach(async () => {
+    if (prev === undefined) delete process.env.DATA_DIR;
+    else process.env.DATA_DIR = prev;
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('refuses write and preserves corrupt admins.json', async () => {
+    const { createAdminUser, adminsFilePath } = await import('./admin-users');
+    const corrupt = 'corrupt admin users content';
+    await fs.writeFile(adminsFilePath(), corrupt, 'utf-8');
+
+    await expect(
+      createAdminUser({
+        username: 'newadmin',
+        password: 'password123',
+        role: 'operator',
+      }),
+    ).rejects.toThrow();
+
+    const after = await fs.readFile(adminsFilePath(), 'utf-8');
+    expect(after).toBe(corrupt);
   });
 });

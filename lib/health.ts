@@ -49,7 +49,16 @@ export async function getPublicHealth(): Promise<{
 }> {
   const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
   const sitePath = path.join(dataDir, 'site.json');
-  const ok = existsSync(sitePath);
+  let ok = existsSync(sitePath);
+  if (!ok) {
+    try {
+      const { getSiteData } = await import('./site-data');
+      await getSiteData();
+      ok = existsSync(sitePath);
+    } catch {
+      ok = false;
+    }
+  }
   return {
     ok,
     service: 'properservice',
@@ -99,6 +108,15 @@ export async function getHealthReport(): Promise<HealthReport> {
 
   // Ensure data dir is readable
   let dataFile = existsSync(sitePath);
+  if (!dataFile) {
+    try {
+      const { getSiteData } = await import('./site-data');
+      await getSiteData();
+      dataFile = existsSync(sitePath);
+    } catch {
+      dataFile = false;
+    }
+  }
   if (dataFile) {
     try {
       await fs.access(sitePath);

@@ -82,11 +82,26 @@ export async function POST(request: NextRequest) {
       image: product.image,
     };
 
+    // 1. First append order to journal with emailed: false
+    let order;
+    try {
+      order = await appendOrder({
+        phone,
+        comment: comment || undefined,
+        product: snapshot,
+        emailed: false,
+        telegram: false,
+      });
+    } catch (err) {
+      console.error('[orders] failed to persist order to journal', err);
+      return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
+    }
+
     const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
     const smtpUser = process.env.SMTP_USER || '';
     const smtpPass = process.env.SMTP_PASS || '';
     const smtpPort = parseInt(process.env.SMTP_PORT || '465', 10);
-    const mailTo = process.env.MAIL_TO || 'remontmailshop@gmail.com';
+    const mailTo = (process.env.MAIL_TO || '').trim();
     const mailFrom = process.env.MAIL_FROM || smtpUser || 'no-reply@example.com';
     const siteUrl = (process.env.SITE_URL || '').replace(/\/$/, '');
 
@@ -101,8 +116,9 @@ export async function POST(request: NextRequest) {
 
     let emailed = false;
 
-    if (!smtpUser || !smtpPass) {
-      console.log('[ORDER] submission (no SMTP):', phone, product.title);
+    // 2. Send email only if SMTP credentials and MAIL_TO are configured
+    if (!smtpUser || !smtpPass || !mailTo) {
+      console.log('[ORDER] submission (no SMTP or MAIL_TO configured):', phone, product.title);
     } else {
       try {
         const transporter = nodemailer.createTransport({
@@ -147,6 +163,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 3. Send Telegram notification
     let telegram = false;
     try {
       telegram = await notifyOrder({
@@ -158,22 +175,25 @@ export async function POST(request: NextRequest) {
       telegram = false;
     }
 
-    try {
-      await appendOrder({
-        phone,
-        comment: comment || undefined,
-        product: snapshot,
-        emailed,
-        telegram,
-      });
-    } catch (err) {
-      console.error('[orders] failed to persist', err);
-      if (!emailed && !telegram) {
-        return NextResponse.json({ error: 'Failed to save order' }, { status: 500 });
+    // 4. Update order with flags if mail/telegram succeeded
+    if (emailed || telegram) {
+      try {
+        await updateOrder(order.id, {
+          ...(emailed ? { emailed: true } : {}),
+          ...(telegram ? { telegram: true } : {}),
+        });
+      } catch (err) {
+        console.error('[orders] failed to update order flags in journal', err);
       }
     }
 
-    return NextResponse.json({ ok: true, emailed, telegram, dev: !smtpUser || !smtpPass });
+    return NextResponse.json({
+      ok: true,
+      emailed,
+      telegram,
+      orderId: order.id,
+      dev: !smtpUser || !smtpPass || !mailTo,
+    });
   } catch (err) {
     console.error('Order error:', err);
     return NextResponse.json({ error: 'Failed to place order' }, { status: 500 });

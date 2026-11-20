@@ -28,13 +28,26 @@ export function sessionsFilePath(): string {
 }
 
 async function readStore(): Promise<SessionsStore> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(sessionsFilePath(), 'utf-8');
+    raw = await fs.readFile(sessionsFilePath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return { sessions: [] };
+    }
+    console.error(`[admin-sessions] failed to read ${sessionsFilePath()}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as SessionsStore;
-    if (!parsed || !Array.isArray(parsed.sessions)) return { sessions: [] };
+    if (!parsed || !Array.isArray(parsed.sessions)) {
+      throw new Error(`Invalid sessions store format in ${sessionsFilePath()}`);
+    }
     return parsed;
-  } catch {
-    return { sessions: [] };
+  } catch (err) {
+    console.error(`[admin-sessions] corrupt admin-sessions.json at ${sessionsFilePath()}:`, err);
+    throw err;
   }
 }
 
@@ -122,12 +135,34 @@ export async function markFingerprintRevoked(fingerprint: string): Promise<void>
 }
 
 export async function isSessionAllowed(fingerprint: string): Promise<boolean> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(sessionsFilePath(), 'utf-8');
-    const parsed = JSON.parse(raw) as RevokedStore;
+    raw = await fs.readFile(sessionsFilePath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return true;
+    }
+    console.error(`[admin-sessions] failed to read ${sessionsFilePath()} during session validation:`, err);
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.sessions)) {
+      console.error(`[admin-sessions] corrupt or invalid sessions store format in ${sessionsFilePath()}`);
+      return false;
+    }
+    if (
+      'revoked' in parsed &&
+      parsed.revoked !== undefined &&
+      (!Array.isArray(parsed.revoked) || parsed.revoked.some((r: unknown) => typeof r !== 'string'))
+    ) {
+      return false;
+    }
     if (parsed.revoked?.includes(fingerprint)) return false;
     return true;
-  } catch {
-    return true;
+  } catch (err) {
+    console.error(`[admin-sessions] corrupt ${sessionsFilePath()} during session validation:`, err);
+    return false;
   }
 }

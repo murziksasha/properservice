@@ -19,6 +19,7 @@
     "pm2:restart": "pm2 restart properservice",
     "pm2:logs": "pm2 logs properservice",
     "seed": "tsx scripts/seed.ts",
+    "seed:force": "tsx scripts/seed.ts --force",
     "backup": "tsx scripts/backup.ts",
     "uploads:reprocess": "node scripts/reprocess-uploads.mjs",
     "uploads:reprocess:dry": "node scripts/reprocess-uploads.mjs --dry-run",
@@ -31,8 +32,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "pretest:e2e": "npm run seed",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "pretest:smoke": "npm run seed",
     "test:smoke": "playwright test e2e/smoke.spec.ts"
   },
   "dependencies": {

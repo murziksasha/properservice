@@ -4,6 +4,7 @@ import { atomicWriteJson } from './atomic-write';
 import { createId } from './id';
 import {
   handledFromStatus,
+  isClosedStatus,
   isCloseOutcome,
   isWorkflowStatus,
   normalizeStatus,
@@ -21,7 +22,7 @@ export interface OrderProductSnapshot {
 
 export interface OrderAuditEntry {
   at: string;
-  action: 'created' | 'handled' | 'reopened' | 'note' | 'status' | 'callback' | 'assign' | 'outcome';
+  action: 'created' | 'handled' | 'reopened' | 'note' | 'emailed' | 'status' | 'callback' | 'assign' | 'outcome';
   detail?: string;
 }
 
@@ -62,13 +63,26 @@ export function ordersFilePath(): string {
 }
 
 async function readStore(): Promise<OrdersStore> {
+  let raw: string;
   try {
-    const raw = await fs.readFile(ordersFilePath(), 'utf-8');
+    raw = await fs.readFile(ordersFilePath(), 'utf-8');
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && (err as { code: string }).code === 'ENOENT') {
+      return { orders: [] };
+    }
+    console.error(`[orders] failed to read ${ordersFilePath()}:`, err);
+    throw err;
+  }
+
+  try {
     const parsed = JSON.parse(raw) as OrdersStore;
-    if (!parsed || !Array.isArray(parsed.orders)) return { orders: [] };
+    if (!parsed || !Array.isArray(parsed.orders)) {
+      throw new Error(`Invalid orders store format in ${ordersFilePath()}`);
+    }
     return parsed;
-  } catch {
-    return { orders: [] };
+  } catch (err) {
+    console.error(`[orders] corrupt orders.json at ${ordersFilePath()}:`, err);
+    throw err;
   }
 }
 
@@ -128,14 +142,29 @@ export async function appendOrder(input: {
     audit: [{ at: now, action: 'created' }],
   };
   store.orders.unshift(order);
-  if (store.orders.length > MAX_ORDERS) {
-    store.orders = store.orders.slice(0, MAX_ORDERS);
+  while (store.orders.length > MAX_ORDERS) {
+    let removeIdx = -1;
+    for (let i = store.orders.length - 1; i >= 0; i--) {
+      const o = store.orders[i];
+      const status = normalizeStatus(o.status, o.handled);
+      if (isClosedStatus(status)) {
+        removeIdx = i;
+        break;
+      }
+    }
+    if (removeIdx >= 0) {
+      store.orders.splice(removeIdx, 1);
+    } else {
+      break;
+    }
   }
   await writeStore(store);
   return withNormalizedOrder(order);
 }
 
-export type OrderPatch = Partial<Pick<Order, 'handled' | 'note' | 'status' | 'callbackAt' | 'outcome' | 'assignee'>>;
+export type OrderPatch = Partial<
+  Pick<Order, 'handled' | 'note' | 'emailed' | 'telegram' | 'status' | 'callbackAt' | 'outcome' | 'assignee'>
+>;
 
 export async function updateOrder(id: string, patch: OrderPatch): Promise<Order | null> {
   const store = await readStore();
@@ -178,12 +207,17 @@ export async function updateOrder(id: string, patch: OrderPatch): Promise<Order 
   if (patch.outcome !== undefined && patch.outcome !== current.outcome) {
     audit = pushAudit({ ...current, audit }, { at: now, action: 'outcome', detail: String(patch.outcome || '') });
   }
+  if (typeof patch.emailed === 'boolean' && patch.emailed && !current.emailed) {
+    audit = pushAudit({ ...current, audit }, { at: now, action: 'emailed' });
+  }
 
   const closed = handledFromStatus(nextStatus);
   const next: Order = {
     ...current,
     status: nextStatus,
     handled: closed,
+    emailed: typeof patch.emailed === 'boolean' ? patch.emailed : current.emailed,
+    telegram: typeof patch.telegram === 'boolean' ? patch.telegram : current.telegram,
     note: patch.note !== undefined ? patch.note : current.note,
     callbackAt: patch.callbackAt !== undefined ? patch.callbackAt || undefined : current.callbackAt,
     outcome: closed ? nextOutcome : undefined,
